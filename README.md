@@ -1,1 +1,1 @@
-# SergeyUsok.github.io
+Studing JavaScript and AngularJS via game development
