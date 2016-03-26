@@ -1,1 +1,1 @@
-Studing JavaScript and AngularJS via game development
+Studying JavaScript and AngularJS via game development
