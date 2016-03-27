@@ -50,8 +50,10 @@ function Game(board, neighborsFinder, minesCount, $interval)
 	var autoUncover = function(cell)
 	{
 		// walking through cell neighbors and uncover emtpy cells
-		for (var neighbor of neighborsFinder.getNeighbors(board, cell.x, cell.y))
+		var neighbors = neighborsFinder.getNeighbors(board, cell.x, cell.y);
+		for (var i = 0; i < neighbors.length; i++)
 		{
+			var neighbor = neighbors[i];
 			// do not process uncovered cells in order to avoid stack overflow exception
 			if(neighbor.uncovered || neighbor.flagged)
 				continue;

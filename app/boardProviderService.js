@@ -69,10 +69,13 @@ function GameBoardProvider(neighborsFinder)
 	{
 		minesCount = 0;
 
-		// walking through cell neighbors
-		for (var neighbor of neighborsFinder.getNeighbors(board, x, y)) 
-			if(neighbor.hasMine)
+		// walking through cell neighbors and uncover emtpy cells
+		var neighbors = neighborsFinder.getNeighbors(board, x, y);
+		for (var i = 0; i < neighbors.length; i++)
+		{
+			if(neighbors[i].hasMine)
 				minesCount++;
+		}
 		
 		return minesCount == 0 ? "" : minesCount;
 	}
