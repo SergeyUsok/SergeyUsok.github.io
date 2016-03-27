@@ -1,0 +1,307 @@
+* {
+	/* Setting specifies that border are include in width and height element calculations */
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+body {
+	background: rgba(82,82,82,1);
+	background: -moz-linear-gradient(left, rgba(82,82,82,1) 0%, rgba(94,94,94,1) 12%, rgba(107,107,107,1) 23%, rgba(77,77,77,1) 35%, rgba(46,46,46,1) 60%, rgba(18,18,18,1) 74%, rgba(0,0,0,1) 84%, rgba(18,18,18,1) 94%, rgba(46,46,46,1) 96%, rgba(31,31,31,1) 100%);
+	background: -webkit-gradient(left top, right top, color-stop(0%, rgba(82,82,82,1)), color-stop(12%, rgba(94,94,94,1)), color-stop(23%, rgba(107,107,107,1)), color-stop(35%, rgba(77,77,77,1)), color-stop(60%, rgba(46,46,46,1)), color-stop(74%, rgba(18,18,18,1)), color-stop(84%, rgba(0,0,0,1)), color-stop(94%, rgba(18,18,18,1)), color-stop(96%, rgba(46,46,46,1)), color-stop(100%, rgba(31,31,31,1)));
+	background: -webkit-linear-gradient(left, rgba(82,82,82,1) 0%, rgba(94,94,94,1) 12%, rgba(107,107,107,1) 23%, rgba(77,77,77,1) 35%, rgba(46,46,46,1) 60%, rgba(18,18,18,1) 74%, rgba(0,0,0,1) 84%, rgba(18,18,18,1) 94%, rgba(46,46,46,1) 96%, rgba(31,31,31,1) 100%);
+	background: -o-linear-gradient(left, rgba(82,82,82,1) 0%, rgba(94,94,94,1) 12%, rgba(107,107,107,1) 23%, rgba(77,77,77,1) 35%, rgba(46,46,46,1) 60%, rgba(18,18,18,1) 74%, rgba(0,0,0,1) 84%, rgba(18,18,18,1) 94%, rgba(46,46,46,1) 96%, rgba(31,31,31,1) 100%);
+	background: -ms-linear-gradient(left, rgba(82,82,82,1) 0%, rgba(94,94,94,1) 12%, rgba(107,107,107,1) 23%, rgba(77,77,77,1) 35%, rgba(46,46,46,1) 60%, rgba(18,18,18,1) 74%, rgba(0,0,0,1) 84%, rgba(18,18,18,1) 94%, rgba(46,46,46,1) 96%, rgba(31,31,31,1) 100%);
+	background: linear-gradient(to right, rgba(82,82,82,1) 0%, rgba(94,94,94,1) 12%, rgba(107,107,107,1) 23%, rgba(77,77,77,1) 35%, rgba(46,46,46,1) 60%, rgba(18,18,18,1) 74%, rgba(0,0,0,1) 84%, rgba(18,18,18,1) 94%, rgba(46,46,46,1) 96%, rgba(31,31,31,1) 100%);
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#525252', endColorstr='#1f1f1f', GradientType=1 );
+}
+
+ /* Preload all images */
+body:after{
+    position:absolute; width:0; height:0; overflow:hidden; z-index:-1;
+    content: url(../img/smile.png) url(../img/winner.png) url(../img/fail.png) url(../img/attempt.png) url(../img/flag.png) url(../img/uncovered_mine.png) url(../img/lose_mine.png);
+}
+
+.container {
+	position: absolute;
+    left: 17%;
+    right: 17%;
+	overflow:hidden;
+	background-color: #ecf9ec;/* MintCream; */
+	border-radius: 15px;
+	-webkit-border-radius: 15px;
+	-moz-border-radius: 15px;
+	border-style: none;
+}
+
+.title {
+	  font-size: 50px;
+	  color: rgb(109,179,242);
+	  text-align: center;
+	  font-weight: bold;
+}
+
+.game-status:active {
+  /* differnt borders allows make button press 3d effect */
+  border-left: 0.2em solid #989898;
+  border-top: 0.2em solid #989898;
+  border-bottom: 0.1em solid #989898;
+  border-right: 0.1em solid #989898;
+  width: 2em;
+  height: 2em;
+}
+
+.game-status {
+	cursor: pointer;	
+	width: 2em;
+	height: 2em;
+	/* allows show smile at the same line with digits */
+	display:inline-block;
+    
+	background: #C8C8C8;
+	
+	/* differnt borders allows make button 3d effect */
+	border-left: 0.2em solid #E8E8E8;
+	border-top: 0.2em solid #E8E8E8;
+	border-bottom: 0.2em solid #989898;
+	border-right: 0.2em solid #989898;
+	
+	/* centerized div with smile. Parent that contains thus element should have position=relative */
+	left: 47%;
+    margin-right: -50%;
+	position: absolute;
+}
+
+.smile-holder {
+	width: 1.5em;
+	height: 1.5em;
+	display:inline-block;
+	border-radius: 15px;
+	vertical-align: middle;
+}
+
+/* Various smile states */
+.game-in-progress {
+	background: url("../img/smile.png");
+	background-size: 1.5em 1.5em;
+    background-repeat: no-repeat;
+}
+
+.won {
+	background: url("../img/winner.png");
+	background-size: 1.5em 1.5em;
+    background-repeat: no-repeat;
+}
+
+.fail {
+	background: url("../img/fail.png");
+	background-size: 1.5em 1.5em;
+    background-repeat: no-repeat;
+}
+
+.attempt {
+	background: url("../img/attempt.png");
+	background-size: 1.5em 1.5em;
+    background-repeat: no-repeat;
+}
+
+.table {
+	text-align: center;
+	margin-bottom: 0.7em;
+	/* Expands this element. If seeting will be removed then button with smile covers by itself part of game field */
+	overflow: hidden;
+}
+
+.information {
+	font-family: Orbitron, Calibri, sans-serif;
+	font-size: 20px;
+	color: red;
+	float: left;
+}
+
+/* Docks element to the top right corner of parent element. Parent shouldn have position=relative */
+.dockright {
+	position: absolute;
+	top: 0%;
+	right: 0%;
+}
+
+.modeChoise {
+	margin-left: 5%;
+	margin-top: 2%;
+}
+
+.modeChoise span{
+	float: left;
+	font-family: Calibri;
+	font-size: 25px;
+	margin-right: 25px;
+}
+
+/* -------------------- Select Box Styles: bavotasan.com Method (with special adaptations by ericrasch.com) */
+/* -------------------- Source: http://bavotasan.com/2011/style-select-box-using-only-css/ */
+.styled-select {
+   height: 29px;
+   overflow: hidden;
+   width: 240px;
+   margin-left: 10px;
+}
+
+.styled-select select {
+   background: transparent;
+   border: none;
+   font-size: 14px;
+   height: 29px;
+   padding: 5px; /* If you add too much padding here, the options won't show in IE */
+   width: 268px;
+   -webkit-border-radius: 20px;
+   -moz-border-radius: 20px;
+   border-radius: 20px;
+   display: inline;
+}
+
+.styled-select.slate {
+   background: url(http://i62.tinypic.com/2e3ybe1.jpg) no-repeat right center;
+   height: 34px;
+   width: 240px;
+}
+
+.styled-select.slate select {
+   border: 1px solid #ccc;
+   font-size: 16px;
+   height: 34px;
+   width: 268px;
+}
+
+.gameboard {
+    border-style: none;
+    padding: 0;
+	font-size: 18px;
+	margin-left: 5%;
+	margin-top: 5%;
+	display: inline-block;
+	position: relative;
+	margin-bottom: 20px;
+	overflow:hidden;
+}
+
+.row {
+	clear: both;
+}
+
+ .cell {
+	width: 1.5em;
+	height: 1.5em;
+    border: 0.05em solid #989898;
+    background: #C8C8C8;
+	float:left;
+	vertical-align: middle;
+	line-height: 1.2em;
+    text-align: center;
+ }
+
+.cell.covered {
+	border-left: 0.2em solid #E8E8E8;
+	border-top: 0.2em solid #E8E8E8;
+	border-bottom: 0.2em solid #989898;
+	border-right: 0.2em solid #989898;
+ } 
+
+.cell.covered:hover {
+	cursor:pointer;
+	background: #E0E0E0;
+}
+
+.cell.covered:active {
+  border-left: 0.2em solid #989898;
+  border-top: 0.2em solid #989898;
+  border-bottom: 0.1em solid #989898;
+  border-right: 0.1em solid #989898;
+}
+
+.flagged {
+	background: url("../img/flag.png");
+    background-size: 1.5em 1.5em;
+    background-repeat: no-repeat;
+	background-position: center;
+	/* border-style: none; */
+} 
+
+.cell.covered.flagged:hover {
+	cursor: default;
+	background: url("../img/flag.png");
+    background-size: 1.5em 1.5em;
+    background-repeat: no-repeat;
+	background-position: center;
+	border-left: 0.2em solid #E8E8E8;
+	border-top: 0.2em solid #E8E8E8;
+	border-bottom: 0.2em solid #989898;
+	border-right: 0.2em solid #989898;
+}
+
+.cell.covered.flagged:active {
+	cursor: default;
+	background: url("../img/flag.png");
+    background-size: 1.5em 1.5em;
+    background-repeat: no-repeat;
+	background-position: center;
+}
+
+.clicked-mine {
+	background: url("../img/lose_mine.png");
+    background-size: 1.5em 1.5em;
+    background-repeat: no-repeat;
+} 
+
+.uncovered-mine {
+	background: url("../img/uncovered_mine.png");
+    background-size: 1.5em 1.5em;
+    background-repeat: no-repeat;
+}
+
+.wrong-flag {
+	background: url("../img/wrong_mine.png");
+    background-size: 1.5em 1.5em;
+    background-repeat: no-repeat;
+}
+
+.cell-content {
+	font-weight: bold;
+	display:block;
+	width: 1.5em;
+	height: 1.5em;
+	margin: auto;
+	text-align: center;
+}
+
+.has-1-mines-around{
+	color: blue;
+}
+
+.has-2-mines-around {
+	color: green;
+}
+
+.has-3-mines-around {
+	color: red;
+}
+
+.has-4-mines-around {
+	color: darkblue;
+}
+
+.has-5-mines-around {
+	color: darkred;
+}
+
+.has-6-mines-around {
+	color: teal;
+}
+
+.has-7-mines-around {
+	color: black;
+}
+
+.has-8-mines-around {
+	color: darkgray;
+}

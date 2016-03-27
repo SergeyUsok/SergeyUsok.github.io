@@ -1,0 +1,75 @@
+<html lang="en" ng-app="minesweeperGame">
+	<head>
+		<meta charset="utf-8">
+		<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.0/angular.min.js"></script>
+		
+		<script src="app\app.js"></script>
+		<script src="app\gameController.js"></script>
+		<script src="app\game.js"></script>
+		<script src="app\rightClickDirective.js"></script>
+		<script src="app\neightborsFinderService.js"></script>
+		<script src="app\boardProviderService.js"></script>
+		
+		<link href="css\styles.css" rel="stylesheet" type="text/css" media="all">
+		<link href='https://fonts.googleapis.com/css?family=Orbitron' rel='stylesheet' type='text/css'>
+		<title>Minesweeper</title>
+	</head>
+
+	<body ng-controller="gameController">
+		<div class="container">
+			
+			<div class="title">Minesweeper Game</div>
+			
+			<div class="modeChoise">
+				<span>Choose game mode: </span>
+				
+				<div class="styled-select slate">
+					<select ng-model="selectedMode" 
+							ng-options="mode.name for mode in modes" 
+							ng-change="newGame()">
+					</select>
+				</div>
+			</div>
+							
+			<div class="gameboard">
+				<div class="table">
+					<div class="information">{{game.elapsedTime}}</div>
+					
+					<div class="game-status" ng-click="newGame()">
+						<span class="smile-holder" ng-class="{'game-in-progress': game.hasWon == false && game.hasLose == false && isRisky == false,
+															  'fail': game.hasLose == true,
+															  'won': game.hasWon == true,
+															  'attempt': isRisky == true}" >
+						</span>
+					</div>
+					
+					<div class="information dockright">{{game.possibleRemainingMines}}</div>
+				</div>
+				<!-- ng-click="" -->
+				
+				<div class="row" ng-repeat="row in game.board">
+					<div  class="cell" ng-repeat="cell in row" 
+									   ng-class="{'covered': cell.uncovered == false, 'flagged': cell.flagged == true}"
+									   ng-right-click="game.flag(cell)"
+									   ng-mousedown="cell.uncovered || cell.flagged || onDown($event)"
+									   ng-mouseup="cell.uncovered || cell.flagged || uncover($event, cell)">
+									 
+						<span class="cell-content" ng-show="cell.uncovered" ng-class="{'has-1-mines-around': cell.content === 1,
+																					   'has-2-mines-around': cell.content === 2,
+																					   'has-3-mines-around': cell.content === 3,
+																					   'has-4-mines-around': cell.content === 4,
+																					   'has-5-mines-around': cell.content === 5,
+																					   'has-6-mines-around': cell.content === 6,
+																					   'has-7-mines-around': cell.content === 7,
+																					   'has-8-mines-around': cell.content === 8,
+																					   'clicked-mine': game.hasLose == true && cell.hasMine == true && cell.clicked == true,
+																					   'uncovered-mine': game.hasLose == true && cell.hasMine == true && cell.clicked === undefined,
+																					   'wrong-flag': game.hasLose == true && cell.hasMine == false && cell.flagged == true}">{{getContent(cell)}}</span> 
+
+					</div>
+				</div>
+				
+			</div>	
+		</div>
+	</body>
+</html>
