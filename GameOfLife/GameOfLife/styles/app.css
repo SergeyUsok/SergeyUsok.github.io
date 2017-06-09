@@ -1,0 +1,62 @@
+﻿#board-container {
+    margin-top: 10px;
+    margin-bottom: 30px;
+}
+
+.tile {
+    background: #22a0fb;
+	float:left;
+	vertical-align: middle;
+    border: 1px solid #f9f3f3;
+    width: 35px;
+    height: 35px;
+    border-radius: 5px;
+    padding: 4px;
+    text-align: center;
+}
+
+.alive {
+    background: #f9f3f3;
+    width: 25px;
+    height: 25px;
+    border: 0px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.btn-spin {
+  font-size: 10px;
+  border-radius: 0px;
+  padding: 0px 10px 0px 10px;
+}
+
+.addon-override {
+    padding: 0px;
+    font-size: 10px;
+    border-radius: 0px;
+}
+
+#widthInput {
+    width: 100%;
+}
+
+#heightInput {
+    width: 100%;
+}
+
+.tile-notstarted {
+    background: #22a0fb;
+	float:left;
+	vertical-align: middle;
+    border: 1px solid #f9f3f3;
+    width: 35px;
+    height: 35px;
+    border-radius: 5px;
+    padding: 4px;
+    text-align: center;
+}
+
+.tile-notstarted:hover {
+    cursor: pointer;
+    background: #73c1fa;
+}
