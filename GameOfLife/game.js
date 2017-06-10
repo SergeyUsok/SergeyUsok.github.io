@@ -1,54 +1,3 @@
-/// <reference path="Models.ts" />
-/// <reference path="UnitStates.ts" />
-var Rules;
-(function (Rules) {
-    class Rule {
-        countAliveNeighbors(unit, generation) {
-            let aliveNeighborsCount = 0;
-            for (let neighbor of this.getNeighbors(unit, generation)) {
-                if (neighbor.state instanceof UnitStates.AliveState)
-                    aliveNeighborsCount++;
-            }
-            return aliveNeighborsCount;
-        }
-        *getNeighbors(unit, generation) {
-            for (let i = -1; i < 2; i++) {
-                for (let j = -1; j < 2; j++) {
-                    // skip current
-                    if (i == 0 && j == 0)
-                        continue;
-                    let neighborX = this.getCoordinate(unit.x + i, generation.width);
-                    let neighborY = this.getCoordinate(unit.y + j, generation.height);
-                    yield generation.getUnit(neighborX, neighborY);
-                }
-            }
-        }
-        getCoordinate(maybeValidCoord, border) {
-            if (maybeValidCoord < 0)
-                return border - 1;
-            if (maybeValidCoord >= border)
-                return 0;
-            return maybeValidCoord;
-        }
-    }
-    Rules.Rule = Rule;
-    class AliveRule extends Rule {
-        execute(unit, generation) {
-            let aliveNeighborsCount = this.countAliveNeighbors(unit, generation);
-            return aliveNeighborsCount >= 2 && aliveNeighborsCount < 4 ?
-                unit :
-                new Models.Unit(unit.x, unit.y, new UnitStates.DeadState());
-        }
-    }
-    Rules.AliveRule = AliveRule;
-    class DeadRule extends Rule {
-        execute(unit, generation) {
-            let aliveNeighborsCount = this.countAliveNeighbors(unit, generation);
-            return aliveNeighborsCount == 3 ? new Models.Unit(unit.x, unit.y, new UnitStates.AliveState()) : unit;
-        }
-    }
-    Rules.DeadRule = DeadRule;
-})(Rules || (Rules = {}));
 /// <reference path="Rules.ts" />
 var UnitStates;
 (function (UnitStates) {
@@ -111,61 +60,112 @@ var Models;
 })(Models || (Models = {}));
 /// <reference path="Models.ts" />
 /// <reference path="UnitStates.ts" />
-var GameCore;
-(function (GameCore) {
+var Rules;
+(function (Rules) {
+    class Rule {
+        countAliveNeighbors(unit, generation) {
+            let aliveNeighborsCount = 0;
+            for (let neighbor of this.getNeighbors(unit, generation)) {
+                if (neighbor.state instanceof UnitStates.AliveState)
+                    aliveNeighborsCount++;
+            }
+            return aliveNeighborsCount;
+        }
+        *getNeighbors(unit, generation) {
+            for (let i = -1; i < 2; i++) {
+                for (let j = -1; j < 2; j++) {
+                    // skip current
+                    if (i == 0 && j == 0)
+                        continue;
+                    let neighborX = this.getCoordinate(unit.x + i, generation.width);
+                    let neighborY = this.getCoordinate(unit.y + j, generation.height);
+                    yield generation.getUnit(neighborX, neighborY);
+                }
+            }
+        }
+        getCoordinate(maybeValidCoord, border) {
+            if (maybeValidCoord < 0)
+                return border - 1;
+            if (maybeValidCoord >= border)
+                return 0;
+            return maybeValidCoord;
+        }
+    }
+    Rules.Rule = Rule;
+    class AliveRule extends Rule {
+        execute(unit, generation) {
+            let aliveNeighborsCount = this.countAliveNeighbors(unit, generation);
+            return aliveNeighborsCount >= 2 && aliveNeighborsCount < 4 ?
+                unit :
+                new Models.Unit(unit.x, unit.y, new UnitStates.DeadState());
+        }
+    }
+    Rules.AliveRule = AliveRule;
+    class DeadRule extends Rule {
+        execute(unit, generation) {
+            let aliveNeighborsCount = this.countAliveNeighbors(unit, generation);
+            return aliveNeighborsCount == 3 ? new Models.Unit(unit.x, unit.y, new UnitStates.AliveState()) : unit;
+        }
+    }
+    Rules.DeadRule = DeadRule;
+})(Rules || (Rules = {}));
+/// <reference path="Models.ts" />
+/// <reference path="UnitStates.ts" />
+var Core;
+(function (Core) {
     class Game {
-        new(width, height) {
-            this.currentGeneration = new Models.Generation(width, height);
+        constructor(emptyGeneration) {
+            this._currentGeneration = emptyGeneration;
+        }
+        static createNew(width, height) {
+            let emptyGeneration = new Models.Generation(width, height);
             for (let y = 0; y < height; y++) {
                 for (let x = 0; x < width; x++) {
                     let unit = new Models.Unit(x, y, new UnitStates.DeadState());
-                    this.currentGeneration.add(unit);
+                    emptyGeneration.add(unit);
                 }
             }
-            return this.currentGeneration;
+            return new Game(emptyGeneration);
         }
-        randomGeneration() {
+        get currentGeneration() {
+            return this._currentGeneration;
         }
-        start() {
-        }
-        pause() {
-        }
-        previous() {
+        static fromRandomGeneration(width, height) {
         }
         nextGeneration() {
-            var newGeneration = new Models.Generation(this.currentGeneration.width, this.currentGeneration.height);
-            for (let unit of this.currentGeneration) {
+            var newGeneration = new Models.Generation(this._currentGeneration.width, this._currentGeneration.height);
+            for (let unit of this._currentGeneration) {
                 let rule = unit.state.getRule();
-                let newUnit = rule.execute(unit, this.currentGeneration);
+                let newUnit = rule.execute(unit, this._currentGeneration);
                 newGeneration.add(newUnit);
             }
-            this.currentGeneration = newGeneration;
+            this._currentGeneration = newGeneration;
             return newGeneration;
         }
-        next() {
-        }
     }
-    GameCore.Game = Game;
-})(GameCore || (GameCore = {}));
+    Core.Game = Game;
+})(Core || (Core = {}));
 /// <reference path="Models.ts" />
-/// <reference path="GameCore.ts" />
+/// <reference path="Core.ts" />
 /// <reference path="UnitStates.ts" />
 var MVC;
 (function (MVC) {
     class GameController {
         constructor(view) {
             this.view = view;
-            this.game = new GameCore.Game();
+            this.pauseRequested = false;
             this.state = GameState.NotStarted;
             this.view.onNewGame(() => this.new());
             this.view.onRandomGame(this.randomGame);
             this.view.onGameStateChanged(() => this.gameStateChanged());
-            this.view.onNext(this.next);
-            this.view.onPrevoius(this.previous);
+            this.view.onNext(() => this.next());
+            this.view.onPrevoius(() => this.previous());
         }
         new() {
             this.resetToNotStartedState();
-            let initialGen = this.game.new(this.view.width, this.view.height);
+            this.game = Core.Game.createNew(this.view.width, this.view.height);
+            let initialGen = this.game.currentGeneration;
+            // render empty board with callback that allows on/off alive cells
             this.view.renderInitialBoard((x, y) => {
                 let unit = initialGen.getUnit(x, y);
                 if (unit.state instanceof UnitStates.AliveState)
@@ -179,6 +179,7 @@ var MVC;
             switch (this.state) {
                 case GameState.NotStarted:
                 case GameState.Paused:
+                    this.pauseRequested = false;
                     this.runGame();
                     break;
                 case GameState.Running:
@@ -188,26 +189,40 @@ var MVC;
         }
         pauseGame() {
             this.state = GameState.Paused;
+            this.pauseRequested = true;
             this.view.showPausedState();
-            clearTimeout(this.timerToken);
+            this.checkPreviousAvailable();
         }
         runGame() {
+            if (this.pauseRequested)
+                return;
             this.state = GameState.Running;
             this.view.showRunningState();
-            this.timerToken = setInterval(() => {
-                let generation = this.game.nextGeneration();
-                this.view.renderGeneration(generation);
-            }, 1000);
+            this.getNewGeneration();
+            setTimeout(() => this.runGame(), 1000);
+        }
+        getNewGeneration() {
+            let generation = this.game.nextGeneration();
+            this.generations.push(generation);
+            this.cursor = this.generations.length - 1;
+            this.view.renderGeneration(generation);
         }
         resetToNotStartedState() {
             this.state = GameState.NotStarted;
             this.view.showNotStartedState();
-            if (this.timerToken !== undefined)
-                clearTimeout(this.timerToken);
+            this.generations = [];
+            this.cursor = 0;
         }
         previous() {
+            this.cursor--;
+            this.checkPreviousAvailable();
+            this.view.renderGeneration(this.generations[this.cursor]);
         }
         next() {
+            this.getNewGeneration();
+        }
+        checkPreviousAvailable() {
+            this.view.changePrevButtonState(this.cursor == 0);
         }
         randomGame() {
         }
@@ -305,8 +320,10 @@ var MVC;
         showPausedState() {
             let gameStateBtn = document.getElementById("game-state-controller");
             gameStateBtn.textContent = "Continue";
-            document.getElementById("prevBtn").disabled = false;
             document.getElementById("nextBtn").disabled = false;
+        }
+        changePrevButtonState(disable) {
+            document.getElementById("prevBtn").disabled = disable;
         }
         clearChildren(node) {
             while (node.lastChild) {
@@ -389,13 +406,4 @@ window.onload = () => {
     let game = new MVC.GameController(view);
     game.new();
 };
-// add checks for x and y in add method of universe
-// probably remove iterator from Universe and add setter to board
-// add Height and Width properties to Universe
-// add Game class
-// declare
-// unit tests
-// add control for increment/decrement text box
-// do not allow row to move on next line 
-/// <reference path="MVC.ts" />
 //# sourceMappingURL=game.js.map

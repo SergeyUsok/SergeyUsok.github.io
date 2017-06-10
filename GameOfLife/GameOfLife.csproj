@@ -28,8 +28,7 @@
     <Content Include="web.config" />
   </ItemGroup>
   <ItemGroup>
-    <TypeScriptCompile Include="src\app.ts" />
-    <TypeScriptCompile Include="src\GameCore.ts" />
+    <TypeScriptCompile Include="src\Core.ts" />
     <TypeScriptCompile Include="src\Models.ts" />
     <TypeScriptCompile Include="src\MVC.ts" />
     <TypeScriptCompile Include="src\Rules.ts" />

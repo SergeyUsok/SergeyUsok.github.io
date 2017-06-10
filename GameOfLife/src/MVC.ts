@@ -1,26 +1,29 @@
 ﻿/// <reference path="Models.ts" />
-/// <reference path="GameCore.ts" />
+/// <reference path="Core.ts" />
 /// <reference path="UnitStates.ts" />
 
 namespace MVC {
     export class GameController {
 
-        private readonly game: GameCore.Game = new GameCore.Game();
-        private timerToken: number;
+        private game: Core.Game;
+        private pauseRequested: boolean = false;
         private state: GameState = GameState.NotStarted;
-
+        private generations: Models.Generation[];
+        private cursor: number;
 
         public constructor(private readonly view: View) {
             this.view.onNewGame(() => this.new());
             this.view.onRandomGame(this.randomGame);
             this.view.onGameStateChanged(() => this.gameStateChanged());
-            this.view.onNext(this.next);
-            this.view.onPrevoius(this.previous);
+            this.view.onNext(() => this.next());
+            this.view.onPrevoius(() => this.previous());
         }
 
         public new() {
             this.resetToNotStartedState();
-            let initialGen = this.game.new(this.view.width, this.view.height); 
+            this.game = Core.Game.createNew(this.view.width, this.view.height);           
+            let initialGen = this.game.currentGeneration;
+            // render empty board with callback that allows on/off alive cells
             this.view.renderInitialBoard((x, y) => {
                 let unit = initialGen.getUnit(x, y);
                 if (unit.state instanceof UnitStates.AliveState)
@@ -31,10 +34,11 @@ namespace MVC {
             });
         }
 
-        public gameStateChanged() {
+        private gameStateChanged() {
             switch (this.state) {
                 case GameState.NotStarted:
                 case GameState.Paused:
+                    this.pauseRequested = false;
                     this.runGame();
                     break;
                 case GameState.Running:
@@ -45,32 +49,47 @@ namespace MVC {
 
         private pauseGame() {
             this.state = GameState.Paused;
+            this.pauseRequested = true;
             this.view.showPausedState();
-            clearTimeout(this.timerToken);
+            this.checkPreviousAvailable();
         }
 
         private runGame() {
+            if (this.pauseRequested)
+                return;
+
             this.state = GameState.Running;
             this.view.showRunningState();
-            this.timerToken = setInterval(() => {
-                let generation = this.game.nextGeneration();
-                this.view.renderGeneration(generation);
-            }, 1000);
+            this.getNewGeneration();
+            setTimeout(() => this.runGame(), 1000);
+        }
+
+        private getNewGeneration() {
+            let generation = this.game.nextGeneration();
+            this.generations.push(generation);
+            this.cursor = this.generations.length - 1;
+            this.view.renderGeneration(generation);
         }
 
         private resetToNotStartedState() {
             this.state = GameState.NotStarted;
             this.view.showNotStartedState();
-            if (this.timerToken !== undefined)
-                clearTimeout(this.timerToken);
+            this.generations = [];
+            this.cursor = 0;
         }
 
-        private previous() {
-
+        private previous(): void {
+            this.cursor--;
+            this.checkPreviousAvailable();
+            this.view.renderGeneration(this.generations[this.cursor]);
         }
 
-        private next() {
+        private next(): void {
+            this.getNewGeneration();
+        }
 
+        private checkPreviousAvailable(): void {
+            this.view.changePrevButtonState(this.cursor == 0);
         }
 
         private randomGame() {
@@ -191,8 +210,11 @@ namespace MVC {
         public showPausedState(): void {
             let gameStateBtn = document.getElementById("game-state-controller");
             gameStateBtn.textContent = "Continue";
-            (<HTMLInputElement>document.getElementById("prevBtn")).disabled = false;
             (<HTMLInputElement>document.getElementById("nextBtn")).disabled = false;
+        }
+
+        public changePrevButtonState(disable: boolean) {
+            (<HTMLInputElement>document.getElementById("prevBtn")).disabled = disable;
         }
 
         private clearChildren(node: HTMLElement) {
@@ -293,12 +315,3 @@ window.onload = () => {
     let game = new MVC.GameController(view);
     game.new();
 };
-
-// add checks for x and y in add method of universe
-// probably remove iterator from Universe and add setter to board
-// add Height and Width properties to Universe
-// add Game class
-// declare
-// unit tests
-// add control for increment/decrement text box
-// do not allow row to move on next line
