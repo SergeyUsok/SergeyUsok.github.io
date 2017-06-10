@@ -180,8 +180,8 @@ namespace MVC {
 
         public makeTilesInactive(): void {
             $("#board-container").find(".tile")
-                .removeClass("notstarted")
-                .click(null);
+                .off("click")
+                .removeClass("notstarted");
         }
 
         public showRunningState(): void {
@@ -205,15 +205,9 @@ namespace MVC {
             $("#prevBtn").prop("disabled", disable);
         }
 
-        private clearChildren(node: HTMLElement) {
-            while (node.lastChild) {
-                node.removeChild(node.lastChild);
-            }
-        }
-
         private attachOnClickHandler(tile: HTMLElement, changeState: (x: number, y: number) => UnitStates.State): void {
             // onclick event processing
-            tile.onclick = () => {
+            $(tile).click(() => {
 
                 // get coordinates of clicked node 
                 let [x, y] = tile.id.split('-'); // Array Destructuring
@@ -227,7 +221,7 @@ namespace MVC {
                 else if (newState instanceof UnitStates.DeadState) {
                     tile.firstElementChild.remove();
                 }
-            };
+            });
         }
 
         private updateWidth(): void {

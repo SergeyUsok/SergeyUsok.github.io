@@ -291,8 +291,8 @@ var MVC;
         }
         makeTilesInactive() {
             $("#board-container").find(".tile")
-                .removeClass("notstarted")
-                .click(null);
+                .off("click")
+                .removeClass("notstarted");
         }
         showRunningState() {
             $("#game-state-controller").html("Pause");
@@ -311,14 +311,9 @@ var MVC;
         changePrevButtonState(disable) {
             $("#prevBtn").prop("disabled", disable);
         }
-        clearChildren(node) {
-            while (node.lastChild) {
-                node.removeChild(node.lastChild);
-            }
-        }
         attachOnClickHandler(tile, changeState) {
             // onclick event processing
-            tile.onclick = () => {
+            $(tile).click(() => {
                 // get coordinates of clicked node 
                 let [x, y] = tile.id.split('-'); // Array Destructuring
                 // get state after click was processed
@@ -330,7 +325,7 @@ var MVC;
                 else if (newState instanceof UnitStates.DeadState) {
                     tile.firstElementChild.remove();
                 }
-            };
+            });
         }
         updateWidth() {
             if (this.isValid($("#widthInput").val())) {

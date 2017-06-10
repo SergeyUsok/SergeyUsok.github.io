@@ -19,4 +19,5 @@ interface JQuery {
     html(value: string): JQuery;
     prop(name: string, value?: any): JQuery;
     find(selector: string): JQuery;
+    off(event?: string): JQuery;
 }
