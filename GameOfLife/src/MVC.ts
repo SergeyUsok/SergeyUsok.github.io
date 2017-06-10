@@ -6,14 +6,14 @@ namespace MVC {
     export class GameController {
 
         private game: Core.Game;
-        private pauseRequested: boolean = false;
+        private pauseRequested: boolean = true;
         private state: GameState = GameState.NotStarted;
         private generations: Models.Generation[];
         private cursor: number;
 
         public constructor(private readonly view: View) {
             this.view.onNewGame(() => this.new());
-            this.view.onRandomGame(this.randomGame);
+            this.view.onRandomGame(() => this.randomGame());
             this.view.onGameStateChanged(() => this.gameStateChanged());
             this.view.onNext(() => this.next());
             this.view.onPrevoius(() => this.previous());
@@ -37,6 +37,7 @@ namespace MVC {
         private gameStateChanged() {
             switch (this.state) {
                 case GameState.NotStarted:
+                    this.view.makeTilesInactive();
                 case GameState.Paused:
                     this.pauseRequested = false;
                     this.runGame();
@@ -73,6 +74,7 @@ namespace MVC {
 
         private resetToNotStartedState() {
             this.state = GameState.NotStarted;
+            this.pauseRequested = true;
             this.view.showNotStartedState();
             this.generations = [];
             this.cursor = 0;
@@ -99,21 +101,18 @@ namespace MVC {
 
     export class View {
 
-        private widthInput: HTMLInputElement;
-        private heightInput: HTMLInputElement;
-
         public constructor(private _width: number, private _height: number) {
-            this.widthInput = <HTMLInputElement>document.getElementById("widthInput");
-            this.widthInput.oninput = () => this.updateWidth();
-            this.widthInput.value = _width.toString();
-            this.heightInput = <HTMLInputElement>document.getElementById("heightInput");
-            this.heightInput.oninput = () => this.updateHeight();
-            this.heightInput.value = _height.toString();
 
-            document.getElementById("widthUp").onclick = () => this.widthUp();
-            document.getElementById("widthDown").onclick = () => this.widthDown();
-            document.getElementById("heightUp").onclick = () => this.heightUp();
-            document.getElementById("heightDown").onclick = () => this.heightDown();
+            $("#widthInput").on("input", () => this.updateWidth())
+                .val(_width.toString());
+
+            $("#heightInput").on("input", () => this.updateHeight())
+                .val(_height.toString());
+
+            $("#widthUp").click(() => this.widthUp());
+            $("#widthDown").click(() => this.widthDown());
+            $("#heightUp").click(() => this.heightUp());
+            $("#heightDown").click(() => this.heightDown());
         }
 
         public get width(): number {
@@ -125,96 +124,85 @@ namespace MVC {
         }
 
         public onGameStateChanged(callback: () => void): void {
-            let gameStateBtn = document.getElementById("game-state-controller");
-            //document.querySelector("")
-            gameStateBtn.onclick = callback;
+            $("#game-state-controller").click(callback);
         }
 
         public onNext(callback: () => void): void {
-            let startBtn = document.getElementById("nextBtn");
-            startBtn.onclick = callback;
+            $("#nextBtn").click(callback);
         }
 
         public onPrevoius(callback: () => void): void {
-            let startBtn = document.getElementById("prevBtn");
-            startBtn.onclick = callback;
+            $("#prevBtn").click(callback);
         }
 
         public onNewGame(callback: () => void): void {
-            let startBtn = document.getElementById("newGameBtn");
-            startBtn.onclick = callback;
+            $("#newGameBtn").click(callback);
         }
 
         public onRandomGame(callback: () => void): void {
-            let startBtn = document.getElementById("randomBtn");
-            startBtn.onclick = callback;
+            $("#randomBtn").click(callback);
         }
 
         public renderInitialBoard(changeState: (x: number, y: number) => UnitStates.State): void {
-            let boardContainer = document.getElementById("board-container");
-            this.clearChildren(boardContainer);
-            for (let y = 0; y < this.height; y++)
-            {
-                let row = document.createElement("div");
-                row.className = "row";
-                for (let x = 0; x < this.width; x++)
-                {
-                    let tile = document.createElement("div");
-                    tile.id = `${x}-${y}`;
-                    tile.className = "tile-notstarted";
+
+            $("#board-container").empty();
+
+            for (let y = 0; y < this.height; y++) {
+                let row = $("<div/>").addClass("row").get(0);
+
+                for (let x = 0; x < this.width; x++) {
+
+                    let tile = $("<div/>").attr("id", `${x}-${y}`)
+                        .addClass("tile notstarted")
+                        .get(0);
+                    
                     this.attachOnClickHandler(tile, changeState);
                     row.appendChild(tile);
                 }
-
-                boardContainer.appendChild(row);
+                
+                $("#board-container").append(row);
             }
         }
 
         public renderGeneration(generation: Models.Generation): void {
-            let boardContainer = document.getElementById("board-container");
-            this.clearChildren(boardContainer);
+            for (let unit of generation) {
+                let tile = $(`#${unit.x}-${unit.y}`).get(0);
 
-            for (let y = 0; y < this.height; y++) {
-                let row = document.createElement("div");
-                row.className = "row";
-                for (let x = 0; x < this.width; x++) {
-                    let tile = document.createElement("div");
-                    tile.className = "tile";
-                    row.appendChild(tile);
-                    if (generation.getUnit(x, y).state instanceof UnitStates.AliveState)
-                    {
-                        let aliveUnit = document.createElement("div");
-                        aliveUnit.className = "alive";
-                        tile.appendChild(aliveUnit);
-                    }
+                if (unit.state instanceof UnitStates.AliveState && !tile.hasChildNodes()) {
+                    $("<div/>").addClass("alive").appendTo(tile);
                 }
 
-                boardContainer.appendChild(row);
+                else if (unit.state instanceof UnitStates.DeadState && tile.hasChildNodes()) {
+                    tile.lastElementChild.remove();
+                }
             }
         }
 
+        public makeTilesInactive(): void {
+            $("#board-container").find(".tile")
+                .removeClass("notstarted")
+                .click(null);
+        }
+
         public showRunningState(): void {
-            let gameStateBtn = document.getElementById("game-state-controller");
-            gameStateBtn.textContent = "Pause";
-            (<HTMLInputElement>document.getElementById("prevBtn")).disabled = true;
-            (<HTMLInputElement>document.getElementById("nextBtn")).disabled = true;
+            $("#game-state-controller").html("Pause");
+            $("#prevBtn").prop("disabled", true);
+            $("#nextBtn").prop("disabled", true);
         }
 
         public showNotStartedState(): void {
-            let gameStateBtn = document.getElementById("game-state-controller");
-            gameStateBtn.textContent = "Start";
-            (<HTMLInputElement>document.getElementById("prevBtn")).disabled = true;
-            (<HTMLInputElement>document.getElementById("nextBtn")).disabled = true;
+            $("#game-state-controller").html("Start");
+            $("#prevBtn").prop("disabled", true);
+            $("#nextBtn").prop("disabled", true);
         }
 
         public showPausedState(): void {
-            let gameStateBtn = document.getElementById("game-state-controller");
-            gameStateBtn.textContent = "Continue";
-            (<HTMLInputElement>document.getElementById("nextBtn")).disabled = false;
+            $("#game-state-controller").html("Continue");
+            $("#nextBtn").prop("disabled", false);
         }
 
         public changePrevButtonState(disable: boolean) {
-            (<HTMLInputElement>document.getElementById("prevBtn")).disabled = disable;
+            $("#prevBtn").prop("disabled", disable);
         }
 
         private clearChildren(node: HTMLElement) {
@@ -223,7 +211,7 @@ namespace MVC {
             }
         }
 
-        private attachOnClickHandler(tile: HTMLDivElement, changeState: (x: number, y: number) => UnitStates.State): void {
+        private attachOnClickHandler(tile: HTMLElement, changeState: (x: number, y: number) => UnitStates.State): void {
             // onclick event processing
             tile.onclick = () => {
 
@@ -233,9 +221,7 @@ namespace MVC {
                 let newState = changeState(parseInt(x), parseInt(y));
                 // draw alive element if state is Alive
                 if (newState instanceof UnitStates.AliveState) {
-                    let aliveUnit = document.createElement("div");
-                    aliveUnit.className = "alive";
-                    tile.appendChild(aliveUnit);
+                    $("<div/>").addClass("alive").appendTo(tile);
                 }
                 // remove child Alive element if state is Dead
                 else if (newState instanceof UnitStates.DeadState) {
@@ -245,29 +231,27 @@ namespace MVC {
         }
 
         private updateWidth(): void {
-            if (this.isValid(this.widthInput.value))
-            {
-                this._width = parseInt(this.widthInput.value);
+            if (this.isValid($("#widthInput").val())) {
+                this._height = parseInt($("#widthInput").val());
             }
-            else
-            {
+            else {
                 // do not allow to input incorrect value 
-                this.widthInput.value = this.width.toString();
+                $("#widthInput").val(this.height.toString());
             }
         }
 
         private updateHeight(): void {
-            if (this.isValid(this.heightInput.value)) {
-                this._height = parseInt(this.heightInput.value);
+            if (this.isValid($("#heightInput").val())) {
+                this._height = parseInt($("#heightInput").val());
             }
             else {
                 // do not allow to input incorrect value 
-                this.heightInput.value = this.height.toString();
+                $("#heightInput").val(this.height.toString());
             }
         }
 
         private widthUp(): void {
-            this.widthInput.value = (++this._width).toString();
+            $("#widthInput").val((++this._width).toString());
         }
 
         private widthDown(): void {
@@ -275,12 +259,12 @@ namespace MVC {
             if (temp > 0)
             {
                 this._width = temp;
-                this.widthInput.value = temp.toString();
+                $("#widthInput").val(temp.toString());
             }
         }
 
         private heightUp(): void {
-            this.heightInput.value = (++this._height).toString();
+            $("#heightInput").val((++this._height).toString());
         }
 
         private heightDown(): void {
@@ -288,7 +272,7 @@ namespace MVC {
             if (temp > 0)
             {
                 this._height = temp;
-                this.heightInput.value = temp.toString();
+                $("#heightInput").val(temp.toString());
             }
         }
 
@@ -309,9 +293,8 @@ namespace MVC {
     }
 }
 
-window.onload = () => {
-
-    let view = new MVC.View(20, 10);
+$(document).ready(() => {
+    let view = new MVC.View(30, 15);
     let game = new MVC.GameController(view);
     game.new();
-};
+});

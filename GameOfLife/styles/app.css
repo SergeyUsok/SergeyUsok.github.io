@@ -8,8 +8,8 @@
 	float:left;
 	vertical-align: middle;
     border: 1px solid #f9f3f3;
-    width: 35px;
-    height: 35px;
+    width: 30px;
+    height: 30px;
     border-radius: 5px;
     padding: 4px;
     text-align: center;
@@ -17,8 +17,8 @@
 
 .alive {
     background: #f9f3f3;
-    width: 25px;
-    height: 25px;
+    width: 20px;
+    height: 20px;
     border: 0px;
     border-radius: 50%;
     display: inline-block;
@@ -44,19 +44,7 @@
     width: 100%;
 }
 
-.tile-notstarted {
-    background: #22a0fb;
-	float:left;
-	vertical-align: middle;
-    border: 1px solid #f9f3f3;
-    width: 35px;
-    height: 35px;
-    border-radius: 5px;
-    padding: 4px;
-    text-align: center;
-}
-
-.tile-notstarted:hover {
+.notstarted:hover {
     cursor: pointer;
     background: #73c1fa;
 }

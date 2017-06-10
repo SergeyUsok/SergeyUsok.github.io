@@ -1,3 +1,54 @@
+/// <reference path="Models.ts" />
+/// <reference path="UnitStates.ts" />
+var Rules;
+(function (Rules) {
+    class Rule {
+        countAliveNeighbors(unit, generation) {
+            let aliveNeighborsCount = 0;
+            for (let neighbor of this.getNeighbors(unit, generation)) {
+                if (neighbor.state instanceof UnitStates.AliveState)
+                    aliveNeighborsCount++;
+            }
+            return aliveNeighborsCount;
+        }
+        *getNeighbors(unit, generation) {
+            for (let i = -1; i < 2; i++) {
+                for (let j = -1; j < 2; j++) {
+                    // skip current
+                    if (i == 0 && j == 0)
+                        continue;
+                    let neighborX = this.getCoordinate(unit.x + i, generation.width);
+                    let neighborY = this.getCoordinate(unit.y + j, generation.height);
+                    yield generation.getUnit(neighborX, neighborY);
+                }
+            }
+        }
+        getCoordinate(maybeValidCoord, border) {
+            if (maybeValidCoord < 0)
+                return border - 1;
+            if (maybeValidCoord >= border)
+                return 0;
+            return maybeValidCoord;
+        }
+    }
+    Rules.Rule = Rule;
+    class AliveRule extends Rule {
+        execute(unit, generation) {
+            let aliveNeighborsCount = this.countAliveNeighbors(unit, generation);
+            return aliveNeighborsCount >= 2 && aliveNeighborsCount < 4 ?
+                unit :
+                new Models.Unit(unit.x, unit.y, new UnitStates.DeadState());
+        }
+    }
+    Rules.AliveRule = AliveRule;
+    class DeadRule extends Rule {
+        execute(unit, generation) {
+            let aliveNeighborsCount = this.countAliveNeighbors(unit, generation);
+            return aliveNeighborsCount == 3 ? new Models.Unit(unit.x, unit.y, new UnitStates.AliveState()) : unit;
+        }
+    }
+    Rules.DeadRule = DeadRule;
+})(Rules || (Rules = {}));
 /// <reference path="Rules.ts" />
 var UnitStates;
 (function (UnitStates) {
@@ -60,57 +111,6 @@ var Models;
 })(Models || (Models = {}));
 /// <reference path="Models.ts" />
 /// <reference path="UnitStates.ts" />
-var Rules;
-(function (Rules) {
-    class Rule {
-        countAliveNeighbors(unit, generation) {
-            let aliveNeighborsCount = 0;
-            for (let neighbor of this.getNeighbors(unit, generation)) {
-                if (neighbor.state instanceof UnitStates.AliveState)
-                    aliveNeighborsCount++;
-            }
-            return aliveNeighborsCount;
-        }
-        *getNeighbors(unit, generation) {
-            for (let i = -1; i < 2; i++) {
-                for (let j = -1; j < 2; j++) {
-                    // skip current
-                    if (i == 0 && j == 0)
-                        continue;
-                    let neighborX = this.getCoordinate(unit.x + i, generation.width);
-                    let neighborY = this.getCoordinate(unit.y + j, generation.height);
-                    yield generation.getUnit(neighborX, neighborY);
-                }
-            }
-        }
-        getCoordinate(maybeValidCoord, border) {
-            if (maybeValidCoord < 0)
-                return border - 1;
-            if (maybeValidCoord >= border)
-                return 0;
-            return maybeValidCoord;
-        }
-    }
-    Rules.Rule = Rule;
-    class AliveRule extends Rule {
-        execute(unit, generation) {
-            let aliveNeighborsCount = this.countAliveNeighbors(unit, generation);
-            return aliveNeighborsCount >= 2 && aliveNeighborsCount < 4 ?
-                unit :
-                new Models.Unit(unit.x, unit.y, new UnitStates.DeadState());
-        }
-    }
-    Rules.AliveRule = AliveRule;
-    class DeadRule extends Rule {
-        execute(unit, generation) {
-            let aliveNeighborsCount = this.countAliveNeighbors(unit, generation);
-            return aliveNeighborsCount == 3 ? new Models.Unit(unit.x, unit.y, new UnitStates.AliveState()) : unit;
-        }
-    }
-    Rules.DeadRule = DeadRule;
-})(Rules || (Rules = {}));
-/// <reference path="Models.ts" />
-/// <reference path="UnitStates.ts" />
 var Core;
 (function (Core) {
     class Game {
@@ -153,10 +153,10 @@ var MVC;
     class GameController {
         constructor(view) {
             this.view = view;
-            this.pauseRequested = false;
+            this.pauseRequested = true;
             this.state = GameState.NotStarted;
             this.view.onNewGame(() => this.new());
-            this.view.onRandomGame(this.randomGame);
+            this.view.onRandomGame(() => this.randomGame());
             this.view.onGameStateChanged(() => this.gameStateChanged());
             this.view.onNext(() => this.next());
             this.view.onPrevoius(() => this.previous());
@@ -178,6 +178,7 @@ var MVC;
         gameStateChanged() {
             switch (this.state) {
                 case GameState.NotStarted:
+                    this.view.makeTilesInactive();
                 case GameState.Paused:
                     this.pauseRequested = false;
                     this.runGame();
@@ -209,6 +210,7 @@ var MVC;
         }
         resetToNotStartedState() {
             this.state = GameState.NotStarted;
+            this.pauseRequested = true;
             this.view.showNotStartedState();
             this.generations = [];
             this.cursor = 0;
@@ -232,16 +234,14 @@ var MVC;
         constructor(_width, _height) {
             this._width = _width;
             this._height = _height;
-            this.widthInput = document.getElementById("widthInput");
-            this.widthInput.oninput = () => this.updateWidth();
-            this.widthInput.value = _width.toString();
-            this.heightInput = document.getElementById("heightInput");
-            this.heightInput.oninput = () => this.updateHeight();
-            this.heightInput.value = _height.toString();
-            document.getElementById("widthUp").onclick = () => this.widthUp();
-            document.getElementById("widthDown").onclick = () => this.widthDown();
-            document.getElementById("heightUp").onclick = () => this.heightUp();
-            document.getElementById("heightDown").onclick = () => this.heightDown();
+            $("#widthInput").on("input", () => this.updateWidth())
+                .val(_width.toString());
+            $("#heightInput").on("input", () => this.updateHeight())
+                .val(_height.toString());
+            $("#widthUp").click(() => this.widthUp());
+            $("#widthDown").click(() => this.widthDown());
+            $("#heightUp").click(() => this.heightUp());
+            $("#heightDown").click(() => this.heightDown());
         }
         get width() {
             return this._width;
@@ -250,80 +250,66 @@ var MVC;
             return this._height;
         }
         onGameStateChanged(callback) {
-            let gameStateBtn = document.getElementById("game-state-controller");
-            //document.querySelector("")
-            gameStateBtn.onclick = callback;
+            $("#game-state-controller").click(callback);
         }
         onNext(callback) {
-            let startBtn = document.getElementById("nextBtn");
-            startBtn.onclick = callback;
+            $("#nextBtn").click(callback);
         }
         onPrevoius(callback) {
-            let startBtn = document.getElementById("prevBtn");
-            startBtn.onclick = callback;
+            $("#prevBtn").click(callback);
         }
         onNewGame(callback) {
-            let startBtn = document.getElementById("newGameBtn");
-            startBtn.onclick = callback;
+            $("#newGameBtn").click(callback);
         }
         onRandomGame(callback) {
-            let startBtn = document.getElementById("randomBtn");
-            startBtn.onclick = callback;
+            $("#randomBtn").click(callback);
         }
         renderInitialBoard(changeState) {
-            let boardContainer = document.getElementById("board-container");
-            this.clearChildren(boardContainer);
+            $("#board-container").empty();
             for (let y = 0; y < this.height; y++) {
-                let row = document.createElement("div");
-                row.className = "row";
+                let row = $("<div/>").addClass("row").get(0);
                 for (let x = 0; x < this.width; x++) {
-                    let tile = document.createElement("div");
-                    tile.id = `${x}-${y}`;
-                    tile.className = "tile-notstarted";
+                    let tile = $("<div/>").attr("id", `${x}-${y}`)
+                        .addClass("tile notstarted")
+                        .get(0);
                     this.attachOnClickHandler(tile, changeState);
                     row.appendChild(tile);
                 }
-                boardContainer.appendChild(row);
+                $("#board-container").append(row);
             }
         }
         renderGeneration(generation) {
-            let boardContainer = document.getElementById("board-container");
-            this.clearChildren(boardContainer);
-            for (let y = 0; y < this.height; y++) {
-                let row = document.createElement("div");
-                row.className = "row";
-                for (let x = 0; x < this.width; x++) {
-                    let tile = document.createElement("div");
-                    tile.className = "tile";
-                    row.appendChild(tile);
-                    if (generation.getUnit(x, y).state instanceof UnitStates.AliveState) {
-                        let aliveUnit = document.createElement("div");
-                        aliveUnit.className = "alive";
-                        tile.appendChild(aliveUnit);
-                    }
+            for (let unit of generation) {
+                let tile = $(`#${unit.x}-${unit.y}`).get(0);
+                if (unit.state instanceof UnitStates.AliveState && !tile.hasChildNodes()) {
+                    $("<div/>").addClass("alive").appendTo(tile);
                 }
-                boardContainer.appendChild(row);
+                else if (unit.state instanceof UnitStates.DeadState && tile.hasChildNodes()) {
+                    tile.lastElementChild.remove();
+                }
             }
         }
+        makeTilesInactive() {
+            $("#board-container").find(".tile")
+                .removeClass("notstarted")
+                .click(null);
+        }
         showRunningState() {
-            let gameStateBtn = document.getElementById("game-state-controller");
-            gameStateBtn.textContent = "Pause";
-            document.getElementById("prevBtn").disabled = true;
-            document.getElementById("nextBtn").disabled = true;
+            $("#game-state-controller").html("Pause");
+            $("#prevBtn").prop("disabled", true);
+            $("#nextBtn").prop("disabled", true);
         }
         showNotStartedState() {
-            let gameStateBtn = document.getElementById("game-state-controller");
-            gameStateBtn.textContent = "Start";
-            document.getElementById("prevBtn").disabled = true;
-            document.getElementById("nextBtn").disabled = true;
+            $("#game-state-controller").html("Start");
+            $("#prevBtn").prop("disabled", true);
+            $("#nextBtn").prop("disabled", true);
         }
         showPausedState() {
-            let gameStateBtn = document.getElementById("game-state-controller");
-            gameStateBtn.textContent = "Continue";
-            document.getElementById("nextBtn").disabled = false;
+            $("#game-state-controller").html("Continue");
+            $("#nextBtn").prop("disabled", false);
         }
         changePrevButtonState(disable) {
-            document.getElementById("prevBtn").disabled = disable;
+            $("#prevBtn").prop("disabled", disable);
         }
         clearChildren(node) {
             while (node.lastChild) {
@@ -339,9 +325,7 @@ var MVC;
                 let newState = changeState(parseInt(x), parseInt(y));
                 // draw alive element if state is Alive
                 if (newState instanceof UnitStates.AliveState) {
-                    let aliveUnit = document.createElement("div");
-                    aliveUnit.className = "alive";
-                    tile.appendChild(aliveUnit);
+                    $("<div/>").addClass("alive").appendTo(tile);
                 }
                 else if (newState instanceof UnitStates.DeadState) {
                     tile.firstElementChild.remove();
@@ -349,41 +333,41 @@ var MVC;
             };
         }
         updateWidth() {
-            if (this.isValid(this.widthInput.value)) {
-                this._width = parseInt(this.widthInput.value);
+            if (this.isValid($("#widthInput").val())) {
+                this._height = parseInt($("#widthInput").val());
             }
             else {
                 // do not allow to input incorrect value 
-                this.widthInput.value = this.width.toString();
+                $("#widthInput").val(this.height.toString());
             }
         }
         updateHeight() {
-            if (this.isValid(this.heightInput.value)) {
-                this._height = parseInt(this.heightInput.value);
+            if (this.isValid($("#heightInput").val())) {
+                this._height = parseInt($("#heightInput").val());
             }
             else {
                 // do not allow to input incorrect value 
-                this.heightInput.value = this.height.toString();
+                $("#heightInput").val(this.height.toString());
             }
         }
         widthUp() {
-            this.widthInput.value = (++this._width).toString();
+            $("#widthInput").val((++this._width).toString());
         }
         widthDown() {
             let temp = this._width - 1;
             if (temp > 0) {
                 this._width = temp;
-                this.widthInput.value = temp.toString();
+                $("#widthInput").val(temp.toString());
             }
         }
         heightUp() {
-            this.heightInput.value = (++this._height).toString();
+            $("#heightInput").val((++this._height).toString());
         }
         heightDown() {
             let temp = this._height - 1;
             if (temp > 0) {
                 this._height = temp;
-                this.heightInput.value = temp.toString();
+                $("#heightInput").val(temp.toString());
             }
         }
         isValid(maybeNumber) {
@@ -401,9 +385,9 @@ var MVC;
         GameState[GameState["Paused"] = 2] = "Paused";
     })(GameState || (GameState = {}));
 })(MVC || (MVC = {}));
-window.onload = () => {
-    let view = new MVC.View(20, 10);
+$(document).ready(() => {
+    let view = new MVC.View(30, 15);
     let game = new MVC.GameController(view);
     game.new();
-};
+});
 //# sourceMappingURL=game.js.map
