@@ -23,6 +23,7 @@ namespace MVC {
             this.resetToNotStartedState();
             this.game = Core.Game.createNew(this.view.width, this.view.height);           
             let initialGen = this.game.currentGeneration;
+            this.generations.push(initialGen);
             // render empty board with callback that allows on/off alive cells
             this.view.renderInitialBoard((x, y) => {
                 let unit = initialGen.getUnit(x, y);
@@ -87,7 +88,13 @@ namespace MVC {
         }
 
         private next(): void {
-            this.getNewGeneration();
+            this.cursor++;
+            this.checkPreviousAvailable();
+
+            if (this.cursor >= this.generations.length)
+                this.getNewGeneration();
+            else
+                this.view.renderGeneration(this.generations[this.cursor]);
         }
 
         private checkPreviousAvailable(): void {
@@ -226,11 +233,11 @@ namespace MVC {
 
         private updateWidth(): void {
             if (this.isValid($("#widthInput").val())) {
-                this._height = parseInt($("#widthInput").val());
+                this._width = parseInt($("#widthInput").val());
             }
             else {
-                // do not allow to input incorrect value 
-                $("#widthInput").val(this.height.toString());
+                // do not allow to input incorrect value and set up previous one
+                $("#widthInput").val(this._width.toString());
             }
         }
 
@@ -239,8 +246,8 @@ namespace MVC {
                 this._height = parseInt($("#heightInput").val());
             }
             else {
-                // do not allow to input incorrect value 
-                $("#heightInput").val(this.height.toString());
+                // do not allow to input incorrect value and set up previous one
+                $("#heightInput").val(this._height.toString());
             }
         }
 
@@ -288,7 +295,7 @@ namespace MVC {
 }
 
 $(document).ready(() => {
-    let view = new MVC.View(30, 15);
+    let view = new MVC.View(34, 20);
     let game = new MVC.GameController(view);
     game.new();
 });

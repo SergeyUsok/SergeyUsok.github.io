@@ -15,34 +15,35 @@
     <!--<h1>Game of Life</h1>-->
 
     <div class="container">
-        <div class="center-block">
-            <div class="jumbotron">
-                <div class="row">
-                    <div class="col-md-2">
-                        <button type="button" class="btn btn-primary" id="newGameBtn">New game</button>
-                        <button type="button" class="btn btn-primary" id="randomBtn">Random</button>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-inline">
-                            <span><strong>Width</strong></span>
-
+        <div class="jumbotron">
+            <div class="row">
+                <div class="col-lg-3">
+                    <button type="button" class="btn btn-primary" id="newGameBtn">New game</button>
+                    <button type="button" class="btn btn-primary" id="randomBtn">Random</button>
+                </div>
+                <div class="col-lg-6">
+                    <div class="row">
+                        <div class="col-xs-4">
+                            <span class="label-d">Width</span>
                             <div class="input-group">
-                                <input type="text" class="form-control" id="widthInput" inputmode="numeric">
-                                <span class="input-group-addon addon-override">
-                                    <span class="btn-group-vertical">
+                                <input type="text" class="form-control" id="widthInput" />
+                                <div class="input-group-addon addon-override">
+                                    <div class="btn-group-vertical">
                                         <button class="btn btn-default btn-spin" type="button" id="widthUp">
                                             <span class="glyphicon glyphicon-chevron-up" />
                                         </button>
                                         <button class="btn btn-default btn-spin" type="button" id="widthDown">
                                             <span class="glyphicon glyphicon-chevron-down" />
                                         </button>
-                                    </span>
-                                </span>
+                                    </div>
+                                </div>
                             </div>
+                        </div>
 
-                            <span><strong>Height</strong></span>
+                        <div class="col-xs-4">
+                            <span class="label-d">Height</span>
                             <div class="input-group">
-                                <input type="text" class="form-control" id="heightInput" inputmode="numeric">
+                                <input type="text" class="form-control" id="heightInput" />
                                 <span class="input-group-addon addon-override">
                                     <span class="btn-group-vertical">
                                         <button class="btn btn-default btn-spin" type="button" id="heightUp">
@@ -56,18 +57,16 @@
                             </div>
                         </div>
                     </div>
-                    
-                    <div class="col-md-4">
-                        <button type="button" class="btn btn-primary" id="prevBtn">Prevoius</button>
-                        <button type="button" class="btn btn-primary" id="game-state-controller">Start</button>
-                        <button type="button" class="btn btn-primary" id="nextBtn">Next</button>
-                    </div>
+                    </div>                    
+                <div class="col-lg-3">
+                    <button type="button" class="btn btn-primary" id="prevBtn">Prevoius</button>
+                    <button type="button" class="btn btn-primary" id="game-state-controller">Start</button>
+                    <button type="button" class="btn btn-primary" id="nextBtn">Next</button>
                 </div>
-                <div class="row">
-                    <div class="col-md-offset-1 col-sm-offset-1 col-xs-offset-1 col-lg-offset-1">
-                        <div id="board-container">
-                        </div>
-                    </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                    <div class="container" id="board-container" />
                 </div>
             </div>
         </div>

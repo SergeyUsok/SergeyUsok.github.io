@@ -1,3 +1,63 @@
+/// <reference path="Rules.ts" />
+var UnitStates;
+(function (UnitStates) {
+    class AliveState {
+        getRule() {
+            return new Rules.AliveRule();
+        }
+    }
+    UnitStates.AliveState = AliveState;
+    class DeadState {
+        getRule() {
+            return new Rules.DeadRule();
+        }
+    }
+    UnitStates.DeadState = DeadState;
+})(UnitStates || (UnitStates = {}));
+/// <reference path="UnitStates.ts" />
+var states = UnitStates; // just to try use import keyword
+var Models;
+(function (Models) {
+    class Generation {
+        constructor(width, height) {
+            this.width = width;
+            this.height = height;
+            this.board = this.initializeBoard(width, height);
+        }
+        add(unit) {
+            this.board[unit.y][unit.x] = unit;
+        }
+        getUnit(x, y) {
+            return this.board[y][x];
+        }
+        *[Symbol.iterator]() {
+            for (let row of this.board) {
+                for (let unit of row) {
+                    yield unit;
+                }
+            }
+        }
+        initializeBoard(width, height) {
+            let result = [];
+            for (let y = 0; y < height; y++) {
+                result[y] = [];
+                for (let x = 0; x < width; x++) {
+                    result[y][x] = null;
+                }
+            }
+            return result;
+        }
+    }
+    Models.Generation = Generation;
+    class Unit {
+        constructor(x, y, state) {
+            this.state = state;
+            this.x = x;
+            this.y = y;
+        }
+    }
+    Models.Unit = Unit;
+})(Models || (Models = {}));
 /// <reference path="Models.ts" />
 /// <reference path="UnitStates.ts" />
 var Rules;
@@ -49,66 +109,6 @@ var Rules;
     }
     Rules.DeadRule = DeadRule;
 })(Rules || (Rules = {}));
-/// <reference path="Rules.ts" />
-var UnitStates;
-(function (UnitStates) {
-    class AliveState {
-        getRule() {
-            return new Rules.AliveRule();
-        }
-    }
-    UnitStates.AliveState = AliveState;
-    class DeadState {
-        getRule() {
-            return new Rules.DeadRule();
-        }
-    }
-    UnitStates.DeadState = DeadState;
-})(UnitStates || (UnitStates = {}));
-/// <reference path="UnitStates.ts" />
-var states = UnitStates;
-var Models;
-(function (Models) {
-    class Generation {
-        constructor(width, height) {
-            this.width = width;
-            this.height = height;
-            this.board = this.initializeBoard(width, height);
-        }
-        add(unit) {
-            this.board[unit.y][unit.x] = unit;
-        }
-        getUnit(x, y) {
-            return this.board[y][x];
-        }
-        *[Symbol.iterator]() {
-            for (let row of this.board) {
-                for (let unit of row) {
-                    yield unit;
-                }
-            }
-        }
-        initializeBoard(width, height) {
-            let result = [];
-            for (let y = 0; y < height; y++) {
-                result[y] = [];
-                for (let x = 0; x < width; x++) {
-                    result[y][x] = null;
-                }
-            }
-            return result;
-        }
-    }
-    Models.Generation = Generation;
-    class Unit {
-        constructor(x, y, state) {
-            this.state = state;
-            this.x = x;
-            this.y = y;
-        }
-    }
-    Models.Unit = Unit;
-})(Models || (Models = {}));
 /// <reference path="Models.ts" />
 /// <reference path="UnitStates.ts" />
 var Core;
@@ -165,6 +165,7 @@ var MVC;
             this.resetToNotStartedState();
             this.game = Core.Game.createNew(this.view.width, this.view.height);
             let initialGen = this.game.currentGeneration;
+            this.generations.push(initialGen);
             // render empty board with callback that allows on/off alive cells
             this.view.renderInitialBoard((x, y) => {
                 let unit = initialGen.getUnit(x, y);
@@ -221,7 +222,12 @@ var MVC;
             this.view.renderGeneration(this.generations[this.cursor]);
         }
         next() {
-            this.getNewGeneration();
+            this.cursor++;
+            this.checkPreviousAvailable();
+            if (this.cursor >= this.generations.length)
+                this.getNewGeneration();
+            else
+                this.view.renderGeneration(this.generations[this.cursor]);
         }
         checkPreviousAvailable() {
             this.view.changePrevButtonState(this.cursor == 0);
@@ -329,11 +335,11 @@ var MVC;
         }
         updateWidth() {
             if (this.isValid($("#widthInput").val())) {
-                this._height = parseInt($("#widthInput").val());
+                this._width = parseInt($("#widthInput").val());
             }
             else {
-                // do not allow to input incorrect value 
-                $("#widthInput").val(this.height.toString());
+                // do not allow to input incorrect value and set up previous one
+                $("#widthInput").val(this._width.toString());
             }
         }
         updateHeight() {
@@ -341,8 +347,8 @@ var MVC;
                 this._height = parseInt($("#heightInput").val());
             }
             else {
-                // do not allow to input incorrect value 
-                $("#heightInput").val(this.height.toString());
+                // do not allow to input incorrect value and set up previous one
+                $("#heightInput").val(this._height.toString());
             }
         }
         widthUp() {
@@ -381,7 +387,7 @@ var MVC;
     })(GameState || (GameState = {}));
 })(MVC || (MVC = {}));
 $(document).ready(() => {
-    let view = new MVC.View(30, 15);
+    let view = new MVC.View(34, 20);
     let game = new MVC.GameController(view);
     game.new();
 });

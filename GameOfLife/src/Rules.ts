@@ -6,10 +6,10 @@ namespace Rules {
     export abstract class Rule {
 
         public abstract execute(unit: Models.Unit, generation: Models.Generation): Models.Unit
-
+        
         protected countAliveNeighbors(unit: Models.Unit, generation: Models.Generation): number {
             let aliveNeighborsCount = 0;
-
+            
             for (let neighbor of this.getNeighbors(unit, generation)) {
                 if (neighbor.state instanceof UnitStates.AliveState)
                     aliveNeighborsCount++;

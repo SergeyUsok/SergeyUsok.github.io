@@ -1,5 +1,5 @@
 ﻿/// <reference path="UnitStates.ts" />
-import states = UnitStates;
+import states = UnitStates; // just to try use import keyword
 
 namespace Models {
 

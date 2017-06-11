@@ -1,6 +1,8 @@
 ﻿#board-container {
     margin-top: 10px;
-    margin-bottom: 30px;
+    margin-bottom: 10px;
+    white-space: nowrap;
+    overflow-x:scroll;
 }
 
 .tile {
@@ -36,15 +38,14 @@
     border-radius: 0px;
 }
 
-#widthInput {
-    width: 100%;
-}
-
-#heightInput {
-    width: 100%;
-}
-
 .notstarted:hover {
     cursor: pointer;
     background: #73c1fa;
+}
+
+.label-d {
+    display:inline;
+    float:left;
+    font-weight: bolder;
+    margin: 5px 10px 0 0; 
 }
