@@ -7,7 +7,7 @@ Some features of TypeScript lang that were used during Game of Life implementati
 * interface
 * **let** keyword
 * field initialization in ctor
-* iterator
+* [Symbol] iterator
 * namespaces
 * string interpolation (template strings)
 * **yield** keyword
@@ -15,6 +15,7 @@ Some features of TypeScript lang that were used during Game of Life implementati
 * generator functions with \*
 * type aliases (**type** keyword)
 * **declare** keyword (naive declaration of some JQuery functions)
+* reference paths
 
 What was NOT used and still requires to learn:
 
@@ -25,3 +26,4 @@ What was NOT used and still requires to learn:
 * promises
 * union types (|)
 * intersection types (&)
+* enum flags
