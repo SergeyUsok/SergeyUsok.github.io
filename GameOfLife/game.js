@@ -2,12 +2,18 @@
 var UnitStates;
 (function (UnitStates) {
     class AliveState {
+        constructor() {
+            this.name = "Alive";
+        }
         getRule() {
             return new Rules.AliveRule();
         }
     }
     UnitStates.AliveState = AliveState;
     class DeadState {
+        constructor() {
+            this.name = "Dead";
+        }
         getRule() {
             return new Rules.DeadRule();
         }
@@ -20,15 +26,32 @@ var Models;
 (function (Models) {
     class Generation {
         constructor(width, height) {
+            this._population = 0;
             this.width = width;
             this.height = height;
             this.board = this.initializeBoard(width, height);
         }
+        get population() {
+            return this._population;
+        }
         add(unit) {
+            if (this.board[unit.y][unit.x] == null) {
+                if (unit.state instanceof states.AliveState)
+                    this._population++;
+            }
+            else if (this.board[unit.y][unit.x].state instanceof states.AliveState &&
+                unit.state instanceof states.DeadState) {
+                this._population--;
+            }
+            else if (this.board[unit.y][unit.x].state instanceof states.DeadState &&
+                unit.state instanceof states.AliveState) {
+                this._population++;
+            }
             this.board[unit.y][unit.x] = unit;
         }
         getUnit(x, y) {
-            return this.board[y][x];
+            let unit = this.board[y][x];
+            return unit;
         }
         *[Symbol.iterator]() {
             for (let row of this.board) {
@@ -139,8 +162,37 @@ var Core;
                 let newUnit = rule.execute(unit, this._currentGeneration);
                 newGeneration.add(newUnit);
             }
+            let gameOverResult = this.isGameOver(this._currentGeneration, newGeneration);
             this._currentGeneration = newGeneration;
-            return newGeneration;
+            return {
+                generation: newGeneration,
+                isGameOver: gameOverResult.marker,
+                reason: gameOverResult.reason
+            };
+        }
+        // there are 2 possible ways to end game:
+        // 1. New generation has zero population
+        // 2. Game came to a stable  state and no changes in generations expected
+        isGameOver(oldGen, newGen) {
+            if (newGen.population == 0) {
+                return {
+                    reason: "The game came to zero population",
+                    marker: true
+                };
+            }
+            for (var oldUnit of oldGen) {
+                var newUnit = newGen.getUnit(oldUnit.x, oldUnit.y);
+                if (newUnit.state.name !== oldUnit.state.name) {
+                    return {
+                        reason: "",
+                        marker: false
+                    };
+                }
+            }
+            return {
+                reason: "The game came to a stable state",
+                marker: true
+            };
         }
     }
     Core.Game = Game;
@@ -169,11 +221,18 @@ var MVC;
             // render empty board with callback that allows on/off alive cells
             this.view.renderInitialBoard((x, y) => {
                 let unit = initialGen.getUnit(x, y);
-                if (unit.state instanceof UnitStates.AliveState)
-                    unit.state = new UnitStates.DeadState();
-                else if (unit.state instanceof UnitStates.DeadState)
-                    unit.state = new UnitStates.AliveState();
-                return unit.state;
+                if (unit.state instanceof UnitStates.AliveState) {
+                    let newUnit = new Models.Unit(unit.x, unit.y, new UnitStates.DeadState());
+                    initialGen.add(newUnit);
+                    this.view.updatePopulation(initialGen.population);
+                    return newUnit.state;
+                }
+                else {
+                    let newUnit = new Models.Unit(unit.x, unit.y, new UnitStates.AliveState());
+                    initialGen.add(newUnit);
+                    this.view.updatePopulation(initialGen.population);
+                    return newUnit.state;
+                }
             });
         }
         gameStateChanged() {
@@ -204,10 +263,19 @@ var MVC;
             setTimeout(() => this.runGame(), 1000);
         }
         getNewGeneration() {
-            let generation = this.game.nextGeneration();
-            this.generations.push(generation);
+            let result = this.game.nextGeneration();
+            this.generations.push(result.generation);
             this.cursor = this.generations.length - 1;
-            this.view.renderGeneration(generation);
+            this.view.renderGeneration(result.generation);
+            this.view.updateGenNumber(this.cursor);
+            this.view.updatePopulation(result.generation.population);
+            if (result.isGameOver) {
+                this.gameOver(result.reason);
+            }
+        }
+        gameOver(reason) {
+            this.pauseRequested = true;
+            this.view.showGameOver(reason);
         }
         resetToNotStartedState() {
             this.state = GameState.NotStarted;
@@ -215,19 +283,26 @@ var MVC;
             this.view.showNotStartedState();
             this.generations = [];
             this.cursor = 0;
+            this.view.updateGenNumber(0);
+            this.view.updatePopulation(0);
         }
         previous() {
             this.cursor--;
             this.checkPreviousAvailable();
             this.view.renderGeneration(this.generations[this.cursor]);
+            this.view.updateGenNumber(this.cursor);
+            this.view.updatePopulation(this.generations[this.cursor].population);
         }
         next() {
             this.cursor++;
             this.checkPreviousAvailable();
             if (this.cursor >= this.generations.length)
                 this.getNewGeneration();
-            else
+            else {
                 this.view.renderGeneration(this.generations[this.cursor]);
+                this.view.updateGenNumber(this.cursor);
+                this.view.updatePopulation(this.generations[this.cursor].population);
+            }
         }
         checkPreviousAvailable() {
             this.view.changePrevButtonState(this.cursor == 0);
@@ -237,17 +312,23 @@ var MVC;
     }
     MVC.GameController = GameController;
     class View {
-        constructor(_width, _height) {
-            this._width = _width;
-            this._height = _height;
+        constructor() {
+            this._height = 20; // default height
+            this.maxWidth = this.calculateMaxWidth();
+            this._width = this.maxWidth;
             $("#widthInput").on("input", () => this.updateWidth())
-                .val(_width.toString());
+                .val(this.maxWidth.toString());
             $("#heightInput").on("input", () => this.updateHeight())
-                .val(_height.toString());
+                .val(this._height.toString());
             $("#widthUp").click(() => this.widthUp());
             $("#widthDown").click(() => this.widthDown());
             $("#heightUp").click(() => this.heightUp());
             $("#heightDown").click(() => this.heightDown());
+        }
+        calculateMaxWidth() {
+            let availableWidth = $("#board-container").width();
+            const tileWidth = 30; // div width
+            return Math.floor(availableWidth / tileWidth);
         }
         get width() {
             return this._width;
@@ -258,6 +339,19 @@ var MVC;
         onGameStateChanged(callback) {
             $("#game-state-controller").click(callback);
         }
+        updatePopulation(population) {
+            $("#pop-count").html(population.toString());
+        }
+        updateGenNumber(genNumber) {
+            $("#gen-count").html(genNumber.toString());
+        }
+        showGameOver(reason) {
+            $(".game-over-block").show("slow");
+            $(".reason").html(reason);
+            $("#prevBtn").prop("disabled", true);
+            $("#nextBtn").prop("disabled", true);
+            $("#game-state-controller").prop("disabled", true);
+        }
         onNext(callback) {
             $("#nextBtn").click(callback);
         }
@@ -266,6 +360,11 @@ var MVC;
         }
         onNewGame(callback) {
             $("#newGameBtn").click(callback);
+            window.onresize = () => {
+                this.maxWidth = this.calculateMaxWidth();
+                this._width = this.maxWidth;
+                callback();
+            };
         }
         onRandomGame(callback) {
             $("#randomBtn").click(callback);
@@ -307,8 +406,10 @@ var MVC;
         }
         showNotStartedState() {
             $("#game-state-controller").html("Start");
+            $("#game-state-controller").prop("disabled", false);
             $("#prevBtn").prop("disabled", true);
             $("#nextBtn").prop("disabled", true);
+            $(".game-over-block").hide();
         }
         showPausedState() {
             $("#game-state-controller").html("Continue");
@@ -335,12 +436,12 @@ var MVC;
         }
         updateWidth() {
             if (this.isValid($("#widthInput").val())) {
-                this._width = parseInt($("#widthInput").val());
+                let width = parseInt($("#widthInput").val());
+                if (width <= this.maxWidth)
+                    this._width = width;
             }
-            else {
-                // do not allow to input incorrect value and set up previous one
-                $("#widthInput").val(this._width.toString());
-            }
+            // if new value is correct it will be set. If not set onld value
+            $("#widthInput").val(this._width.toString());
         }
         updateHeight() {
             if (this.isValid($("#heightInput").val())) {
@@ -352,7 +453,10 @@ var MVC;
             }
         }
         widthUp() {
-            $("#widthInput").val((++this._width).toString());
+            let width = this._width + 1;
+            if (width <= this.maxWidth)
+                this._width = width;
+            $("#widthInput").val(this._width.toString());
         }
         widthDown() {
             let temp = this._width - 1;
@@ -387,7 +491,7 @@ var MVC;
     })(GameState || (GameState = {}));
 })(MVC || (MVC = {}));
 $(document).ready(() => {
-    let view = new MVC.View(34, 20);
+    let view = new MVC.View();
     let game = new MVC.GameController(view);
     game.new();
 });

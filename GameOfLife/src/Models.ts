@@ -6,6 +6,7 @@ namespace Models {
     export class Generation implements Iterable<Unit> {
 
         private board: Unit[][];
+        private _population: number = 0;
 
         public constructor(width: number, height: number) {
             this.width = width;
@@ -16,12 +17,33 @@ namespace Models {
         public readonly width: number;
         public readonly height: number;
 
+        public get population(): number {
+            return this._population;
+        }
+
         public add(unit: Unit) {
+            if (this.board[unit.y][unit.x] == null)
+            {
+                if (unit.state instanceof states.AliveState)
+                    this._population++;
+            }
+            else if (this.board[unit.y][unit.x].state instanceof states.AliveState &&
+                unit.state instanceof states.DeadState)
+            {
+                this._population--;
+            }
+            else if (this.board[unit.y][unit.x].state instanceof states.DeadState &&
+                unit.state instanceof states.AliveState)
+            {
+                this._population++;
+            }
+
             this.board[unit.y][unit.x] = unit;
         }
 
         public getUnit(x: number, y: number): Unit {
-            return this.board[y][x];
+            let unit = this.board[y][x];
+            return unit;
         }
 
         public *[Symbol.iterator](): Iterator<Unit> {
@@ -48,7 +70,7 @@ namespace Models {
     }
 
     export class Unit {
-        state: states.State;
+        readonly state: states.State;
         readonly x: number;
         readonly y: number;
 

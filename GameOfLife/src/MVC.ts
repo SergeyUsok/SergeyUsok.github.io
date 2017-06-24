@@ -27,11 +27,18 @@ namespace MVC {
             // render empty board with callback that allows on/off alive cells
             this.view.renderInitialBoard((x, y) => {
                 let unit = initialGen.getUnit(x, y);
-                if (unit.state instanceof UnitStates.AliveState)
-                    unit.state = new UnitStates.DeadState();
-                else if (unit.state instanceof UnitStates.DeadState)
-                    unit.state = new UnitStates.AliveState();
-                return unit.state;
+                if (unit.state instanceof UnitStates.AliveState) {
+                    let newUnit = new Models.Unit(unit.x, unit.y, new UnitStates.DeadState());
+                    initialGen.add(newUnit);
+                    this.view.updatePopulation(initialGen.population);
+                    return newUnit.state;
+                }
+                else {
+                    let newUnit = new Models.Unit(unit.x, unit.y, new UnitStates.AliveState());
+                    initialGen.add(newUnit);
+                    this.view.updatePopulation(initialGen.population);
+                    return newUnit.state;
+                }
             });
         }
 
@@ -67,10 +74,21 @@ namespace MVC {
         }
 
         private getNewGeneration() {
-            let generation = this.game.nextGeneration();
-            this.generations.push(generation);
+            let result = this.game.nextGeneration();
+            this.generations.push(result.generation);
             this.cursor = this.generations.length - 1;
-            this.view.renderGeneration(generation);
+            this.view.renderGeneration(result.generation);
+            this.view.updateGenNumber(this.cursor);
+            this.view.updatePopulation(result.generation.population);
+
+            if (result.isGameOver) {
+                this.gameOver(result.reason);
+            } 
+        }
+
+        private gameOver(reason: string): void {
+            this.pauseRequested = true;
+            this.view.showGameOver(reason);
         }
 
         private resetToNotStartedState() {
@@ -79,12 +97,16 @@ namespace MVC {
             this.view.showNotStartedState();
             this.generations = [];
             this.cursor = 0;
+            this.view.updateGenNumber(0);
+            this.view.updatePopulation(0);
         }
 
         private previous(): void {
             this.cursor--;
             this.checkPreviousAvailable();
             this.view.renderGeneration(this.generations[this.cursor]);
+            this.view.updateGenNumber(this.cursor);
+            this.view.updatePopulation(this.generations[this.cursor].population);
         }
 
         private next(): void {
@@ -93,8 +115,11 @@ namespace MVC {
 
             if (this.cursor >= this.generations.length)
                 this.getNewGeneration();
-            else
+            else {
                 this.view.renderGeneration(this.generations[this.cursor]);
+                this.view.updateGenNumber(this.cursor);
+                this.view.updatePopulation(this.generations[this.cursor].population);
+            }
         }
 
         private checkPreviousAvailable(): void {
@@ -108,18 +133,30 @@ namespace MVC {
 
     export class View {
 
-        public constructor(private _width: number, private _height: number) {
+        private maxWidth: number;
+        private _height: number = 20; // default height
+        private _width: number;
+
+        public constructor() {
+            this.maxWidth = this.calculateMaxWidth();
+            this._width = this.maxWidth;
 
             $("#widthInput").on("input", () => this.updateWidth())
-                .val(_width.toString());
+                .val(this.maxWidth.toString());
 
             $("#heightInput").on("input", () => this.updateHeight())
-                .val(_height.toString());
+                .val(this._height.toString());
 
             $("#widthUp").click(() => this.widthUp());
             $("#widthDown").click(() => this.widthDown());
             $("#heightUp").click(() => this.heightUp());
             $("#heightDown").click(() => this.heightDown());
+        }
+
+        private calculateMaxWidth(): number {
+            let availableWidth = $("#board-container").width();
+            const tileWidth = 30; // div width
+            return Math.floor(availableWidth / tileWidth);
         }
 
         public get width(): number {
@@ -134,6 +171,22 @@ namespace MVC {
             $("#game-state-controller").click(callback);
         }
 
+        public updatePopulation(population: number): void {
+            $("#pop-count").html(population.toString());
+        }
+
+        public updateGenNumber(genNumber: number): void {
+            $("#gen-count").html(genNumber.toString());
+        }
+
+        public showGameOver(reason: string): void {
+            $(".game-over-block").show("slow");
+            $(".reason").html(reason);
+            $("#prevBtn").prop("disabled", true);
+            $("#nextBtn").prop("disabled", true);
+            $("#game-state-controller").prop("disabled", true);
+        }
+
         public onNext(callback: () => void): void {
             $("#nextBtn").click(callback);
         }
@@ -144,6 +197,11 @@ namespace MVC {
 
         public onNewGame(callback: () => void): void {
             $("#newGameBtn").click(callback);
+            window.onresize = () => {
+                this.maxWidth = this.calculateMaxWidth();
+                this._width = this.maxWidth;
+                callback();
+            }
         }
 
         public onRandomGame(callback: () => void): void {
@@ -199,8 +257,10 @@ namespace MVC {
 
         public showNotStartedState(): void {
             $("#game-state-controller").html("Start");
+            $("#game-state-controller").prop("disabled", false);
             $("#prevBtn").prop("disabled", true);
             $("#nextBtn").prop("disabled", true);
+            $(".game-over-block").hide();
         }
 
         public showPausedState(): void {
@@ -215,7 +275,6 @@ namespace MVC {
         private attachOnClickHandler(tile: HTMLElement, changeState: (x: number, y: number) => UnitStates.State): void {
             // onclick event processing
             $(tile).click(() => {
-
                 // get coordinates of clicked node 
                 let [x, y] = tile.id.split('-'); // Array Destructuring
                 // get state after click was processed
@@ -233,12 +292,13 @@ namespace MVC {
 
         private updateWidth(): void {
             if (this.isValid($("#widthInput").val())) {
-                this._width = parseInt($("#widthInput").val());
+                let width = parseInt($("#widthInput").val());
+                if (width <= this.maxWidth)
+                    this._width = width;
             }
-            else {
-                // do not allow to input incorrect value and set up previous one
-                $("#widthInput").val(this._width.toString());
-            }
+
+            // if new value is correct it will be set. If not set onld value
+            $("#widthInput").val(this._width.toString());
         }
 
         private updateHeight(): void {
@@ -252,7 +312,12 @@ namespace MVC {
         }
 
         private widthUp(): void {
-            $("#widthInput").val((++this._width).toString());
+            let width = this._width + 1;
+
+            if (width <= this.maxWidth)
+                this._width = width;
+            
+            $("#widthInput").val(this._width.toString());
         }
 
         private widthDown(): void {
@@ -295,7 +360,7 @@ namespace MVC {
 }
 
 $(document).ready(() => {
-    let view = new MVC.View(34, 20);
+    let view = new MVC.View();
     let game = new MVC.GameController(view);
     game.new();
 });

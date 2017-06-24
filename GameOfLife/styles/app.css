@@ -1,8 +1,11 @@
-﻿#board-container {
-    margin-top: 10px;
-    margin-bottom: 10px;
-    white-space: nowrap;
-    overflow-x:scroll;
+﻿.game-container {
+    position:relative;
+    left:0;
+    top:0;
+}
+
+#board-container {
+    margin: 10px 15px 10px 15px;
 }
 
 .tile {
@@ -43,9 +46,52 @@
     background: #73c1fa;
 }
 
-.label-d {
-    display:inline;
+.dimension-label {
     float:left;
     font-weight: bolder;
     margin: 5px 10px 0 0; 
+}
+
+.info-panel {
+    margin-left: 15px;
+    margin-top: 20px;
+    margin-bottom: 5px;
+}
+
+/*#08d2d0*/
+
+.info-label {
+    display: inline-block;
+    padding: 5px 14px;
+    background-color: #007fdf;
+    border: 1px solid white;
+    border-radius: 15px;
+    color: aliceblue;
+}
+
+#gen-count,
+#pop-count {
+    font-weight:bolder;
+    color:#bed9ec;
+}
+
+.game-over-block {
+  z-index: 100;
+  position: absolute;
+  color: forestgreen;
+  display: none;
+  
+  margin-left: 6vw;
+  margin-top: 5vh;
+}
+
+.game-over {
+  font-size: calc(6vw + 6vh + 2vmin);
+  font-weight: bold;
+}
+
+.reason {
+  font-size: calc(1vw + 1vh + 1vmin);
+  font-weight: bold;
+  display:inline-block;
 }
