@@ -16,6 +16,7 @@ Some features of TypeScript lang that were used during Game of Life implementati
 * type aliases (**type** keyword)
 * **declare** keyword (naive declaration of some JQuery functions)
 * reference paths
+* array destructuring
 
 What was NOT used and still requires to learn:
 
