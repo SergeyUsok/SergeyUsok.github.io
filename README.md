@@ -1,4 +1,4 @@
-###### Playing with JavaScript, AngularJS, TypeScript, CSS, HTML and Bootstrap
+#### Playing with JavaScript, AngularJS, TypeScript, CSS, HTML and Bootstrap
 
 Some features of TypeScript lang that were used during Game of Life implementation:
 
