@@ -1,3 +1,54 @@
+/// <reference path="Models.ts" />
+/// <reference path="UnitStates.ts" />
+var Rules;
+(function (Rules) {
+    class Rule {
+        countAliveNeighbors(unit, generation) {
+            let aliveNeighborsCount = 0;
+            for (let neighbor of this.getNeighbors(unit, generation)) {
+                if (neighbor.state instanceof UnitStates.AliveState)
+                    aliveNeighborsCount++;
+            }
+            return aliveNeighborsCount;
+        }
+        *getNeighbors(unit, generation) {
+            for (let i = -1; i < 2; i++) {
+                for (let j = -1; j < 2; j++) {
+                    // skip current
+                    if (i == 0 && j == 0)
+                        continue;
+                    let neighborX = this.getCoordinate(unit.x + i, generation.width);
+                    let neighborY = this.getCoordinate(unit.y + j, generation.height);
+                    yield generation.getUnit(neighborX, neighborY);
+                }
+            }
+        }
+        getCoordinate(maybeValidCoord, border) {
+            if (maybeValidCoord < 0)
+                return border - 1;
+            if (maybeValidCoord >= border)
+                return 0;
+            return maybeValidCoord;
+        }
+    }
+    Rules.Rule = Rule;
+    class AliveRule extends Rule {
+        execute(unit, generation) {
+            let aliveNeighborsCount = this.countAliveNeighbors(unit, generation);
+            return aliveNeighborsCount >= 2 && aliveNeighborsCount < 4 ?
+                unit :
+                new Models.Unit(unit.x, unit.y, new UnitStates.DeadState());
+        }
+    }
+    Rules.AliveRule = AliveRule;
+    class DeadRule extends Rule {
+        execute(unit, generation) {
+            let aliveNeighborsCount = this.countAliveNeighbors(unit, generation);
+            return aliveNeighborsCount == 3 ? new Models.Unit(unit.x, unit.y, new UnitStates.AliveState()) : unit;
+        }
+    }
+    Rules.DeadRule = DeadRule;
+})(Rules || (Rules = {}));
 /// <reference path="Rules.ts" />
 var UnitStates;
 (function (UnitStates) {
@@ -83,57 +134,6 @@ var Models;
 })(Models || (Models = {}));
 /// <reference path="Models.ts" />
 /// <reference path="UnitStates.ts" />
-var Rules;
-(function (Rules) {
-    class Rule {
-        countAliveNeighbors(unit, generation) {
-            let aliveNeighborsCount = 0;
-            for (let neighbor of this.getNeighbors(unit, generation)) {
-                if (neighbor.state instanceof UnitStates.AliveState)
-                    aliveNeighborsCount++;
-            }
-            return aliveNeighborsCount;
-        }
-        *getNeighbors(unit, generation) {
-            for (let i = -1; i < 2; i++) {
-                for (let j = -1; j < 2; j++) {
-                    // skip current
-                    if (i == 0 && j == 0)
-                        continue;
-                    let neighborX = this.getCoordinate(unit.x + i, generation.width);
-                    let neighborY = this.getCoordinate(unit.y + j, generation.height);
-                    yield generation.getUnit(neighborX, neighborY);
-                }
-            }
-        }
-        getCoordinate(maybeValidCoord, border) {
-            if (maybeValidCoord < 0)
-                return border - 1;
-            if (maybeValidCoord >= border)
-                return 0;
-            return maybeValidCoord;
-        }
-    }
-    Rules.Rule = Rule;
-    class AliveRule extends Rule {
-        execute(unit, generation) {
-            let aliveNeighborsCount = this.countAliveNeighbors(unit, generation);
-            return aliveNeighborsCount >= 2 && aliveNeighborsCount < 4 ?
-                unit :
-                new Models.Unit(unit.x, unit.y, new UnitStates.DeadState());
-        }
-    }
-    Rules.AliveRule = AliveRule;
-    class DeadRule extends Rule {
-        execute(unit, generation) {
-            let aliveNeighborsCount = this.countAliveNeighbors(unit, generation);
-            return aliveNeighborsCount == 3 ? new Models.Unit(unit.x, unit.y, new UnitStates.AliveState()) : unit;
-        }
-    }
-    Rules.DeadRule = DeadRule;
-})(Rules || (Rules = {}));
-/// <reference path="Models.ts" />
-/// <reference path="UnitStates.ts" />
 var Core;
 (function (Core) {
     class Game {
@@ -180,8 +180,8 @@ var Core;
                     marker: true
                 };
             }
-            for (var oldUnit of oldGen) {
-                var newUnit = newGen.getUnit(oldUnit.x, oldUnit.y);
+            for (let oldUnit of oldGen) {
+                let newUnit = newGen.getUnit(oldUnit.x, oldUnit.y);
                 if (newUnit.state.name !== oldUnit.state.name) {
                     return {
                         reason: "",
@@ -341,6 +341,10 @@ var MVC;
         }
         updatePopulation(population) {
             $("#pop-count").html(population.toString());
+            if (population > 0 && $("#game-state-controller").prop('disabled'))
+                $("#game-state-controller").prop('disabled', false);
+            else if (population == 0 && !$("#game-state-controller").prop('disabled'))
+                $("#game-state-controller").prop('disabled', true);
         }
         updateGenNumber(genNumber) {
             $("#gen-count").html(genNumber.toString());

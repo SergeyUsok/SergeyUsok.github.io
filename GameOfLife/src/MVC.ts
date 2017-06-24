@@ -173,6 +173,13 @@ namespace MVC {
 
         public updatePopulation(population: number): void {
             $("#pop-count").html(population.toString());
+
+            if (population > 0 && $("#game-state-controller").prop('disabled'))
+                $("#game-state-controller").prop('disabled', false);
+
+            else if (population == 0 && !$("#game-state-controller").prop('disabled'))
+                $("#game-state-controller").prop('disabled', true);
+
         }
 
         public updateGenNumber(genNumber: number): void {

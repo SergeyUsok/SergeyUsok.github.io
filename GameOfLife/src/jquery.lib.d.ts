@@ -15,9 +15,9 @@ interface JQuery {
     appendTo(target: any): JQuery;
     addClass(cls: string): JQuery;
     removeClass(cls: string): JQuery;
-    attr(name: string, value?: string): any;
+    attr(name: string, value?: string): JQuery;
     html(value: string): JQuery;
-    prop(name: string, value?: any): any;
+    prop(name: string, value?: any): JQuery;
     find(selector: string): JQuery;
     off(event?: string): JQuery;
     width(): number;

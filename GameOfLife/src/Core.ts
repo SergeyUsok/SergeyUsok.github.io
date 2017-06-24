@@ -67,10 +67,9 @@ namespace Core {
                     marker: true
                 };
             }
-                
-
-            for (var oldUnit of oldGen) {
-                var newUnit = newGen.getUnit(oldUnit.x, oldUnit.y);
+            
+            for (let oldUnit of oldGen) {
+                let newUnit = newGen.getUnit(oldUnit.x, oldUnit.y);
                 if (newUnit.state.name !== oldUnit.state.name) {
                     return {
                         reason: "",
