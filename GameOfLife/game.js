@@ -1,54 +1,3 @@
-/// <reference path="Models.ts" />
-/// <reference path="UnitStates.ts" />
-var Rules;
-(function (Rules) {
-    class Rule {
-        countAliveNeighbors(unit, generation) {
-            let aliveNeighborsCount = 0;
-            for (let neighbor of this.getNeighbors(unit, generation)) {
-                if (neighbor.state instanceof UnitStates.AliveState)
-                    aliveNeighborsCount++;
-            }
-            return aliveNeighborsCount;
-        }
-        *getNeighbors(unit, generation) {
-            for (let i = -1; i < 2; i++) {
-                for (let j = -1; j < 2; j++) {
-                    // skip current
-                    if (i == 0 && j == 0)
-                        continue;
-                    let neighborX = this.getCoordinate(unit.x + i, generation.width);
-                    let neighborY = this.getCoordinate(unit.y + j, generation.height);
-                    yield generation.getUnit(neighborX, neighborY);
-                }
-            }
-        }
-        getCoordinate(maybeValidCoord, border) {
-            if (maybeValidCoord < 0)
-                return border - 1;
-            if (maybeValidCoord >= border)
-                return 0;
-            return maybeValidCoord;
-        }
-    }
-    Rules.Rule = Rule;
-    class AliveRule extends Rule {
-        execute(unit, generation) {
-            let aliveNeighborsCount = this.countAliveNeighbors(unit, generation);
-            return aliveNeighborsCount >= 2 && aliveNeighborsCount < 4 ?
-                unit :
-                new Models.Unit(unit.x, unit.y, new UnitStates.DeadState());
-        }
-    }
-    Rules.AliveRule = AliveRule;
-    class DeadRule extends Rule {
-        execute(unit, generation) {
-            let aliveNeighborsCount = this.countAliveNeighbors(unit, generation);
-            return aliveNeighborsCount == 3 ? new Models.Unit(unit.x, unit.y, new UnitStates.AliveState()) : unit;
-        }
-    }
-    Rules.DeadRule = DeadRule;
-})(Rules || (Rules = {}));
 /// <reference path="Rules.ts" />
 var UnitStates;
 (function (UnitStates) {
@@ -57,7 +6,7 @@ var UnitStates;
             this.name = "Alive";
         }
         getRule() {
-            return new Rules.AliveRule();
+            return RulesCache.getRule(this.name);
         }
     }
     UnitStates.AliveState = AliveState;
@@ -66,7 +15,7 @@ var UnitStates;
             this.name = "Dead";
         }
         getRule() {
-            return new Rules.DeadRule();
+            return RulesCache.getRule(this.name);
         }
     }
     UnitStates.DeadState = DeadState;
@@ -128,6 +77,70 @@ var Models;
     }
     Models.Unit = Unit;
 })(Models || (Models = {}));
+/// <reference path="Models.ts" />
+/// <reference path="UnitStates.ts" />
+var RulesCache;
+(function (RulesCache) {
+    class Rule {
+        countAliveNeighbors(unit, generation) {
+            let aliveNeighborsCount = 0;
+            for (let neighbor of this.getNeighbors(unit, generation)) {
+                if (neighbor.state instanceof states.AliveState)
+                    aliveNeighborsCount++;
+            }
+            return aliveNeighborsCount;
+        }
+        *getNeighbors(unit, generation) {
+            for (let i = -1; i < 2; i++) {
+                for (let j = -1; j < 2; j++) {
+                    // skip current
+                    if (i == 0 && j == 0)
+                        continue;
+                    let neighborX = this.getCoordinate(unit.x + i, generation.width);
+                    let neighborY = this.getCoordinate(unit.y + j, generation.height);
+                    yield generation.getUnit(neighborX, neighborY);
+                }
+            }
+        }
+        getCoordinate(maybeValidCoord, border) {
+            if (maybeValidCoord < 0)
+                return border - 1;
+            if (maybeValidCoord >= border)
+                return 0;
+            return maybeValidCoord;
+        }
+    }
+    RulesCache.Rule = Rule;
+    class AliveRule extends Rule {
+        execute(unit, generation) {
+            let aliveNeighborsCount = this.countAliveNeighbors(unit, generation);
+            return aliveNeighborsCount >= 2 && aliveNeighborsCount < 4 ?
+                unit :
+                new Models.Unit(unit.x, unit.y, new states.DeadState());
+        }
+    }
+    class DeadRule extends Rule {
+        execute(unit, generation) {
+            let aliveNeighborsCount = this.countAliveNeighbors(unit, generation);
+            return aliveNeighborsCount == 3 ?
+                new Models.Unit(unit.x, unit.y, new states.AliveState()) :
+                unit;
+        }
+    }
+    let cache = getCache();
+    function getRule(rule) {
+        if (!cache.has(rule))
+            throw new Error(`Provided ${rule} is not present in cache`);
+        return cache.get(rule);
+    }
+    RulesCache.getRule = getRule;
+    function getCache() {
+        let cache = new Map();
+        cache.set("Dead", new DeadRule());
+        cache.set("Alive", new AliveRule());
+        return cache;
+    }
+})(RulesCache || (RulesCache = {}));
 /// <reference path="Models.ts" />
 /// <reference path="UnitStates.ts" />
 var Core;
@@ -399,11 +412,14 @@ var MVC;
         }
         onNewGame(callback) {
             $("#newGameBtn").click(callback);
-            window.onresize = () => {
-                this.maxWidth = this.calculateMaxWidth();
-                this._width = this.maxWidth;
-                callback();
-            };
+            $(window).on('resize', () => {
+                let tempWidth = this.calculateMaxWidth();
+                if (tempWidth != this.maxWidth) {
+                    this.maxWidth = tempWidth;
+                    this._width = this.maxWidth;
+                    callback();
+                }
+            });
         }
         onRandomGame(callback) {
             $("#randomBtn").click(callback);

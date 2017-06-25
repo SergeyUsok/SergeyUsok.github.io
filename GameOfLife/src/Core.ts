@@ -1,15 +1,15 @@
 ﻿/// <reference path="Models.ts" />
 /// <reference path="UnitStates.ts" />
 
-type IterationResult = {
-    generation: Models.Generation;
-    isGameOver: boolean;
-    reason: string;
-}
-
-type Pair = { x: number; y: number; }
-
 namespace Core {
+
+    type IterationResult = {
+        generation: Models.Generation;
+        isGameOver: boolean;
+        reason: string;
+    }
+
+    type Pair = { x: number; y: number; }
 
     export class Game {
         private _currentGeneration: Models.Generation
@@ -46,8 +46,9 @@ namespace Core {
         public nextGeneration(): IterationResult {
 
             var newGeneration = new Models.Generation(this._currentGeneration.width, this._currentGeneration.height);
-
+            
             for (let unit of this._currentGeneration) {
+                
                 let rule = unit.state.getRule();
                 let newUnit = rule.execute(unit, this._currentGeneration);
                 newGeneration.add(newUnit);

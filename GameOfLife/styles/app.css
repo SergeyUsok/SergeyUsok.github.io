@@ -27,12 +27,12 @@
     display: inline-block;
     width: 20px;
     height: 20px;
-    animation-name: birth;
+    /*animation-name: birth;
     animation-duration: 300ms;
     animation-timing-function: linear;
     animation-delay: 0s;
     animation-iteration-count: 1;
-    animation-direction: normal;
+    animation-direction: normal;*/
 }
 
 @keyframes birth {

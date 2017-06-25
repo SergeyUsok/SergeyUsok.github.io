@@ -3,7 +3,7 @@
 namespace UnitStates {
 
     export interface State {
-        getRule(): Rules.Rule;
+        getRule(): RulesCache.Rule;
         readonly name: string;
     }
 
@@ -11,8 +11,8 @@ namespace UnitStates {
 
         public readonly name: string = "Alive";
 
-        public getRule(): Rules.Rule {
-            return new Rules.AliveRule();
+        public getRule(): RulesCache.Rule {
+            return RulesCache.getRule(this.name);
         }
     }
 
@@ -20,8 +20,8 @@ namespace UnitStates {
 
         public readonly name: string = "Dead";
 
-        public getRule(): Rules.Rule {
-            return new Rules.DeadRule();
-        }        
+        public getRule(): RulesCache.Rule {
+            return RulesCache.getRule(this.name);
+        }
     }
 }

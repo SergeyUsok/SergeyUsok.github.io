@@ -212,11 +212,15 @@ namespace MVC {
 
         public onNewGame(callback: () => void): void {
             $("#newGameBtn").click(callback);
-            window.onresize = () => {
-                this.maxWidth = this.calculateMaxWidth();
-                this._width = this.maxWidth;
-                callback();
-            }
+            
+            $(window).on('resize', () => {
+                let tempWidth = this.calculateMaxWidth();
+                if (tempWidth != this.maxWidth) {
+                    this.maxWidth = tempWidth;
+                    this._width = this.maxWidth;
+                    callback();
+                }
+            });
         }
 
         public onRandomGame(callback: () => void): void {

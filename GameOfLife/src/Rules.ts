@@ -1,17 +1,17 @@
 ﻿/// <reference path="Models.ts" />
 /// <reference path="UnitStates.ts" />
 
-namespace Rules {
+namespace RulesCache {
 
     export abstract class Rule {
 
-        public abstract execute(unit: Models.Unit, generation: Models.Generation): Models.Unit
+        public abstract execute(unit: Models.Unit, generation: Models.Generation): Models.Unit;
         
         protected countAliveNeighbors(unit: Models.Unit, generation: Models.Generation): number {
             let aliveNeighborsCount = 0;
             
             for (let neighbor of this.getNeighbors(unit, generation)) {
-                if (neighbor.state instanceof UnitStates.AliveState)
+                if (neighbor.state instanceof states.AliveState)
                     aliveNeighborsCount++;
             }
 
@@ -45,7 +45,7 @@ namespace Rules {
         }
     }
 
-    export class AliveRule extends Rule {
+    class AliveRule extends Rule {
 
         public execute(unit: Models.Unit, generation: Models.Generation): Models.Unit {
 
@@ -53,17 +53,36 @@ namespace Rules {
 
             return aliveNeighborsCount >= 2 && aliveNeighborsCount < 4 ?
                 unit :
-                new Models.Unit(unit.x, unit.y, new UnitStates.DeadState());
+                new Models.Unit(unit.x, unit.y, new states.DeadState());
         }
     }
 
-    export class DeadRule extends Rule {
+    class DeadRule extends Rule {
 
         public execute(unit: Models.Unit, generation: Models.Generation): Models.Unit {
 
             let aliveNeighborsCount = this.countAliveNeighbors(unit, generation);
 
-            return aliveNeighborsCount == 3 ? new Models.Unit(unit.x, unit.y, new UnitStates.AliveState()) : unit;
+            return aliveNeighborsCount == 3 ?
+                new Models.Unit(unit.x, unit.y, new states.AliveState()) :
+                unit;
         }
     }
+
+    let cache: Map<string, Rule> = getCache();
+
+    export function getRule(rule: string) {
+        if (!cache.has(rule))
+            throw new Error(`Provided ${rule} is not present in cache`);
+
+        return cache.get(rule);
+    }
+
+    function getCache(): Map<string, Rule> {
+        let cache = new Map<string, Rule>();
+        cache.set("Dead", new DeadRule());
+        cache.set("Alive", new AliveRule());
+        return cache;
+    }
+
 }
