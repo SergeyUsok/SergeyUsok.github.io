@@ -25,21 +25,7 @@ namespace MVC {
             let initialGen = this.game.currentGeneration;
             this.generations.push(initialGen);
             // render empty board with callback that allows on/off alive cells
-            this.view.renderInitialBoard((x, y) => {
-                let unit = initialGen.getUnit(x, y);
-                if (unit.state instanceof UnitStates.AliveState) {
-                    let newUnit = new Models.Unit(unit.x, unit.y, new UnitStates.DeadState());
-                    initialGen.add(newUnit);
-                    this.view.updatePopulation(initialGen.population);
-                    return newUnit.state;
-                }
-                else {
-                    let newUnit = new Models.Unit(unit.x, unit.y, new UnitStates.AliveState());
-                    initialGen.add(newUnit);
-                    this.view.updatePopulation(initialGen.population);
-                    return newUnit.state;
-                }
-            });
+            this.view.renderInitialBoard((x, y) => this.updateUnitState(x, y));
         }
 
         private gameStateChanged() {
@@ -127,7 +113,29 @@ namespace MVC {
         }
 
         private randomGame() {
+            this.resetToNotStartedState();
+            this.game = Core.Game.withRandomGeneration(this.view.width, this.view.height);
+            let initialGen = this.game.currentGeneration;
+            this.generations.push(initialGen);
+            // render empty board with callback that allows on/off alive cells
+            this.view.renderInitialBoard((x, y) => this.updateUnitState(x, y), initialGen);
+            this.view.updatePopulation(initialGen.population);
+        }
 
+        private updateUnitState(x: number, y: number): UnitStates.State {
+            let initialGen = this.generations[0];
+            let unit = initialGen.getUnit(x, y);
+            let newUnit: Models.Unit;
+            if (unit.state instanceof UnitStates.AliveState) {
+                newUnit = new Models.Unit(unit.x, unit.y, new UnitStates.DeadState());
+            }
+            else {
+                newUnit = new Models.Unit(unit.x, unit.y, new UnitStates.AliveState());
+            }
+
+            initialGen.add(newUnit);
+            this.view.updatePopulation(initialGen.population);
+            return newUnit.state;
         }
     }
 
@@ -215,7 +223,7 @@ namespace MVC {
             $("#randomBtn").click(callback);
         }
 
-        public renderInitialBoard(changeState: (x: number, y: number) => UnitStates.State): void {
+        public renderInitialBoard(changeState: (x: number, y: number) => UnitStates.State, board?: Models.Generation): void {
 
             $("#board-container").empty();
 
@@ -227,7 +235,11 @@ namespace MVC {
                     let tile = $("<div/>").attr("id", `${x}-${y}`)
                         .addClass("tile notstarted")
                         .get(0);
-                    
+
+                    if (board && board.getUnit(x, y).state instanceof UnitStates.AliveState) {
+                        $("<div/>").addClass("alive").appendTo(tile);
+                    }
+
                     this.attachOnClickHandler(tile, changeState);
                     row.appendChild(tile);
                 }

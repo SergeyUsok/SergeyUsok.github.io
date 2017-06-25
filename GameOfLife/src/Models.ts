@@ -22,12 +22,7 @@ namespace Models {
         }
 
         public add(unit: Unit) {
-            if (this.board[unit.y][unit.x] == null)
-            {
-                if (unit.state instanceof states.AliveState)
-                    this._population++;
-            }
-            else if (this.board[unit.y][unit.x].state instanceof states.AliveState &&
+            if (this.board[unit.y][unit.x].state instanceof states.AliveState &&
                 unit.state instanceof states.DeadState)
             {
                 this._population--;
@@ -61,7 +56,7 @@ namespace Models {
             for (let y = 0; y < height; y++) {
                 result[y] = [];
                 for (let x = 0; x < width; x++) {
-                    result[y][x] = null;
+                    result[y][x] = new Unit(x, y, new states.DeadState());
                 }
             }
 

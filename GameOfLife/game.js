@@ -86,11 +86,7 @@ var Models;
             return this._population;
         }
         add(unit) {
-            if (this.board[unit.y][unit.x] == null) {
-                if (unit.state instanceof states.AliveState)
-                    this._population++;
-            }
-            else if (this.board[unit.y][unit.x].state instanceof states.AliveState &&
+            if (this.board[unit.y][unit.x].state instanceof states.AliveState &&
                 unit.state instanceof states.DeadState) {
                 this._population--;
             }
@@ -116,7 +112,7 @@ var Models;
             for (let y = 0; y < height; y++) {
                 result[y] = [];
                 for (let x = 0; x < width; x++) {
-                    result[y][x] = null;
+                    result[y][x] = new Unit(x, y, new states.DeadState());
                 }
             }
             return result;
@@ -142,18 +138,23 @@ var Core;
         }
         static createNew(width, height) {
             let emptyGeneration = new Models.Generation(width, height);
-            for (let y = 0; y < height; y++) {
-                for (let x = 0; x < width; x++) {
-                    let unit = new Models.Unit(x, y, new UnitStates.DeadState());
-                    emptyGeneration.add(unit);
-                }
-            }
             return new Game(emptyGeneration);
         }
         get currentGeneration() {
             return this._currentGeneration;
         }
-        static fromRandomGeneration(width, height) {
+        static withRandomGeneration(width, height) {
+            let emptyGeneration = new Models.Generation(width, height);
+            let flattened = this.flattenBoard(width, height);
+            let target = this.getTargetCount(width, height);
+            for (let i = 1; i <= target; i++) {
+                let index = this.getRandom(1, flattened.length) - 1; // since index zero based subtract 1
+                let pair = flattened[index];
+                flattened.splice(index, 1); // remove already used item
+                let unit = new Models.Unit(pair.x, pair.y, new states.AliveState());
+                emptyGeneration.add(unit);
+            }
+            return new Game(emptyGeneration);
         }
         nextGeneration() {
             var newGeneration = new Models.Generation(this._currentGeneration.width, this._currentGeneration.height);
@@ -172,7 +173,7 @@ var Core;
         }
         // there are 2 possible ways to end game:
         // 1. New generation has zero population
-        // 2. Game came to a stable  state and no changes in generations expected
+        // 2. Game came to a stable state and no changes in generations expected
         isGameOver(oldGen, newGen) {
             if (newGen.population == 0) {
                 return {
@@ -193,6 +194,33 @@ var Core;
                 reason: "The game came to a stable state",
                 marker: true
             };
+        }
+        // board like:
+        // | 1 | 2 | 3 |
+        // | 4 | 5 | 6 |
+        // will become like
+        // 1 2 3 4 5 6
+        static flattenBoard(width, height) {
+            let flattened = [];
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    flattened.push({ x, y });
+                }
+            }
+            return flattened;
+        }
+        static getTargetCount(width, height) {
+            const lowerBound = 10; // lower percent of alive units
+            const upperBound = 70; // upper percent of alive units
+            let totalSize = width * height;
+            // get number of percent (from 10 to 70) of board that should be filled by alive units
+            let actualPercent = this.getRandom(lowerBound, upperBound);
+            // calculate actual number of alive units
+            let target = actualPercent / 100 * totalSize;
+            return Math.round(target);
+        }
+        static getRandom(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
         }
     }
     Core.Game = Game;
@@ -219,21 +247,7 @@ var MVC;
             let initialGen = this.game.currentGeneration;
             this.generations.push(initialGen);
             // render empty board with callback that allows on/off alive cells
-            this.view.renderInitialBoard((x, y) => {
-                let unit = initialGen.getUnit(x, y);
-                if (unit.state instanceof UnitStates.AliveState) {
-                    let newUnit = new Models.Unit(unit.x, unit.y, new UnitStates.DeadState());
-                    initialGen.add(newUnit);
-                    this.view.updatePopulation(initialGen.population);
-                    return newUnit.state;
-                }
-                else {
-                    let newUnit = new Models.Unit(unit.x, unit.y, new UnitStates.AliveState());
-                    initialGen.add(newUnit);
-                    this.view.updatePopulation(initialGen.population);
-                    return newUnit.state;
-                }
-            });
+            this.view.renderInitialBoard((x, y) => this.updateUnitState(x, y));
         }
         gameStateChanged() {
             switch (this.state) {
@@ -308,6 +322,27 @@ var MVC;
             this.view.changePrevButtonState(this.cursor == 0);
         }
         randomGame() {
+            this.resetToNotStartedState();
+            this.game = Core.Game.withRandomGeneration(this.view.width, this.view.height);
+            let initialGen = this.game.currentGeneration;
+            this.generations.push(initialGen);
+            // render empty board with callback that allows on/off alive cells
+            this.view.renderInitialBoard((x, y) => this.updateUnitState(x, y), initialGen);
+            this.view.updatePopulation(initialGen.population);
+        }
+        updateUnitState(x, y) {
+            let initialGen = this.generations[0];
+            let unit = initialGen.getUnit(x, y);
+            let newUnit;
+            if (unit.state instanceof UnitStates.AliveState) {
+                newUnit = new Models.Unit(unit.x, unit.y, new UnitStates.DeadState());
+            }
+            else {
+                newUnit = new Models.Unit(unit.x, unit.y, new UnitStates.AliveState());
+            }
+            initialGen.add(newUnit);
+            this.view.updatePopulation(initialGen.population);
+            return newUnit.state;
         }
     }
     MVC.GameController = GameController;
@@ -373,7 +408,7 @@ var MVC;
         onRandomGame(callback) {
             $("#randomBtn").click(callback);
         }
-        renderInitialBoard(changeState) {
+        renderInitialBoard(changeState, board) {
             $("#board-container").empty();
             for (let y = 0; y < this.height; y++) {
                 let row = $("<div/>").addClass("row").get(0);
@@ -381,6 +416,9 @@ var MVC;
                     let tile = $("<div/>").attr("id", `${x}-${y}`)
                         .addClass("tile notstarted")
                         .get(0);
+                    if (board && board.getUnit(x, y).state instanceof UnitStates.AliveState) {
+                        $("<div/>").addClass("alive").appendTo(tile);
+                    }
                     this.attachOnClickHandler(tile, changeState);
                     row.appendChild(tile);
                 }
