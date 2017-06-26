@@ -383,7 +383,9 @@ namespace MVC {
 }
 
 $(document).ready(() => {
+
     let view = new MVC.View();
     let game = new MVC.GameController(view);
     game.new();
 });
+

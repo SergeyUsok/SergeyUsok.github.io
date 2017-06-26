@@ -51,6 +51,14 @@ namespace RulesCache {
 
             let aliveNeighborsCount = this.countAliveNeighbors(unit, generation);
 
+            if (window && window.navigator && window.navigator.userAgent && /Edge\/1[0-4]\./.test(window.navigator.userAgent)) {
+                // Fix for bug in Microsoft Edge: https://github.com/Microsoft/ChakraCore/issues/1415#issuecomment-246424339
+                // Construct function from SO: https://stackoverflow.com/questions/1606797/use-of-apply-with-new-operator-is-this-possible
+                return aliveNeighborsCount >= 2 && aliveNeighborsCount < 4 ?
+                    unit :
+                    construct(Models.Unit, unit.x, unit.y, construct(states.DeadState));
+            }
+
             return aliveNeighborsCount >= 2 && aliveNeighborsCount < 4 ?
                 unit :
                 new Models.Unit(unit.x, unit.y, new states.DeadState());
@@ -62,6 +70,14 @@ namespace RulesCache {
         public execute(unit: Models.Unit, generation: Models.Generation): Models.Unit {
 
             let aliveNeighborsCount = this.countAliveNeighbors(unit, generation);
+
+            if (window && window.navigator && window.navigator.userAgent && /Edge\/1[0-4]\./.test(window.navigator.userAgent)) {
+                // Fix for bug in Microsoft Edge: https://github.com/Microsoft/ChakraCore/issues/1415#issuecomment-246424339
+                // Construct function from SO: https://stackoverflow.com/questions/1606797/use-of-apply-with-new-operator-is-this-possible
+                return aliveNeighborsCount == 3 ?
+                    construct(Models.Unit, unit.x, unit.y, construct(states.AliveState)) :
+                    unit;
+            }
 
             return aliveNeighborsCount == 3 ?
                 new Models.Unit(unit.x, unit.y, new states.AliveState()) :
@@ -85,4 +101,7 @@ namespace RulesCache {
         return cache;
     }
 
+    function construct(cls, ...args) {
+       return new (Function.prototype.bind.apply(cls, arguments));
+    }
 }

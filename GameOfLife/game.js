@@ -1,3 +1,84 @@
+/// <reference path="Models.ts" />
+/// <reference path="UnitStates.ts" />
+var RulesCache;
+(function (RulesCache) {
+    class Rule {
+        countAliveNeighbors(unit, generation) {
+            let aliveNeighborsCount = 0;
+            for (let neighbor of this.getNeighbors(unit, generation)) {
+                if (neighbor.state instanceof states.AliveState)
+                    aliveNeighborsCount++;
+            }
+            return aliveNeighborsCount;
+        }
+        *getNeighbors(unit, generation) {
+            for (let i = -1; i < 2; i++) {
+                for (let j = -1; j < 2; j++) {
+                    // skip current
+                    if (i == 0 && j == 0)
+                        continue;
+                    let neighborX = this.getCoordinate(unit.x + i, generation.width);
+                    let neighborY = this.getCoordinate(unit.y + j, generation.height);
+                    yield generation.getUnit(neighborX, neighborY);
+                }
+            }
+        }
+        getCoordinate(maybeValidCoord, border) {
+            if (maybeValidCoord < 0)
+                return border - 1;
+            if (maybeValidCoord >= border)
+                return 0;
+            return maybeValidCoord;
+        }
+    }
+    RulesCache.Rule = Rule;
+    class AliveRule extends Rule {
+        execute(unit, generation) {
+            let aliveNeighborsCount = this.countAliveNeighbors(unit, generation);
+            if (window && window.navigator && window.navigator.userAgent && /Edge\/1[0-4]\./.test(window.navigator.userAgent)) {
+                // Fix for bug in Microsoft Edge: https://github.com/Microsoft/ChakraCore/issues/1415#issuecomment-246424339
+                // Construct function from SO: https://stackoverflow.com/questions/1606797/use-of-apply-with-new-operator-is-this-possible
+                return aliveNeighborsCount >= 2 && aliveNeighborsCount < 4 ?
+                    unit :
+                    construct(Models.Unit, unit.x, unit.y, construct(states.DeadState));
+            }
+            return aliveNeighborsCount >= 2 && aliveNeighborsCount < 4 ?
+                unit :
+                new Models.Unit(unit.x, unit.y, new states.DeadState());
+        }
+    }
+    class DeadRule extends Rule {
+        execute(unit, generation) {
+            let aliveNeighborsCount = this.countAliveNeighbors(unit, generation);
+            if (window && window.navigator && window.navigator.userAgent && /Edge\/1[0-4]\./.test(window.navigator.userAgent)) {
+                // Fix for bug in Microsoft Edge: https://github.com/Microsoft/ChakraCore/issues/1415#issuecomment-246424339
+                // Construct function from SO: https://stackoverflow.com/questions/1606797/use-of-apply-with-new-operator-is-this-possible
+                return aliveNeighborsCount == 3 ?
+                    construct(Models.Unit, unit.x, unit.y, construct(states.AliveState)) :
+                    unit;
+            }
+            return aliveNeighborsCount == 3 ?
+                new Models.Unit(unit.x, unit.y, new states.AliveState()) :
+                unit;
+        }
+    }
+    let cache = getCache();
+    function getRule(rule) {
+        if (!cache.has(rule))
+            throw new Error(`Provided ${rule} is not present in cache`);
+        return cache.get(rule);
+    }
+    RulesCache.getRule = getRule;
+    function getCache() {
+        let cache = new Map();
+        cache.set("Dead", new DeadRule());
+        cache.set("Alive", new AliveRule());
+        return cache;
+    }
+    function construct(cls, ...args) {
+        return new (Function.prototype.bind.apply(cls, arguments));
+    }
+})(RulesCache || (RulesCache = {}));
 /// <reference path="Rules.ts" />
 var UnitStates;
 (function (UnitStates) {
@@ -5,6 +86,9 @@ var UnitStates;
         constructor() {
             this.name = "Alive";
         }
+        //public constructor(name?: string) {
+        //    this.name = name || "Alive";
+        //}
         getRule() {
             return RulesCache.getRule(this.name);
         }
@@ -14,6 +98,9 @@ var UnitStates;
         constructor() {
             this.name = "Dead";
         }
+        //public constructor(name?: string) {
+        //    this.name = name || "Dead";
+        //}
         getRule() {
             return RulesCache.getRule(this.name);
         }
@@ -77,70 +164,6 @@ var Models;
     }
     Models.Unit = Unit;
 })(Models || (Models = {}));
-/// <reference path="Models.ts" />
-/// <reference path="UnitStates.ts" />
-var RulesCache;
-(function (RulesCache) {
-    class Rule {
-        countAliveNeighbors(unit, generation) {
-            let aliveNeighborsCount = 0;
-            for (let neighbor of this.getNeighbors(unit, generation)) {
-                if (neighbor.state instanceof states.AliveState)
-                    aliveNeighborsCount++;
-            }
-            return aliveNeighborsCount;
-        }
-        *getNeighbors(unit, generation) {
-            for (let i = -1; i < 2; i++) {
-                for (let j = -1; j < 2; j++) {
-                    // skip current
-                    if (i == 0 && j == 0)
-                        continue;
-                    let neighborX = this.getCoordinate(unit.x + i, generation.width);
-                    let neighborY = this.getCoordinate(unit.y + j, generation.height);
-                    yield generation.getUnit(neighborX, neighborY);
-                }
-            }
-        }
-        getCoordinate(maybeValidCoord, border) {
-            if (maybeValidCoord < 0)
-                return border - 1;
-            if (maybeValidCoord >= border)
-                return 0;
-            return maybeValidCoord;
-        }
-    }
-    RulesCache.Rule = Rule;
-    class AliveRule extends Rule {
-        execute(unit, generation) {
-            let aliveNeighborsCount = this.countAliveNeighbors(unit, generation);
-            return aliveNeighborsCount >= 2 && aliveNeighborsCount < 4 ?
-                unit :
-                new Models.Unit(unit.x, unit.y, new states.DeadState());
-        }
-    }
-    class DeadRule extends Rule {
-        execute(unit, generation) {
-            let aliveNeighborsCount = this.countAliveNeighbors(unit, generation);
-            return aliveNeighborsCount == 3 ?
-                new Models.Unit(unit.x, unit.y, new states.AliveState()) :
-                unit;
-        }
-    }
-    let cache = getCache();
-    function getRule(rule) {
-        if (!cache.has(rule))
-            throw new Error(`Provided ${rule} is not present in cache`);
-        return cache.get(rule);
-    }
-    RulesCache.getRule = getRule;
-    function getCache() {
-        let cache = new Map();
-        cache.set("Dead", new DeadRule());
-        cache.set("Alive", new AliveRule());
-        return cache;
-    }
-})(RulesCache || (RulesCache = {}));
 /// <reference path="Models.ts" />
 /// <reference path="UnitStates.ts" />
 var Core;
