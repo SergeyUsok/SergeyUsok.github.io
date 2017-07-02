@@ -20,6 +20,7 @@ Some features of TypeScript lang that were used during Game of Life implementati
 
 What was NOT used and still requires to learn:
 
+* decorators (@)
 * generics
 * modules
 * tuples
