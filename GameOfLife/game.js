@@ -1,3 +1,84 @@
+/// <reference path="Rules.ts" />
+var UnitStates;
+(function (UnitStates) {
+    class AliveState {
+        constructor() {
+            this.name = "Alive";
+        }
+        getRule() {
+            return RulesCache.getRule(this.name);
+        }
+    }
+    UnitStates.AliveState = AliveState;
+    class DeadState {
+        constructor() {
+            this.name = "Dead";
+        }
+        getRule() {
+            return RulesCache.getRule(this.name);
+        }
+    }
+    UnitStates.DeadState = DeadState;
+})(UnitStates || (UnitStates = {}));
+/// <reference path="UnitStates.ts" />
+var states = UnitStates; // just to try use import keyword
+var Models;
+(function (Models) {
+    class Generation {
+        constructor(width, height) {
+            this._population = 0;
+            this.width = width;
+            this.height = height;
+            this.board = this.initializeBoard(width, height);
+        }
+        get population() {
+            return this._population;
+        }
+        add(unit) {
+            if (this.board[unit.y][unit.x].state instanceof states.AliveState &&
+                unit.state instanceof states.DeadState) {
+                this._population--;
+            }
+            else if (this.board[unit.y][unit.x].state instanceof states.DeadState &&
+                unit.state instanceof states.AliveState) {
+                this._population++;
+            }
+            this.board[unit.y][unit.x] = unit;
+        }
+        getUnit(x, y) {
+            if (x < 0 || x >= this.width || y < 0 || y >= this.height)
+                throw new RangeError(`Provided x=${x} and y=${y} out of board borders`);
+            let unit = this.board[y][x];
+            return unit;
+        }
+        *[Symbol.iterator]() {
+            for (let row of this.board) {
+                for (let unit of row) {
+                    yield unit;
+                }
+            }
+        }
+        initializeBoard(width, height) {
+            let result = [];
+            for (let y = 0; y < height; y++) {
+                result[y] = [];
+                for (let x = 0; x < width; x++) {
+                    result[y][x] = new Unit(x, y, new states.DeadState());
+                }
+            }
+            return result;
+        }
+    }
+    Models.Generation = Generation;
+    class Unit {
+        constructor(x, y, state) {
+            this.state = state;
+            this.x = x;
+            this.y = y;
+        }
+    }
+    Models.Unit = Unit;
+})(Models || (Models = {}));
 /// <reference path="Models.ts" />
 /// <reference path="UnitStates.ts" />
 var RulesCache;
@@ -79,91 +160,6 @@ var RulesCache;
         return new (Function.prototype.bind.apply(cls, arguments));
     }
 })(RulesCache || (RulesCache = {}));
-/// <reference path="Rules.ts" />
-var UnitStates;
-(function (UnitStates) {
-    class AliveState {
-        constructor() {
-            this.name = "Alive";
-        }
-        //public constructor(name?: string) {
-        //    this.name = name || "Alive";
-        //}
-        getRule() {
-            return RulesCache.getRule(this.name);
-        }
-    }
-    UnitStates.AliveState = AliveState;
-    class DeadState {
-        constructor() {
-            this.name = "Dead";
-        }
-        //public constructor(name?: string) {
-        //    this.name = name || "Dead";
-        //}
-        getRule() {
-            return RulesCache.getRule(this.name);
-        }
-    }
-    UnitStates.DeadState = DeadState;
-})(UnitStates || (UnitStates = {}));
-/// <reference path="UnitStates.ts" />
-var states = UnitStates; // just to try use import keyword
-var Models;
-(function (Models) {
-    class Generation {
-        constructor(width, height) {
-            this._population = 0;
-            this.width = width;
-            this.height = height;
-            this.board = this.initializeBoard(width, height);
-        }
-        get population() {
-            return this._population;
-        }
-        add(unit) {
-            if (this.board[unit.y][unit.x].state instanceof states.AliveState &&
-                unit.state instanceof states.DeadState) {
-                this._population--;
-            }
-            else if (this.board[unit.y][unit.x].state instanceof states.DeadState &&
-                unit.state instanceof states.AliveState) {
-                this._population++;
-            }
-            this.board[unit.y][unit.x] = unit;
-        }
-        getUnit(x, y) {
-            let unit = this.board[y][x];
-            return unit;
-        }
-        *[Symbol.iterator]() {
-            for (let row of this.board) {
-                for (let unit of row) {
-                    yield unit;
-                }
-            }
-        }
-        initializeBoard(width, height) {
-            let result = [];
-            for (let y = 0; y < height; y++) {
-                result[y] = [];
-                for (let x = 0; x < width; x++) {
-                    result[y][x] = new Unit(x, y, new states.DeadState());
-                }
-            }
-            return result;
-        }
-    }
-    Models.Generation = Generation;
-    class Unit {
-        constructor(x, y, state) {
-            this.state = state;
-            this.x = x;
-            this.y = y;
-        }
-    }
-    Models.Unit = Unit;
-})(Models || (Models = {}));
 /// <reference path="Models.ts" />
 /// <reference path="UnitStates.ts" />
 var Core;

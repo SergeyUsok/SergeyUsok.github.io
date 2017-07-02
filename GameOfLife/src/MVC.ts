@@ -21,7 +21,7 @@ namespace MVC {
 
         public new() {
             this.resetToNotStartedState();
-            this.game = Core.Game.createNew(this.view.width, this.view.height);           
+            this.game = Core.Game.createNew(this.view.width, this.view.height);
             let initialGen = this.game.currentGeneration;
             this.generations.push(initialGen);
             // render empty board with callback that allows on/off alive cells
@@ -69,7 +69,7 @@ namespace MVC {
 
             if (result.isGameOver) {
                 this.gameOver(result.reason);
-            } 
+            }
         }
 
         private gameOver(reason: string): void {
@@ -212,7 +212,7 @@ namespace MVC {
 
         public onNewGame(callback: () => void): void {
             $("#newGameBtn").click(callback);
-            
+
             $(window).on('resize', () => {
                 let tempWidth = this.calculateMaxWidth();
                 if (tempWidth != this.maxWidth) {
@@ -247,7 +247,7 @@ namespace MVC {
                     this.attachOnClickHandler(tile, changeState);
                     row.appendChild(tile);
                 }
-                
+
                 $("#board-container").append(row);
             }
         }
@@ -339,14 +339,13 @@ namespace MVC {
 
             if (width <= this.maxWidth)
                 this._width = width;
-            
+
             $("#widthInput").val(this._width.toString());
         }
 
         private widthDown(): void {
             let temp = this._width - 1;
-            if (temp > 0)
-            {
+            if (temp > 0) {
                 this._width = temp;
                 $("#widthInput").val(temp.toString());
             }
@@ -358,8 +357,7 @@ namespace MVC {
 
         private heightDown(): void {
             let temp = this._height - 1;
-            if (temp > 0)
-            {
+            if (temp > 0) {
                 this._height = temp;
                 $("#heightInput").val(temp.toString());
             }
@@ -388,4 +386,3 @@ $(document).ready(() => {
     let game = new MVC.GameController(view);
     game.new();
 });
-

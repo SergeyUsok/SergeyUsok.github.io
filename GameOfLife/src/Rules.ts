@@ -87,7 +87,7 @@ namespace RulesCache {
 
     let cache: Map<string, Rule> = getCache();
 
-    export function getRule(rule: string) {
+    export function getRule(rule: string): Rule {
         if (!cache.has(rule))
             throw new Error(`Provided ${rule} is not present in cache`);
 

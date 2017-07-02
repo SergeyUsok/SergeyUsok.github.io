@@ -37,6 +37,9 @@ namespace Models {
         }
 
         public getUnit(x: number, y: number): Unit {
+            if (x < 0 || x >= this.width || y < 0 || y >= this.height)
+                throw new RangeError(`Provided x=${x} and y=${y} out of board borders`);
+
             let unit = this.board[y][x];
             return unit;
         }

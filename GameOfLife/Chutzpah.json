@@ -1,0 +1,15 @@
+﻿{
+  "Framework": "qunit",
+  "References": [
+    {
+      "Path": "https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js",
+      "IsTestFrameworkFile": true
+    },
+    { "Path": "game.js" }
+  ],
+  "Tests": [
+    {
+      "Includes": [ "*/tests/*.js" ]
+    }
+  ]
+}
