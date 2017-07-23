@@ -12,50 +12,25 @@ namespace Core {
     type Pair = { x: number; y: number; }
 
     export class Game {
-        private _currentGeneration: Models.Generation
+        public history: Models.Generation[] = [];
 
-        private constructor(emptyGeneration: Models.Generation) {
-            this._currentGeneration = emptyGeneration;
-        }
-
-        public static createNew(width: number, height: number): Game  {
-            let emptyGeneration = new Models.Generation(width, height);
-            return new Game(emptyGeneration);
-        }
-
-        public get currentGeneration(): Models.Generation {
-            return this._currentGeneration;
-        }
-
-        public static withRandomGeneration(width: number, height: number) {
-            let emptyGeneration = new Models.Generation(width, height);
-            let flattened = this.flattenBoard(width, height);
-            let target = this.getTargetCount(width, height);
-
-            for (let i = 1; i <= target; i++) {
-                let index = this.getRandom(1, flattened.length) - 1; // since index zero based subtract 1
-                let pair = flattened[index];
-                flattened.splice(index, 1); // remove already used item
-                let unit = new Models.Unit(pair.x, pair.y, new states.AliveState());
-                emptyGeneration.add(unit);
-            }
-
-            return new Game(emptyGeneration);
+        public constructor(zeroGeneration: Models.Generation) {
+            this.history.push(zeroGeneration);
         }
 
         public nextGeneration(): IterationResult {
-
-            var newGeneration = new Models.Generation(this._currentGeneration.width, this._currentGeneration.height);
+            let last = this.history[this.history.length - 1];
+            var newGeneration = new Models.Generation(last.width, last.height);
             
-            for (let unit of this._currentGeneration) {
+            for (let unit of last) {
                 
                 let rule = unit.state.getRule();
-                let newUnit = rule.execute(unit, this._currentGeneration);
+                let newUnit = rule.execute(unit, last);
                 newGeneration.add(newUnit);
             }
 
-            let gameOverResult = this.isGameOver(this._currentGeneration, newGeneration);
-            this._currentGeneration = newGeneration;
+            let gameOverResult = this.isGameOver(last, newGeneration);
+            this.history.push(newGeneration);
 
             return {
                 generation: newGeneration,
@@ -91,12 +66,37 @@ namespace Core {
             };
         }
 
+        
+    }
+
+    export class ZeroGenerationProvider {
+
+        public getEmptyGeneration(width: number, height: number): Models.Generation {
+            return new Models.Generation(width, height);
+        }
+
+        public getRandomGeneration(width: number, height: number): Models.Generation {
+            let zeroGeneration = new Models.Generation(width, height);
+            let flattened = this.flattenBoard(width, height);
+            let target = this.getTargetCount(width, height);
+
+            for (let i = 1; i <= target; i++) {
+                let index = this.getRandom(1, flattened.length) - 1; // since index zero based subtract 1
+                let pair = flattened[index];
+                flattened.splice(index, 1); // remove already used item
+                let unit = new Models.Unit(pair.x, pair.y, new states.AliveState());
+                zeroGeneration.add(unit);
+            }
+
+            return zeroGeneration;
+        }
+
         // board like:
         // | 1 | 2 | 3 |
         // | 4 | 5 | 6 |
         // will become like
         // 1 2 3 4 5 6
-        private static flattenBoard(width: number, height: number): Pair[]{
+        private flattenBoard(width: number, height: number): Pair[] {
             let flattened = [];
 
             for (let y = 0; y < height; y++) {
@@ -108,7 +108,7 @@ namespace Core {
             return flattened;
         }
 
-        private static getTargetCount(width: number, height: number): number {
+        private getTargetCount(width: number, height: number): number {
             const lowerBound = 10; // lower percent of alive units
             const upperBound = 70; // upper percent of alive units
 
@@ -123,7 +123,7 @@ namespace Core {
             return Math.round(target);
         }
 
-        private static getRandom(min: number, max: number): number {
+        private getRandom(min: number, max: number): number {
             return Math.floor(Math.random() * (max - min + 1)) + min;
         }
     }

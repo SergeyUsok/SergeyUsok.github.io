@@ -8,8 +8,8 @@ namespace MVC {
         private game: Core.Game;
         private pauseRequested: boolean = true;
         private state: GameState = GameState.NotStarted;
-        private generations: Models.Generation[];
         private cursor: number;
+        private gen0Provider: Core.ZeroGenerationProvider = new Core.ZeroGenerationProvider();
 
         public constructor(private readonly view: View) {
             this.view.onNewGame(() => this.new());
@@ -21,9 +21,8 @@ namespace MVC {
 
         public new() {
             this.resetToNotStartedState();
-            this.game = Core.Game.createNew(this.view.width, this.view.height);
-            let initialGen = this.game.currentGeneration;
-            this.generations.push(initialGen);
+            let initialGen = this.gen0Provider.getEmptyGeneration(this.view.width, this.view.height);
+            this.game = new Core.Game(initialGen);
             // render empty board with callback that allows on/off alive cells
             this.view.renderInitialBoard((x, y) => this.updateUnitState(x, y));
         }
@@ -61,8 +60,7 @@ namespace MVC {
 
         private getNewGeneration() {
             let result = this.game.nextGeneration();
-            this.generations.push(result.generation);
-            this.cursor = this.generations.length - 1;
+            this.cursor = this.game.history.length - 1;
             this.view.renderGeneration(result.generation);
             this.view.updateGenNumber(this.cursor);
             this.view.updatePopulation(result.generation.population);
@@ -81,7 +79,6 @@ namespace MVC {
             this.state = GameState.NotStarted;
             this.pauseRequested = true;
             this.view.showNotStartedState();
-            this.generations = [];
             this.cursor = 0;
             this.view.updateGenNumber(0);
             this.view.updatePopulation(0);
@@ -90,21 +87,21 @@ namespace MVC {
         private previous(): void {
             this.cursor--;
             this.checkPreviousAvailable();
-            this.view.renderGeneration(this.generations[this.cursor]);
+            this.view.renderGeneration(this.game.history[this.cursor]);
             this.view.updateGenNumber(this.cursor);
-            this.view.updatePopulation(this.generations[this.cursor].population);
+            this.view.updatePopulation(this.game.history[this.cursor].population);
         }
 
         private next(): void {
             this.cursor++;
             this.checkPreviousAvailable();
 
-            if (this.cursor >= this.generations.length)
+            if (this.cursor >= this.game.history.length)
                 this.getNewGeneration();
             else {
-                this.view.renderGeneration(this.generations[this.cursor]);
+                this.view.renderGeneration(this.game.history[this.cursor]);
                 this.view.updateGenNumber(this.cursor);
-                this.view.updatePopulation(this.generations[this.cursor].population);
+                this.view.updatePopulation(this.game.history[this.cursor].population);
             }
         }
 
@@ -114,16 +111,15 @@ namespace MVC {
 
         private randomGame() {
             this.resetToNotStartedState();
-            this.game = Core.Game.withRandomGeneration(this.view.width, this.view.height);
-            let initialGen = this.game.currentGeneration;
-            this.generations.push(initialGen);
+            let initialGen = this.gen0Provider.getRandomGeneration(this.view.width, this.view.height);
+            this.game = new Core.Game(initialGen);
             // render empty board with callback that allows on/off alive cells
             this.view.renderInitialBoard((x, y) => this.updateUnitState(x, y), initialGen);
             this.view.updatePopulation(initialGen.population);
         }
 
         private updateUnitState(x: number, y: number): UnitStates.State {
-            let initialGen = this.generations[0];
+            let initialGen = this.game.history[0];
             let unit = initialGen.getUnit(x, y);
             let newUnit: Models.Unit;
             if (unit.state instanceof UnitStates.AliveState) {

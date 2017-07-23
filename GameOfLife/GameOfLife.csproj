@@ -30,10 +30,14 @@
   </ItemGroup>
   <ItemGroup>
     <TypeScriptCompile Include="src\Core.ts" />
+    <TypeScriptCompile Include="src\Events.ts" />
+    <TypeScriptCompile Include="src\GameStates.ts" />
     <TypeScriptCompile Include="src\jquery.lib.d.ts" />
     <TypeScriptCompile Include="src\Models.ts" />
     <TypeScriptCompile Include="src\MVC.ts" />
+    <TypeScriptCompile Include="src\MVC_New.ts" />
     <TypeScriptCompile Include="src\Rules.ts" />
+    <TypeScriptCompile Include="src\StateMachine.ts" />
     <TypeScriptCompile Include="src\UnitStates.ts" />
     <Content Include="tests\rules.tests.js" />
   </ItemGroup>

@@ -1,3 +1,84 @@
+/// <reference path="Models.ts" />
+/// <reference path="UnitStates.ts" />
+var RulesCache;
+(function (RulesCache) {
+    class Rule {
+        countAliveNeighbors(unit, generation) {
+            let aliveNeighborsCount = 0;
+            for (let neighbor of this.getNeighbors(unit, generation)) {
+                if (neighbor.state instanceof states.AliveState)
+                    aliveNeighborsCount++;
+            }
+            return aliveNeighborsCount;
+        }
+        *getNeighbors(unit, generation) {
+            for (let i = -1; i < 2; i++) {
+                for (let j = -1; j < 2; j++) {
+                    // skip current
+                    if (i == 0 && j == 0)
+                        continue;
+                    let neighborX = this.getCoordinate(unit.x + i, generation.width);
+                    let neighborY = this.getCoordinate(unit.y + j, generation.height);
+                    yield generation.getUnit(neighborX, neighborY);
+                }
+            }
+        }
+        getCoordinate(maybeValidCoord, border) {
+            if (maybeValidCoord < 0)
+                return border - 1;
+            if (maybeValidCoord >= border)
+                return 0;
+            return maybeValidCoord;
+        }
+    }
+    RulesCache.Rule = Rule;
+    class AliveRule extends Rule {
+        execute(unit, generation) {
+            let aliveNeighborsCount = this.countAliveNeighbors(unit, generation);
+            if (window && window.navigator && window.navigator.userAgent && /Edge\/1[0-4]\./.test(window.navigator.userAgent)) {
+                // Fix for bug in Microsoft Edge: https://github.com/Microsoft/ChakraCore/issues/1415#issuecomment-246424339
+                // Construct function from SO: https://stackoverflow.com/questions/1606797/use-of-apply-with-new-operator-is-this-possible
+                return aliveNeighborsCount >= 2 && aliveNeighborsCount < 4 ?
+                    unit :
+                    construct(Models.Unit, unit.x, unit.y, construct(states.DeadState));
+            }
+            return aliveNeighborsCount >= 2 && aliveNeighborsCount < 4 ?
+                unit :
+                new Models.Unit(unit.x, unit.y, new states.DeadState());
+        }
+    }
+    class DeadRule extends Rule {
+        execute(unit, generation) {
+            let aliveNeighborsCount = this.countAliveNeighbors(unit, generation);
+            if (window && window.navigator && window.navigator.userAgent && /Edge\/1[0-4]\./.test(window.navigator.userAgent)) {
+                // Fix for bug in Microsoft Edge: https://github.com/Microsoft/ChakraCore/issues/1415#issuecomment-246424339
+                // Construct function from SO: https://stackoverflow.com/questions/1606797/use-of-apply-with-new-operator-is-this-possible
+                return aliveNeighborsCount == 3 ?
+                    construct(Models.Unit, unit.x, unit.y, construct(states.AliveState)) :
+                    unit;
+            }
+            return aliveNeighborsCount == 3 ?
+                new Models.Unit(unit.x, unit.y, new states.AliveState()) :
+                unit;
+        }
+    }
+    let cache = getCache();
+    function getRule(rule) {
+        if (!cache.has(rule))
+            throw new Error(`Provided ${rule} is not present in cache`);
+        return cache.get(rule);
+    }
+    RulesCache.getRule = getRule;
+    function getCache() {
+        let cache = new Map();
+        cache.set("Dead", new DeadRule());
+        cache.set("Alive", new AliveRule());
+        return cache;
+    }
+    function construct(cls, ...args) {
+        return new (Function.prototype.bind.apply(cls, arguments));
+    }
+})(RulesCache || (RulesCache = {}));
 /// <reference path="Rules.ts" />
 var UnitStates;
 (function (UnitStates) {
@@ -81,122 +162,23 @@ var Models;
 })(Models || (Models = {}));
 /// <reference path="Models.ts" />
 /// <reference path="UnitStates.ts" />
-var RulesCache;
-(function (RulesCache) {
-    class Rule {
-        countAliveNeighbors(unit, generation) {
-            let aliveNeighborsCount = 0;
-            for (let neighbor of this.getNeighbors(unit, generation)) {
-                if (neighbor.state instanceof states.AliveState)
-                    aliveNeighborsCount++;
-            }
-            return aliveNeighborsCount;
-        }
-        *getNeighbors(unit, generation) {
-            for (let i = -1; i < 2; i++) {
-                for (let j = -1; j < 2; j++) {
-                    // skip current
-                    if (i == 0 && j == 0)
-                        continue;
-                    let neighborX = this.getCoordinate(unit.x + i, generation.width);
-                    let neighborY = this.getCoordinate(unit.y + j, generation.height);
-                    yield generation.getUnit(neighborX, neighborY);
-                }
-            }
-        }
-        getCoordinate(maybeValidCoord, border) {
-            if (maybeValidCoord < 0)
-                return border - 1;
-            if (maybeValidCoord >= border)
-                return 0;
-            return maybeValidCoord;
-        }
-    }
-    RulesCache.Rule = Rule;
-    class AliveRule extends Rule {
-        execute(unit, generation) {
-            let aliveNeighborsCount = this.countAliveNeighbors(unit, generation);
-            if (window && window.navigator && window.navigator.userAgent && /Edge\/1[0-4]\./.test(window.navigator.userAgent)) {
-                // Fix for bug in Microsoft Edge: https://github.com/Microsoft/ChakraCore/issues/1415#issuecomment-246424339
-                // Construct function from SO: https://stackoverflow.com/questions/1606797/use-of-apply-with-new-operator-is-this-possible
-                return aliveNeighborsCount >= 2 && aliveNeighborsCount < 4 ?
-                    unit :
-                    construct(Models.Unit, unit.x, unit.y, construct(states.DeadState));
-            }
-            return aliveNeighborsCount >= 2 && aliveNeighborsCount < 4 ?
-                unit :
-                new Models.Unit(unit.x, unit.y, new states.DeadState());
-        }
-    }
-    class DeadRule extends Rule {
-        execute(unit, generation) {
-            let aliveNeighborsCount = this.countAliveNeighbors(unit, generation);
-            if (window && window.navigator && window.navigator.userAgent && /Edge\/1[0-4]\./.test(window.navigator.userAgent)) {
-                // Fix for bug in Microsoft Edge: https://github.com/Microsoft/ChakraCore/issues/1415#issuecomment-246424339
-                // Construct function from SO: https://stackoverflow.com/questions/1606797/use-of-apply-with-new-operator-is-this-possible
-                return aliveNeighborsCount == 3 ?
-                    construct(Models.Unit, unit.x, unit.y, construct(states.AliveState)) :
-                    unit;
-            }
-            return aliveNeighborsCount == 3 ?
-                new Models.Unit(unit.x, unit.y, new states.AliveState()) :
-                unit;
-        }
-    }
-    let cache = getCache();
-    function getRule(rule) {
-        if (!cache.has(rule))
-            throw new Error(`Provided ${rule} is not present in cache`);
-        return cache.get(rule);
-    }
-    RulesCache.getRule = getRule;
-    function getCache() {
-        let cache = new Map();
-        cache.set("Dead", new DeadRule());
-        cache.set("Alive", new AliveRule());
-        return cache;
-    }
-    function construct(cls, ...args) {
-        return new (Function.prototype.bind.apply(cls, arguments));
-    }
-})(RulesCache || (RulesCache = {}));
-/// <reference path="Models.ts" />
-/// <reference path="UnitStates.ts" />
 var Core;
 (function (Core) {
     class Game {
-        constructor(emptyGeneration) {
-            this._currentGeneration = emptyGeneration;
-        }
-        static createNew(width, height) {
-            let emptyGeneration = new Models.Generation(width, height);
-            return new Game(emptyGeneration);
-        }
-        get currentGeneration() {
-            return this._currentGeneration;
-        }
-        static withRandomGeneration(width, height) {
-            let emptyGeneration = new Models.Generation(width, height);
-            let flattened = this.flattenBoard(width, height);
-            let target = this.getTargetCount(width, height);
-            for (let i = 1; i <= target; i++) {
-                let index = this.getRandom(1, flattened.length) - 1; // since index zero based subtract 1
-                let pair = flattened[index];
-                flattened.splice(index, 1); // remove already used item
-                let unit = new Models.Unit(pair.x, pair.y, new states.AliveState());
-                emptyGeneration.add(unit);
-            }
-            return new Game(emptyGeneration);
+        constructor(zeroGeneration) {
+            this.history = [];
+            this.history.push(zeroGeneration);
         }
         nextGeneration() {
-            var newGeneration = new Models.Generation(this._currentGeneration.width, this._currentGeneration.height);
-            for (let unit of this._currentGeneration) {
+            let last = this.history[this.history.length - 1];
+            var newGeneration = new Models.Generation(last.width, last.height);
+            for (let unit of last) {
                 let rule = unit.state.getRule();
-                let newUnit = rule.execute(unit, this._currentGeneration);
+                let newUnit = rule.execute(unit, last);
                 newGeneration.add(newUnit);
             }
-            let gameOverResult = this.isGameOver(this._currentGeneration, newGeneration);
-            this._currentGeneration = newGeneration;
+            let gameOverResult = this.isGameOver(last, newGeneration);
+            this.history.push(newGeneration);
             return {
                 generation: newGeneration,
                 isGameOver: gameOverResult.marker,
@@ -227,12 +209,31 @@ var Core;
                 marker: true
             };
         }
+    }
+    Core.Game = Game;
+    class ZeroGenerationProvider {
+        getEmptyGeneration(width, height) {
+            return new Models.Generation(width, height);
+        }
+        getRandomGeneration(width, height) {
+            let zeroGeneration = new Models.Generation(width, height);
+            let flattened = this.flattenBoard(width, height);
+            let target = this.getTargetCount(width, height);
+            for (let i = 1; i <= target; i++) {
+                let index = this.getRandom(1, flattened.length) - 1; // since index zero based subtract 1
+                let pair = flattened[index];
+                flattened.splice(index, 1); // remove already used item
+                let unit = new Models.Unit(pair.x, pair.y, new states.AliveState());
+                zeroGeneration.add(unit);
+            }
+            return zeroGeneration;
+        }
         // board like:
         // | 1 | 2 | 3 |
         // | 4 | 5 | 6 |
         // will become like
         // 1 2 3 4 5 6
-        static flattenBoard(width, height) {
+        flattenBoard(width, height) {
             let flattened = [];
             for (let y = 0; y < height; y++) {
                 for (let x = 0; x < width; x++) {
@@ -241,7 +242,7 @@ var Core;
             }
             return flattened;
         }
-        static getTargetCount(width, height) {
+        getTargetCount(width, height) {
             const lowerBound = 10; // lower percent of alive units
             const upperBound = 70; // upper percent of alive units
             let totalSize = width * height;
@@ -251,12 +252,102 @@ var Core;
             let target = actualPercent / 100 * totalSize;
             return Math.round(target);
         }
-        static getRandom(min, max) {
+        getRandom(min, max) {
             return Math.floor(Math.random() * (max - min + 1)) + min;
         }
     }
-    Core.Game = Game;
+    Core.ZeroGenerationProvider = ZeroGenerationProvider;
 })(Core || (Core = {}));
+class EventAggregator {
+    constructor() {
+        this.subscribers = new Map();
+    }
+    subscribe(event, action) {
+        let key = event.name;
+        if (!this.subscribers.has(key)) {
+            this.subscribers.set(key, []);
+        }
+        this.subscribers.get(key).push(action);
+        return this.subscribers.get(key).length - 1;
+    }
+    unsubscribe(event, token) {
+        let key = event.name;
+        if (!this.subscribers.has(key)) {
+            return;
+        }
+        let array = this.subscribers.get(key);
+        array[token] = null; // reset the corresponding action
+        if (array.every(a => a == null))
+            this.subscribers.delete(key); // since no subscribers left remove specified key
+    }
+    publish(event) {
+        let key = event.name;
+        if (!this.subscribers.has(key)) {
+            return;
+        }
+        for (let action of this.subscribers.get(key)) {
+            if (action != null)
+                action(event);
+        }
+    }
+}
+class GameOverEvent {
+    constructor() {
+        this.name = "GameOverEvent";
+    }
+}
+class GameEvent {
+    constructor() {
+        this.name = "GameEvent";
+    }
+}
+class NewGameEvent {
+    constructor() {
+        this.name = "NewGameEvent";
+    }
+}
+class GameState {
+}
+class NotStartedState extends GameState {
+    constructor() {
+        super(...arguments);
+        this.name = "NotStartedState";
+    }
+    apply() {
+    }
+    dispose() {
+    }
+}
+class RunningState extends GameState {
+    constructor() {
+        super(...arguments);
+        this.name = "RunningState";
+    }
+    apply() {
+    }
+    dispose() {
+    }
+}
+class PausedState extends GameState {
+    constructor() {
+        super(...arguments);
+        this.name = "PausedState";
+    }
+    apply() {
+    }
+    dispose() {
+    }
+}
+class GameOverState extends GameState {
+    constructor() {
+        super(...arguments);
+        this.name = "GameOverState";
+    }
+    apply() {
+    }
+    dispose() {
+    }
+}
 /// <reference path="Models.ts" />
 /// <reference path="Core.ts" />
 /// <reference path="UnitStates.ts" />
@@ -267,6 +358,7 @@ var MVC;
             this.view = view;
             this.pauseRequested = true;
             this.state = GameState.NotStarted;
+            this.gen0Provider = new Core.ZeroGenerationProvider();
             this.view.onNewGame(() => this.new());
             this.view.onRandomGame(() => this.randomGame());
             this.view.onGameStateChanged(() => this.gameStateChanged());
@@ -275,9 +367,8 @@ var MVC;
         }
         new() {
             this.resetToNotStartedState();
-            this.game = Core.Game.createNew(this.view.width, this.view.height);
-            let initialGen = this.game.currentGeneration;
-            this.generations.push(initialGen);
+            let initialGen = this.gen0Provider.getEmptyGeneration(this.view.width, this.view.height);
+            this.game = new Core.Game(initialGen);
             // render empty board with callback that allows on/off alive cells
             this.view.renderInitialBoard((x, y) => this.updateUnitState(x, y));
         }
@@ -310,8 +401,7 @@ var MVC;
         }
         getNewGeneration() {
             let result = this.game.nextGeneration();
-            this.generations.push(result.generation);
-            this.cursor = this.generations.length - 1;
+            this.cursor = this.game.history.length - 1;
             this.view.renderGeneration(result.generation);
             this.view.updateGenNumber(this.cursor);
             this.view.updatePopulation(result.generation.population);
@@ -327,7 +417,6 @@ var MVC;
             this.state = GameState.NotStarted;
             this.pauseRequested = true;
             this.view.showNotStartedState();
-            this.generations = [];
             this.cursor = 0;
             this.view.updateGenNumber(0);
             this.view.updatePopulation(0);
@@ -335,19 +424,19 @@ var MVC;
         previous() {
             this.cursor--;
             this.checkPreviousAvailable();
-            this.view.renderGeneration(this.generations[this.cursor]);
+            this.view.renderGeneration(this.game.history[this.cursor]);
             this.view.updateGenNumber(this.cursor);
-            this.view.updatePopulation(this.generations[this.cursor].population);
+            this.view.updatePopulation(this.game.history[this.cursor].population);
         }
         next() {
             this.cursor++;
             this.checkPreviousAvailable();
-            if (this.cursor >= this.generations.length)
+            if (this.cursor >= this.game.history.length)
                 this.getNewGeneration();
             else {
-                this.view.renderGeneration(this.generations[this.cursor]);
+                this.view.renderGeneration(this.game.history[this.cursor]);
                 this.view.updateGenNumber(this.cursor);
-                this.view.updatePopulation(this.generations[this.cursor].population);
+                this.view.updatePopulation(this.game.history[this.cursor].population);
             }
         }
         checkPreviousAvailable() {
@@ -355,15 +444,14 @@ var MVC;
         }
         randomGame() {
             this.resetToNotStartedState();
-            this.game = Core.Game.withRandomGeneration(this.view.width, this.view.height);
-            let initialGen = this.game.currentGeneration;
-            this.generations.push(initialGen);
+            let initialGen = this.gen0Provider.getRandomGeneration(this.view.width, this.view.height);
+            this.game = new Core.Game(initialGen);
             // render empty board with callback that allows on/off alive cells
             this.view.renderInitialBoard((x, y) => this.updateUnitState(x, y), initialGen);
             this.view.updatePopulation(initialGen.population);
         }
         updateUnitState(x, y) {
-            let initialGen = this.generations[0];
+            let initialGen = this.game.history[0];
             let unit = initialGen.getUnit(x, y);
             let newUnit;
             if (unit.state instanceof UnitStates.AliveState) {
@@ -572,4 +660,137 @@ $(document).ready(() => {
     let game = new MVC.GameController(view);
     game.new();
 });
+/// <reference path="Models.ts" />
+/// <reference path="UnitStates.ts" />
+var MVCNew;
+(function (MVCNew) {
+    class Game {
+        next(generation) {
+        }
+    }
+    class ZeroGenerationProvider {
+    }
+    class GameController {
+        constructor() {
+            let aggregator = new EventAggregator();
+            this.stateMachine =
+                StateMachine.startsFrom(new NotStartedState())
+                    .on(new GameEvent()).moveTo(new RunningState())
+                    .on(new NewGameEvent()).moveTo(new NotStartedState())
+                    .after(s => s.dispose())
+                    .and()
+                    .for(new RunningState())
+                    .on(new GameEvent()).moveTo(new PausedState())
+                    .on(new NewGameEvent()).moveTo(new NotStartedState())
+                    .on(new GameOverEvent()).moveTo(new GameOverState())
+                    .after(s => s.dispose())
+                    .and()
+                    .for(new PausedState())
+                    .on(new GameEvent()).moveTo(new RunningState())
+                    .on(new NewGameEvent()).moveTo(new NotStartedState())
+                    .on(new GameOverEvent()).moveTo(new GameOverState())
+                    .and()
+                    .for(new GameOverState())
+                    .on(new NewGameEvent()).moveTo(new NotStartedState())
+                    .done();
+        }
+    }
+    MVCNew.GameController = GameController;
+    class View {
+        constructor() {
+        }
+    }
+    MVCNew.View = View;
+    class Button {
+        constructor(id) {
+        }
+        disable() {
+        }
+        enable() {
+        }
+    }
+})(MVCNew || (MVCNew = {}));
+class StateMachine {
+    constructor(initialState) {
+        this.initialState = initialState;
+        this.transishionsMap = new Map();
+        this.preActionsMap = new Map();
+        this.postActionsMap = new Map();
+        this.currentState = initialState;
+    }
+    static startsFrom(state) {
+        let stateMachine = new StateMachine(state);
+        return new TriggerConfigurator(stateMachine, state);
+    }
+    addTransition(from, trigger, to) {
+        let key = `${from.name}_${trigger.name}`;
+        this.transishionsMap.set(key, to);
+    }
+    preAction(state, action) {
+        this.preActionsMap.set(state.name, action);
+    }
+    postAction(state, action) {
+        this.postActionsMap.set(state.name, action);
+    }
+    nextState(trigger) {
+        let key = `${this.currentState.name}_${trigger.name}`;
+        if (this.transishionsMap.has(key)) {
+            if (this.postActionsMap.has(this.currentState.name)) {
+                let postAction = this.postActionsMap.get(this.currentState.name);
+                postAction(this.currentState);
+            }
+            this.currentState = this.transishionsMap.get(key);
+            if (this.preActionsMap.has(this.currentState.name)) {
+                let preAction = this.preActionsMap.get(this.currentState.name);
+                preAction(this.currentState);
+            }
+        }
+        return this.currentState;
+    }
+    toStart() {
+        return this.initialState;
+    }
+}
+class StateConfigurator {
+    constructor(machine) {
+        this.machine = machine;
+    }
+    for(state) {
+        return new TriggerConfigurator(this.machine, state);
+    }
+}
+class TriggerConfigurator {
+    constructor(machine, state) {
+        this.machine = machine;
+        this.state = state;
+    }
+    on(trigger) {
+        return new TransitionConfigurator(this.machine, this.state, trigger);
+    }
+    and() {
+        return new StateConfigurator(this.machine);
+    }
+    before(action) {
+        this.machine.preAction(this.state, action);
+        return this;
+    }
+    after(action) {
+        this.machine.postAction(this.state, action);
+        return this;
+    }
+    done() {
+        return this.machine;
+    }
+}
+class TransitionConfigurator {
+    constructor(machine, state, trigger) {
+        this.machine = machine;
+        this.state = state;
+        this.trigger = trigger;
+    }
+    moveTo(destination) {
+        this.machine.addTransition(this.state, this.trigger, destination);
+        return new TriggerConfigurator(this.machine, this.state);
+    }
+}
 //# sourceMappingURL=game.js.map
