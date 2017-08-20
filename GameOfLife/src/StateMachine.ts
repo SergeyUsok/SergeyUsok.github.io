@@ -1,4 +1,4 @@
-﻿class StateMachine<TState extends State, TTrigger extends Trigger> {
+﻿class StateMachine<TState extends IState, TTrigger extends Trigger> {
     private currentState: TState;
     private transishionsMap: Map<string, TState> = new Map<string, TState>();
     private preActionsMap: Map<string, (s: TState) => void> = new Map<string, (s: TState) => void>();
@@ -8,7 +8,7 @@
         this.currentState = initialState;
     }
 
-    public static startsFrom<TState extends State, TTrigger extends Trigger>(state: TState): TriggerConfigurator<TState, TTrigger> {
+    public static startsFrom<TState extends IState, TTrigger extends Trigger>(state: TState): TriggerConfigurator<TState, TTrigger> {
         let stateMachine = new StateMachine(state);
         return new TriggerConfigurator<TState, TTrigger>(stateMachine, state);
     }
@@ -52,7 +52,7 @@
     }
 }
 
-interface State {
+interface IState {
     name: string;
 }
 
@@ -60,7 +60,7 @@ interface Trigger {
     name: string;
 }
 
-class StateConfigurator<TState extends State, TTrigger extends Trigger> {
+class StateConfigurator<TState extends IState, TTrigger extends Trigger> {
     public constructor(private machine: StateMachine<TState, TTrigger>) {
 
     }
@@ -70,7 +70,7 @@ class StateConfigurator<TState extends State, TTrigger extends Trigger> {
     }
 }
 
-class TriggerConfigurator<TState extends State, TTrigger extends Trigger> {
+class TriggerConfigurator<TState extends IState, TTrigger extends Trigger> {
     public constructor(private machine: StateMachine<TState, TTrigger>, private state: TState) {
 
     }
@@ -98,7 +98,7 @@ class TriggerConfigurator<TState extends State, TTrigger extends Trigger> {
     }
 }
 
-class TransitionConfigurator<TState extends State, TTrigger extends Trigger> {
+class TransitionConfigurator<TState extends IState, TTrigger extends Trigger> {
 
     public constructor(private machine: StateMachine<TState, TTrigger>, private state: TState, private trigger: TTrigger) {
 

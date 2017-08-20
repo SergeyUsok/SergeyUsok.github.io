@@ -258,54 +258,158 @@ var Core;
     }
     Core.ZeroGenerationProvider = ZeroGenerationProvider;
 })(Core || (Core = {}));
-class EventAggregator {
-    constructor() {
-        this.subscribers = new Map();
-    }
-    subscribe(event, action) {
+/// <reference path="Models.ts" />
+/// <reference path="UnitStates.ts" />
+// event aggregator is singleton
+var EventAggregator;
+(function (EventAggregator) {
+    let subscribers = new Map();
+    function subscribe(event, action) {
         let key = event.name;
-        if (!this.subscribers.has(key)) {
-            this.subscribers.set(key, []);
+        if (!subscribers.has(key)) {
+            subscribers.set(key, []);
         }
-        this.subscribers.get(key).push(action);
-        return this.subscribers.get(key).length - 1;
+        subscribers.get(key).push(action);
+        return subscribers.get(key).length - 1;
     }
-    unsubscribe(event, token) {
+    EventAggregator.subscribe = subscribe;
+    function unsubscribe(event, token) {
         let key = event.name;
-        if (!this.subscribers.has(key)) {
+        if (!subscribers.has(key)) {
             return;
         }
-        let array = this.subscribers.get(key);
+        let array = subscribers.get(key);
         array[token] = null; // reset the corresponding action
         if (array.every(a => a == null))
-            this.subscribers.delete(key); // since no subscribers left remove specified key
+            subscribers.delete(key); // since no subscribers left remove specified key
     }
-    publish(event) {
+    EventAggregator.unsubscribe = unsubscribe;
+    function publish(event) {
         let key = event.name;
-        if (!this.subscribers.has(key)) {
+        if (!subscribers.has(key)) {
             return;
         }
-        for (let action of this.subscribers.get(key)) {
+        for (let action of subscribers.get(key)) {
             if (action != null)
                 action(event);
         }
     }
-}
+    EventAggregator.publish = publish;
+})(EventAggregator || (EventAggregator = {}));
 class GameOverEvent {
-    constructor() {
+    constructor(reason) {
+        this.reason = reason;
         this.name = "GameOverEvent";
     }
 }
-class GameEvent {
+class GameStartingEvent {
+    constructor() {
+        this.name = "GameStartingEvent";
+    }
+}
+class HistoricalGenerationEvent {
+    constructor(gen, genNumber) {
+        this.gen = gen;
+        this.genNumber = genNumber;
+        this.name = "HistoricalGenerationEvent";
+    }
+    get generation() {
+        return this.gen;
+    }
+    get generationNumber() {
+        return this.genNumber;
+    }
+}
+class GameStateChangedEvent {
     constructor() {
         this.name = "GameEvent";
     }
 }
 class NewGameEvent {
-    constructor() {
+    constructor(_width, _height) {
+        this._width = _width;
+        this._height = _height;
         this.name = "NewGameEvent";
     }
+    get width() {
+        return this._width;
+    }
+    get height() {
+        return this._height;
+    }
 }
+class RandomGameEvent {
+    constructor(_width, _height) {
+        this._width = _width;
+        this._height = _height;
+        this.name = "RandomGameEvent";
+    }
+    get width() {
+        return this._width;
+    }
+    get height() {
+        return this._height;
+    }
+}
+class NextGenerationEvent {
+    constructor() {
+        this.name = "NextGenerationEvent";
+    }
+}
+class PrevGenerationEvent {
+    constructor() {
+        this.name = "PrevGenerationEvent";
+    }
+}
+class InitializeGameEvent {
+    constructor(gen) {
+        this.gen = gen;
+        this.name = "InitializeGameEvent";
+    }
+    get generation() {
+        return this.gen;
+    }
+}
+class NewGenerationEvent {
+    constructor(gen, genNumber) {
+        this.gen = gen;
+        this.genNumber = genNumber;
+        this.name = "NewGenerationEvent";
+    }
+    get generation() {
+        return this.gen;
+    }
+    get generationNumber() {
+        return this.genNumber;
+    }
+}
+class TileClickedEvent {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.name = "TileClickedEvent";
+    }
+}
+class UnitUpdatedEvent {
+    constructor(unit, population) {
+        this.unit = unit;
+        this.population = population;
+        this.name = "UnitUpdatedEvent";
+    }
+}
+class LeavingNotStartedStateEvent {
+    constructor() {
+        this.name = "LeavingNotStartedStateEvent";
+    }
+}
+class GamePausingEvent {
+    constructor() {
+        this.name = "GamePausingEvent";
+    }
+}
+/// <reference path="Core.ts" />
+/// <reference path="Models.ts" />
+/// <reference path="UnitStates.ts" />
 class GameState {
 }
 class NotStartedState extends GameState {
@@ -313,19 +417,53 @@ class NotStartedState extends GameState {
         super(...arguments);
         this.name = "NotStartedState";
     }
-    apply() {
+    apply(game) {
+        this.game = game;
+        this.token = EventAggregator.subscribe(new TileClickedEvent(), (ev) => this.handleClickedTile(ev));
+        EventAggregator.publish(new InitializeGameEvent(game.history[0]));
     }
     dispose() {
+        EventAggregator.unsubscribe(new TileClickedEvent(), this.token);
+        EventAggregator.publish(new LeavingNotStartedStateEvent());
+    }
+    handleClickedTile(ev) {
+        let generationZero = this.game.history[0];
+        let unit = generationZero.getUnit(ev.x, ev.y);
+        let newUnit = null;
+        if (unit.state instanceof UnitStates.DeadState)
+            newUnit = new Models.Unit(ev.x, ev.y, new UnitStates.AliveState());
+        else
+            newUnit = new Models.Unit(ev.x, ev.y, new UnitStates.DeadState());
+        generationZero.add(newUnit);
+        EventAggregator.publish(new UnitUpdatedEvent(newUnit, generationZero.population));
     }
 }
 class RunningState extends GameState {
     constructor() {
         super(...arguments);
         this.name = "RunningState";
+        this.pauseRequested = false;
     }
-    apply() {
+    apply(game) {
+        this.game = game;
+        this.pauseRequested = false;
+        this.runGame();
+    }
+    runGame() {
+        if (this.pauseRequested)
+            return;
+        let genResult = this.game.nextGeneration();
+        if (genResult.isGameOver) {
+            EventAggregator.publish(new GameOverEvent(genResult.reason));
+        }
+        else {
+            let generationNumber = this.game.history.length - 1;
+            EventAggregator.publish(new NewGenerationEvent(genResult.generation, generationNumber));
+        }
+        setTimeout(() => this.runGame(), 1000);
     }
     dispose() {
+        this.pauseRequested = true;
     }
 }
 class PausedState extends GameState {
@@ -333,27 +471,57 @@ class PausedState extends GameState {
         super(...arguments);
         this.name = "PausedState";
     }
-    apply() {
+    apply(game) {
+        this.game = game;
+        this.current = game.history.length - 1;
+        this.nextToken = EventAggregator.subscribe(new NextGenerationEvent(), (ev) => this.getNext());
+        this.prevToken = EventAggregator.subscribe(new PrevGenerationEvent(), (ev) => this.getPrevious());
+    }
+    getNext() {
+        if (this.current >= (this.game.history.length - 1)) {
+            this.generateNew();
+        }
+        else {
+            this.current++;
+            let generation = this.game.history[this.current];
+            EventAggregator.publish(new HistoricalGenerationEvent(generation, this.current));
+        }
+    }
+    generateNew() {
+        let genResult = this.game.nextGeneration();
+        this.current = this.game.history.length - 1;
+        if (genResult.isGameOver) {
+            EventAggregator.publish(new GameOverEvent(genResult.reason));
+        }
+        else {
+            EventAggregator.publish(new NewGenerationEvent(genResult.generation, this.current));
+        }
+    }
+    getPrevious() {
+        if (this.current <= 0)
+            return;
+        this.current--;
+        let generation = this.game.history[this.current];
+        EventAggregator.publish(new HistoricalGenerationEvent(generation, this.current));
     }
     dispose() {
+        EventAggregator.unsubscribe(new NextGenerationEvent(), this.nextToken);
+        EventAggregator.unsubscribe(new PrevGenerationEvent(), this.prevToken);
     }
 }
-class GameOverState extends GameState {
-    constructor() {
-        super(...arguments);
-        this.name = "GameOverState";
-    }
-    apply() {
-    }
-    dispose() {
-    }
-}
+$(document).ready(() => {
+    //let view = new MVP.View();
+    //let game = new MVP.GamePresenter(view);
+    let view = new MVC.View();
+    let game = new MVC.GameController();
+    view.showNotStartedGame();
+});
 /// <reference path="Models.ts" />
 /// <reference path="Core.ts" />
 /// <reference path="UnitStates.ts" />
-var MVC;
-(function (MVC) {
-    class GameController {
+var MVP;
+(function (MVP) {
+    class GamePresenter {
         constructor(view) {
             this.view = view;
             this.pauseRequested = true;
@@ -440,7 +608,7 @@ var MVC;
             }
         }
         checkPreviousAvailable() {
-            this.view.changePrevButtonState(this.cursor == 0);
+            this.view.changePrevButtonState(this.cursor === 0);
         }
         randomGame() {
             this.resetToNotStartedState();
@@ -465,7 +633,7 @@ var MVC;
             return newUnit.state;
         }
     }
-    MVC.GameController = GameController;
+    MVP.GamePresenter = GamePresenter;
     class View {
         constructor() {
             this._height = 20; // default height
@@ -496,10 +664,10 @@ var MVC;
         }
         updatePopulation(population) {
             $("#pop-count").html(population.toString());
-            if (population > 0 && $("#game-state-controller").prop('disabled'))
-                $("#game-state-controller").prop('disabled', false);
-            else if (population == 0 && !$("#game-state-controller").prop('disabled'))
-                $("#game-state-controller").prop('disabled', true);
+            if (population > 0 && $("#game-state-controller").prop("disabled"))
+                $("#game-state-controller").prop("disabled", false);
+            else if (population === 0 && !$("#game-state-controller").prop("disabled"))
+                $("#game-state-controller").prop("disabled", true);
         }
         updateGenNumber(genNumber) {
             $("#gen-count").html(genNumber.toString());
@@ -519,9 +687,9 @@ var MVC;
         }
         onNewGame(callback) {
             $("#newGameBtn").click(callback);
-            $(window).on('resize', () => {
+            $(window).on("resize", () => {
                 let tempWidth = this.calculateMaxWidth();
-                if (tempWidth != this.maxWidth) {
+                if (tempWidth !== this.maxWidth) {
                     this.maxWidth = tempWidth;
                     this._width = this.maxWidth;
                     callback();
@@ -587,7 +755,7 @@ var MVC;
             // onclick event processing
             $(tile).click(() => {
                 // get coordinates of clicked node 
-                let [x, y] = tile.id.split('-'); // Array Destructuring
+                let [x, y] = tile.id.split("-"); // Array Destructuring
                 // get state after click was processed
                 let newState = changeState(parseInt(x), parseInt(y));
                 // draw alive element if state is Alive
@@ -647,69 +815,311 @@ var MVC;
             return false;
         }
     }
-    MVC.View = View;
+    MVP.View = View;
     var GameState;
     (function (GameState) {
         GameState[GameState["NotStarted"] = 0] = "NotStarted";
         GameState[GameState["Running"] = 1] = "Running";
         GameState[GameState["Paused"] = 2] = "Paused";
     })(GameState || (GameState = {}));
-})(MVC || (MVC = {}));
-$(document).ready(() => {
-    let view = new MVC.View();
-    let game = new MVC.GameController(view);
-    game.new();
-});
+})(MVP || (MVP = {}));
+/// <reference path="Core.ts" />
 /// <reference path="Models.ts" />
 /// <reference path="UnitStates.ts" />
-var MVCNew;
-(function (MVCNew) {
-    class Game {
-        next(generation) {
-        }
-    }
-    class ZeroGenerationProvider {
-    }
+var MVC;
+(function (MVC) {
     class GameController {
         constructor() {
-            let aggregator = new EventAggregator();
-            this.stateMachine =
-                StateMachine.startsFrom(new NotStartedState())
-                    .on(new GameEvent()).moveTo(new RunningState())
-                    .on(new NewGameEvent()).moveTo(new NotStartedState())
-                    .after(s => s.dispose())
-                    .and()
-                    .for(new RunningState())
-                    .on(new GameEvent()).moveTo(new PausedState())
-                    .on(new NewGameEvent()).moveTo(new NotStartedState())
-                    .on(new GameOverEvent()).moveTo(new GameOverState())
-                    .after(s => s.dispose())
-                    .and()
-                    .for(new PausedState())
-                    .on(new GameEvent()).moveTo(new RunningState())
-                    .on(new NewGameEvent()).moveTo(new NotStartedState())
-                    .on(new GameOverEvent()).moveTo(new GameOverState())
-                    .and()
-                    .for(new GameOverState())
-                    .on(new NewGameEvent()).moveTo(new NotStartedState())
-                    .done();
+            this.gen0provider = new Core.ZeroGenerationProvider();
+            this.subscribeOnViewEvents();
+            this.stateMachine = this.configureStateMachine();
+        }
+        subscribeOnViewEvents() {
+            EventAggregator.subscribe(new NewGameEvent(), e => this.createNewGame(e));
+            EventAggregator.subscribe(new GameStateChangedEvent(), e => this.handleEvent(e));
+            EventAggregator.subscribe(new RandomGameEvent(), e => this.createRandomGame(e));
+        }
+        configureStateMachine() {
+            let notStarted = new NotStartedState();
+            let running = new RunningState();
+            let paused = new PausedState();
+            return StateMachine.startsFrom(notStarted)
+                .on(new GameStateChangedEvent()).moveTo(running)
+                .on(new NewGameEvent()).moveTo(notStarted)
+                .on(new RandomGameEvent()).moveTo(notStarted)
+                .after(s => s.dispose())
+                .and()
+                .for(running)
+                .before(g => EventAggregator.publish(new GameStartingEvent()))
+                .on(new GameStateChangedEvent()).moveTo(paused)
+                .on(new NewGameEvent()).moveTo(notStarted)
+                .on(new RandomGameEvent()).moveTo(notStarted)
+                .after(s => s.dispose())
+                .and()
+                .for(paused)
+                .before(g => EventAggregator.publish(new GamePausingEvent()))
+                .on(new GameStateChangedEvent()).moveTo(running)
+                .on(new NewGameEvent()).moveTo(notStarted)
+                .on(new RandomGameEvent()).moveTo(notStarted)
+                .after(s => s.dispose())
+                .done();
+        }
+        createNewGame(event) {
+            let gen0 = this.gen0provider.getEmptyGeneration(event.width, event.height);
+            this.game = new Core.Game(gen0);
+            this.handleEvent(event);
+        }
+        createRandomGame(event) {
+            let gen0 = this.gen0provider.getRandomGeneration(event.width, event.height);
+            this.game = new Core.Game(gen0);
+            this.handleEvent(event);
+        }
+        handleEvent(trigger) {
+            this.stateMachine.nextState(trigger).apply(this.game);
         }
     }
-    MVCNew.GameController = GameController;
+    MVC.GameController = GameController;
     class View {
         constructor() {
+            this.initializeButtons();
+            this.initializeSpins();
+            this.subscribeOnEvents();
+        }
+        showNotStartedGame() {
+            EventAggregator.publish(new NewGameEvent(this.widthSpin.value, this.heightSpin.value));
+        }
+        /// Initialization
+        subscribeOnEvents() {
+            // subscribe on Controller events
+            // game state events
+            EventAggregator.subscribe(new InitializeGameEvent(), ev => this.renderInitialBoard(ev.generation));
+            // game events
+            EventAggregator.subscribe(new NewGenerationEvent(), ev => this.updateBoard(ev.generation, ev.generationNumber));
+            EventAggregator.subscribe(new UnitUpdatedEvent(), ev => this.updateTileAndPopulation(ev.unit, ev.population));
+            EventAggregator.subscribe(new HistoricalGenerationEvent(), ev => this.renderHistoricalGeneration(ev.generation, ev.generationNumber));
+            EventAggregator.subscribe(new LeavingNotStartedStateEvent(), ev => this.makeTilesInactive());
+            EventAggregator.subscribe(new GameStartingEvent(), ev => this.buttonsToRunningState());
+            EventAggregator.subscribe(new GamePausingEvent(), ev => this.buttonsToPausedState());
+            EventAggregator.subscribe(new GameOverEvent(), ev => this.showGameOver(ev.reason));
+            // subscribe on UI buttons elements
+            this.newGameButton.onClick(() => EventAggregator.publish(new NewGameEvent(this.widthSpin.value, this.heightSpin.value)));
+            this.randomGameButton.onClick(() => EventAggregator.publish(new RandomGameEvent(this.widthSpin.value, this.heightSpin.value)));
+            this.startButton.onClick(() => EventAggregator.publish(new GameStateChangedEvent()));
+            this.nextButton.onClick(() => EventAggregator.publish(new NextGenerationEvent()));
+            this.previousButton.onClick(() => EventAggregator.publish(new PrevGenerationEvent()));
+        }
+        initializeButtons() {
+            this.newGameButton = new Button("newGameBtn");
+            this.randomGameButton = new Button("randomBtn");
+            this.startButton = new Button("game-state-controller");
+            this.nextButton = new Button("nextBtn");
+            this.previousButton = new Button("prevBtn");
+        }
+        initializeSpins() {
+            let maxWidth = this.calculateMaxWidth();
+            const height = 20; // default height
+            this.widthSpin = new SpinControl("widthInput", "widthUp", "widthDown", maxWidth, maxWidth, 1);
+            this.heightSpin = new SpinControl("heightInput", "heightUp", "heightDown", height, undefined, 1);
+            $(window).on("resize", () => {
+                let tempWidth = this.calculateMaxWidth();
+                if (tempWidth !== this.widthSpin.value) {
+                    this.widthSpin.updateMaximum(tempWidth);
+                    EventAggregator.publish(new NewGameEvent(this.widthSpin.value, this.heightSpin.value));
+                }
+            });
+        }
+        //////////////////////////////////////////////////////////////////////////////
+        renderHistoricalGeneration(generation, genNumber) {
+            this.updateBoard(generation, genNumber);
+            if (genNumber == 0 && !this.previousButton.disabled)
+                this.previousButton.disable();
+            if (genNumber > 0 && this.previousButton.disabled)
+                this.previousButton.enable();
+        }
+        renderInitialBoard(board) {
+            $("#board-container").empty();
+            for (let y = 0; y < board.height; y++) {
+                let row = $("<div/>").addClass("row").get(0);
+                for (let x = 0; x < board.width; x++) {
+                    let tile = $("<div/>").attr("id", `${x}-${y}`)
+                        .addClass("tile notstarted")
+                        .get(0);
+                    $(tile).click(() => EventAggregator.publish(new TileClickedEvent(x, y)));
+                    if (board && board.getUnit(x, y).state instanceof UnitStates.AliveState) {
+                        $("<div/>").addClass("alive").appendTo(tile);
+                    }
+                    row.appendChild(tile);
+                }
+                $("#board-container").append(row);
+            }
+            this.updatePopulation(board.population);
+            this.updateGenerationNumber(0);
+            this.buttonsToNotStartedState();
+        }
+        updateBoard(generation, genNumber) {
+            this.renderBoard(generation);
+            this.updatePopulation(generation.population);
+            this.updateGenerationNumber(genNumber);
+        }
+        renderBoard(generation) {
+            for (let unit of generation) {
+                let tile = $(`#${unit.x}-${unit.y}`).get(0);
+                if (unit.state instanceof UnitStates.AliveState && !tile.hasChildNodes()) {
+                    $("<div/>").addClass("alive").appendTo(tile);
+                }
+                else if (unit.state instanceof UnitStates.DeadState && tile.hasChildNodes()) {
+                    tile.lastElementChild.remove();
+                }
+            }
+        }
+        updateTileAndPopulation(unit, population) {
+            let id = `${unit.x}-${unit.y}`;
+            let tile = document.getElementById(id);
+            // draw alive element if state is Alive
+            if (unit.state instanceof UnitStates.AliveState) {
+                $("<div/>").addClass("alive").appendTo(tile);
+            }
+            else if (unit.state instanceof UnitStates.DeadState) {
+                tile.firstElementChild.remove();
+            }
+            this.updatePopulation(population);
+        }
+        updatePopulation(population) {
+            $("#pop-count").html(population.toString());
+            if (population > 0)
+                this.startButton.enable();
+            else
+                this.startButton.disable();
+        }
+        updateGenerationNumber(genNumber) {
+            $("#gen-count").html(genNumber.toString());
+        }
+        /// Handling game states ///////////////////////////////
+        buttonsToNotStartedState() {
+            this.previousButton.disable();
+            this.nextButton.disable();
+            this.startButton.content = "Start";
+            $(".game-over-block").hide();
+        }
+        buttonsToRunningState() {
+            this.previousButton.disable();
+            this.nextButton.disable();
+            this.startButton.content = "Pause";
+        }
+        buttonsToPausedState() {
+            this.previousButton.enable();
+            this.nextButton.enable();
+            this.startButton.content = "Continue";
+        }
+        makeTilesInactive() {
+            $("#board-container").find(".tile")
+                .off("click")
+                .removeClass("notstarted");
+        }
+        showGameOver(reason) {
+            $(".game-over-block").show("slow");
+            $(".reason").html(reason);
+            this.previousButton.disable();
+            this.nextButton.disable();
+            this.startButton.disable();
+        }
+        //////////////////////////////////////////////////
+        calculateMaxWidth() {
+            let availableWidth = $("#board-container").width();
+            const tileWidth = 30; // div width
+            return Math.floor(availableWidth / tileWidth);
         }
     }
-    MVCNew.View = View;
+    MVC.View = View;
     class Button {
         constructor(id) {
+            this.button = document.getElementById(id);
         }
         disable() {
+            this.button.disabled = true;
+        }
+        enable() {
+            this.button.disabled = false;
+        }
+        onClick(callback) {
+            this.button.onclick = callback;
+        }
+        get content() {
+            return this.button.textContent;
+        }
+        set content(content) {
+            this.button.textContent = content;
+        }
+        get disabled() {
+            return this.button.disabled;
+        }
+    }
+    class SpinControl {
+        constructor(textId, upId, downId, initial, max, min) {
+            this.max = max;
+            this.min = min;
+            this.input = document.getElementById(textId);
+            this.upBtn = document.getElementById(upId);
+            this.downBtn = document.getElementById(downId);
+            $(this.input).on("input", () => this.checkAndUpdate());
+            $(this.upBtn).click(() => this.up());
+            $(this.downBtn).click(() => this.down());
+            this.setNewValue(initial);
+        }
+        checkAndUpdate() {
+            if (this.isValid(this.input.value)) {
+                let value = parseInt(this.input.value);
+                if (this.withinBounds(value)) {
+                    this.setNewValue(value);
+                    return;
+                }
+            }
+            this.input.value = this._value.toString(); // if value is invalid then leave old one
+        }
+        withinBounds(value) {
+            return (this.max === undefined || value <= this.max) &&
+                (this.min === undefined || value >= this.min);
+        }
+        setNewValue(value) {
+            this._value = value;
+            this.input.value = value.toString();
+            if (this.max !== undefined && this.max === this._value)
+                this.upBtn.disabled = true;
+            else
+                this.upBtn.disabled = false;
+            if (this.min !== undefined && this.min === this._value)
+                this.downBtn.disabled = true;
+            else
+                this.downBtn.disabled = false;
+        }
+        up() {
+            let potentialValue = this._value + 1;
+            if (this.withinBounds(potentialValue))
+                this.setNewValue(potentialValue);
+        }
+        down() {
+            let potentialValue = this._value - 1;
+            if (this.withinBounds(potentialValue))
+                this.setNewValue(potentialValue);
+        }
+        isValid(maybeNumber) {
+            let regex = new RegExp('^[0-9]+$');
+            return regex.test(maybeNumber);
         }
         enable() {
         }
+        disable() {
+        }
+        get value() {
+            return this._value;
+        }
+        updateMaximum(maximum) {
+            this.max = maximum;
+            if (this._value > maximum)
+                this._value = maximum;
+        }
     }
-})(MVCNew || (MVCNew = {}));
+})(MVC || (MVC = {}));
 class StateMachine {
     constructor(initialState) {
         this.initialState = initialState;
