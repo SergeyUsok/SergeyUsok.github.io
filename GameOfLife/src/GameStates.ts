@@ -56,13 +56,12 @@ class RunningState extends GameState {
             return;
 
         let genResult = this.game.nextGeneration();
+        let generationNumber = this.game.history.length - 1;
+        EventAggregator.publish(new NewGenerationEvent(genResult.generation, generationNumber));
 
         if (genResult.isGameOver) {
+            this.pauseRequested = true;
             EventAggregator.publish(new GameOverEvent(genResult.reason));
-        }
-        else {
-            let generationNumber = this.game.history.length - 1;
-            EventAggregator.publish(new NewGenerationEvent(genResult.generation, generationNumber));
         }
 
         setTimeout(() => this.runGame(), 1000);
@@ -101,12 +100,10 @@ class PausedState extends GameState {
     private generateNew(): void {
         let genResult = this.game.nextGeneration();
         this.current = this.game.history.length - 1;
+        EventAggregator.publish(new NewGenerationEvent(genResult.generation, this.current));
 
         if (genResult.isGameOver) {
             EventAggregator.publish(new GameOverEvent(genResult.reason));
-        }
-        else {
-            EventAggregator.publish(new NewGenerationEvent(genResult.generation, this.current));
         }
     }
 

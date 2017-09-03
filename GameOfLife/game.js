@@ -1,84 +1,3 @@
-/// <reference path="Models.ts" />
-/// <reference path="UnitStates.ts" />
-var RulesCache;
-(function (RulesCache) {
-    class Rule {
-        countAliveNeighbors(unit, generation) {
-            let aliveNeighborsCount = 0;
-            for (let neighbor of this.getNeighbors(unit, generation)) {
-                if (neighbor.state instanceof states.AliveState)
-                    aliveNeighborsCount++;
-            }
-            return aliveNeighborsCount;
-        }
-        *getNeighbors(unit, generation) {
-            for (let i = -1; i < 2; i++) {
-                for (let j = -1; j < 2; j++) {
-                    // skip current
-                    if (i == 0 && j == 0)
-                        continue;
-                    let neighborX = this.getCoordinate(unit.x + i, generation.width);
-                    let neighborY = this.getCoordinate(unit.y + j, generation.height);
-                    yield generation.getUnit(neighborX, neighborY);
-                }
-            }
-        }
-        getCoordinate(maybeValidCoord, border) {
-            if (maybeValidCoord < 0)
-                return border - 1;
-            if (maybeValidCoord >= border)
-                return 0;
-            return maybeValidCoord;
-        }
-    }
-    RulesCache.Rule = Rule;
-    class AliveRule extends Rule {
-        execute(unit, generation) {
-            let aliveNeighborsCount = this.countAliveNeighbors(unit, generation);
-            if (window && window.navigator && window.navigator.userAgent && /Edge\/1[0-4]\./.test(window.navigator.userAgent)) {
-                // Fix for bug in Microsoft Edge: https://github.com/Microsoft/ChakraCore/issues/1415#issuecomment-246424339
-                // Construct function from SO: https://stackoverflow.com/questions/1606797/use-of-apply-with-new-operator-is-this-possible
-                return aliveNeighborsCount >= 2 && aliveNeighborsCount < 4 ?
-                    unit :
-                    construct(Models.Unit, unit.x, unit.y, construct(states.DeadState));
-            }
-            return aliveNeighborsCount >= 2 && aliveNeighborsCount < 4 ?
-                unit :
-                new Models.Unit(unit.x, unit.y, new states.DeadState());
-        }
-    }
-    class DeadRule extends Rule {
-        execute(unit, generation) {
-            let aliveNeighborsCount = this.countAliveNeighbors(unit, generation);
-            if (window && window.navigator && window.navigator.userAgent && /Edge\/1[0-4]\./.test(window.navigator.userAgent)) {
-                // Fix for bug in Microsoft Edge: https://github.com/Microsoft/ChakraCore/issues/1415#issuecomment-246424339
-                // Construct function from SO: https://stackoverflow.com/questions/1606797/use-of-apply-with-new-operator-is-this-possible
-                return aliveNeighborsCount == 3 ?
-                    construct(Models.Unit, unit.x, unit.y, construct(states.AliveState)) :
-                    unit;
-            }
-            return aliveNeighborsCount == 3 ?
-                new Models.Unit(unit.x, unit.y, new states.AliveState()) :
-                unit;
-        }
-    }
-    let cache = getCache();
-    function getRule(rule) {
-        if (!cache.has(rule))
-            throw new Error(`Provided ${rule} is not present in cache`);
-        return cache.get(rule);
-    }
-    RulesCache.getRule = getRule;
-    function getCache() {
-        let cache = new Map();
-        cache.set("Dead", new DeadRule());
-        cache.set("Alive", new AliveRule());
-        return cache;
-    }
-    function construct(cls, ...args) {
-        return new (Function.prototype.bind.apply(cls, arguments));
-    }
-})(RulesCache || (RulesCache = {}));
 /// <reference path="Rules.ts" />
 var UnitStates;
 (function (UnitStates) {
@@ -162,6 +81,87 @@ var Models;
 })(Models || (Models = {}));
 /// <reference path="Models.ts" />
 /// <reference path="UnitStates.ts" />
+var RulesCache;
+(function (RulesCache) {
+    class Rule {
+        countAliveNeighbors(unit, generation) {
+            let aliveNeighborsCount = 0;
+            for (let neighbor of this.getNeighbors(unit, generation)) {
+                if (neighbor.state instanceof states.AliveState)
+                    aliveNeighborsCount++;
+            }
+            return aliveNeighborsCount;
+        }
+        *getNeighbors(unit, generation) {
+            for (let i = -1; i < 2; i++) {
+                for (let j = -1; j < 2; j++) {
+                    // skip current
+                    if (i == 0 && j == 0)
+                        continue;
+                    let neighborX = this.getCoordinate(unit.x + i, generation.width);
+                    let neighborY = this.getCoordinate(unit.y + j, generation.height);
+                    yield generation.getUnit(neighborX, neighborY);
+                }
+            }
+        }
+        getCoordinate(maybeValidCoord, border) {
+            if (maybeValidCoord < 0)
+                return border - 1;
+            if (maybeValidCoord >= border)
+                return 0;
+            return maybeValidCoord;
+        }
+    }
+    RulesCache.Rule = Rule;
+    class AliveRule extends Rule {
+        execute(unit, generation) {
+            let aliveNeighborsCount = this.countAliveNeighbors(unit, generation);
+            if (window && window.navigator && window.navigator.userAgent && /Edge\/1[0-4]\./.test(window.navigator.userAgent)) {
+                // Fix for bug in Microsoft Edge: https://github.com/Microsoft/ChakraCore/issues/1415#issuecomment-246424339
+                // Construct function from SO: https://stackoverflow.com/questions/1606797/use-of-apply-with-new-operator-is-this-possible
+                return aliveNeighborsCount >= 2 && aliveNeighborsCount < 4 ?
+                    unit :
+                    construct(Models.Unit, unit.x, unit.y, construct(states.DeadState));
+            }
+            return aliveNeighborsCount >= 2 && aliveNeighborsCount < 4 ?
+                unit :
+                new Models.Unit(unit.x, unit.y, new states.DeadState());
+        }
+    }
+    class DeadRule extends Rule {
+        execute(unit, generation) {
+            let aliveNeighborsCount = this.countAliveNeighbors(unit, generation);
+            if (window && window.navigator && window.navigator.userAgent && /Edge\/1[0-4]\./.test(window.navigator.userAgent)) {
+                // Fix for bug in Microsoft Edge: https://github.com/Microsoft/ChakraCore/issues/1415#issuecomment-246424339
+                // Construct function from SO: https://stackoverflow.com/questions/1606797/use-of-apply-with-new-operator-is-this-possible
+                return aliveNeighborsCount == 3 ?
+                    construct(Models.Unit, unit.x, unit.y, construct(states.AliveState)) :
+                    unit;
+            }
+            return aliveNeighborsCount == 3 ?
+                new Models.Unit(unit.x, unit.y, new states.AliveState()) :
+                unit;
+        }
+    }
+    let cache = getCache();
+    function getRule(rule) {
+        if (!cache.has(rule))
+            throw new Error(`Provided ${rule} is not present in cache`);
+        return cache.get(rule);
+    }
+    RulesCache.getRule = getRule;
+    function getCache() {
+        let cache = new Map();
+        cache.set("Dead", new DeadRule());
+        cache.set("Alive", new AliveRule());
+        return cache;
+    }
+    function construct(cls, ...args) {
+        return new (Function.prototype.bind.apply(cls, arguments));
+    }
+})(RulesCache || (RulesCache = {}));
+/// <reference path="Models.ts" />
+/// <reference path="UnitStates.ts" />
 var Core;
 (function (Core) {
     class Game {
@@ -185,7 +185,7 @@ var Core;
                 reason: gameOverResult.reason
             };
         }
-        // there are 2 possible ways to end game:
+        // there are 2 possible ways to end the game:
         // 1. New generation has zero population
         // 2. Game came to a stable state and no changes in generations expected
         isGameOver(oldGen, newGen) {
@@ -453,12 +453,11 @@ class RunningState extends GameState {
         if (this.pauseRequested)
             return;
         let genResult = this.game.nextGeneration();
+        let generationNumber = this.game.history.length - 1;
+        EventAggregator.publish(new NewGenerationEvent(genResult.generation, generationNumber));
         if (genResult.isGameOver) {
+            this.pauseRequested = true;
             EventAggregator.publish(new GameOverEvent(genResult.reason));
-        }
-        else {
-            let generationNumber = this.game.history.length - 1;
-            EventAggregator.publish(new NewGenerationEvent(genResult.generation, generationNumber));
         }
         setTimeout(() => this.runGame(), 1000);
     }
@@ -490,11 +489,9 @@ class PausedState extends GameState {
     generateNew() {
         let genResult = this.game.nextGeneration();
         this.current = this.game.history.length - 1;
+        EventAggregator.publish(new NewGenerationEvent(genResult.generation, this.current));
         if (genResult.isGameOver) {
             EventAggregator.publish(new GameOverEvent(genResult.reason));
-        }
-        else {
-            EventAggregator.publish(new NewGenerationEvent(genResult.generation, this.current));
         }
     }
     getPrevious() {
@@ -516,6 +513,303 @@ $(document).ready(() => {
     let game = new MVC.GameController();
     view.showNotStartedGame();
 });
+/// <reference path="Core.ts" />
+/// <reference path="Models.ts" />
+/// <reference path="UnitStates.ts" />
+var MVC;
+(function (MVC) {
+    class GameController {
+        constructor() {
+            this.gen0provider = new Core.ZeroGenerationProvider();
+            this.subscribeOnViewEvents();
+            this.stateMachine = this.configureStateMachine();
+        }
+        subscribeOnViewEvents() {
+            EventAggregator.subscribe(new NewGameEvent(), e => this.createNewGame(e));
+            EventAggregator.subscribe(new GameStateChangedEvent(), e => this.handleEvent(e));
+            EventAggregator.subscribe(new RandomGameEvent(), e => this.createRandomGame(e));
+        }
+        configureStateMachine() {
+            let notStarted = new NotStartedState();
+            let running = new RunningState();
+            let paused = new PausedState();
+            return StateMachine.startsFrom(notStarted)
+                .on(new GameStateChangedEvent()).moveTo(running)
+                .on(new NewGameEvent()).moveTo(notStarted)
+                .on(new RandomGameEvent()).moveTo(notStarted)
+                .after(s => s.dispose())
+                .and()
+                .for(running)
+                .before(g => EventAggregator.publish(new GameStartingEvent()))
+                .on(new GameStateChangedEvent()).moveTo(paused)
+                .on(new NewGameEvent()).moveTo(notStarted)
+                .on(new RandomGameEvent()).moveTo(notStarted)
+                .after(s => s.dispose())
+                .and()
+                .for(paused)
+                .before(g => EventAggregator.publish(new GamePausingEvent()))
+                .on(new GameStateChangedEvent()).moveTo(running)
+                .on(new NewGameEvent()).moveTo(notStarted)
+                .on(new RandomGameEvent()).moveTo(notStarted)
+                .after(s => s.dispose())
+                .done();
+        }
+        createNewGame(event) {
+            let gen0 = this.gen0provider.getEmptyGeneration(event.width, event.height);
+            this.game = new Core.Game(gen0);
+            this.handleEvent(event);
+        }
+        createRandomGame(event) {
+            let gen0 = this.gen0provider.getRandomGeneration(event.width, event.height);
+            this.game = new Core.Game(gen0);
+            this.handleEvent(event);
+        }
+        handleEvent(trigger) {
+            this.stateMachine.nextState(trigger).apply(this.game);
+        }
+    }
+    MVC.GameController = GameController;
+    class View {
+        constructor() {
+            this.initializeButtons();
+            this.initializeSpins();
+            this.subscribeOnEvents();
+        }
+        showNotStartedGame() {
+            EventAggregator.publish(new NewGameEvent(this.widthSpin.value, this.heightSpin.value));
+        }
+        /// Initialization
+        subscribeOnEvents() {
+            // subscribe on Controller events
+            // game state events
+            EventAggregator.subscribe(new InitializeGameEvent(), ev => this.renderInitialBoard(ev.generation));
+            // game events
+            EventAggregator.subscribe(new NewGenerationEvent(), ev => this.updateBoard(ev.generation, ev.generationNumber));
+            EventAggregator.subscribe(new UnitUpdatedEvent(), ev => this.updateTileAndPopulation(ev.unit, ev.population));
+            EventAggregator.subscribe(new HistoricalGenerationEvent(), ev => this.renderHistoricalGeneration(ev.generation, ev.generationNumber));
+            EventAggregator.subscribe(new LeavingNotStartedStateEvent(), ev => this.makeTilesInactive());
+            EventAggregator.subscribe(new GameStartingEvent(), ev => this.buttonsToRunningState());
+            EventAggregator.subscribe(new GamePausingEvent(), ev => this.buttonsToPausedState());
+            EventAggregator.subscribe(new GameOverEvent(), ev => this.showGameOver(ev.reason));
+            // subscribe on UI buttons elements
+            this.newGameButton.onClick(() => EventAggregator.publish(new NewGameEvent(this.widthSpin.value, this.heightSpin.value)));
+            this.randomGameButton.onClick(() => EventAggregator.publish(new RandomGameEvent(this.widthSpin.value, this.heightSpin.value)));
+            this.startButton.onClick(() => EventAggregator.publish(new GameStateChangedEvent()));
+            this.nextButton.onClick(() => EventAggregator.publish(new NextGenerationEvent()));
+            this.previousButton.onClick(() => EventAggregator.publish(new PrevGenerationEvent()));
+        }
+        initializeButtons() {
+            this.newGameButton = new Button("newGameBtn");
+            this.randomGameButton = new Button("randomBtn");
+            this.startButton = new Button("game-state-controller");
+            this.nextButton = new Button("nextBtn");
+            this.previousButton = new Button("prevBtn");
+        }
+        initializeSpins() {
+            let maxWidth = this.calculateMaxWidth();
+            const height = 20; // default height
+            this.widthSpin = new SpinControl("widthInput", "widthUp", "widthDown", maxWidth, maxWidth, 1);
+            this.heightSpin = new SpinControl("heightInput", "heightUp", "heightDown", height, undefined, 1);
+            $(window).on("resize", () => {
+                let tempWidth = this.calculateMaxWidth();
+                if (tempWidth !== this.widthSpin.value) {
+                    this.widthSpin.updateMaximum(tempWidth);
+                    EventAggregator.publish(new NewGameEvent(this.widthSpin.value, this.heightSpin.value));
+                }
+            });
+        }
+        //////////////////////////////////////////////////////////////////////////////
+        renderHistoricalGeneration(generation, genNumber) {
+            this.updateBoard(generation, genNumber);
+            if (genNumber == 0 && !this.previousButton.disabled)
+                this.previousButton.disable();
+            if (genNumber > 0 && this.previousButton.disabled)
+                this.previousButton.enable();
+        }
+        renderInitialBoard(board) {
+            $("#board-container").empty();
+            for (let y = 0; y < board.height; y++) {
+                let row = $("<div/>").addClass("row").get(0);
+                for (let x = 0; x < board.width; x++) {
+                    let tile = $("<div/>").attr("id", `${x}-${y}`)
+                        .addClass("tile notstarted")
+                        .get(0);
+                    $(tile).click(() => EventAggregator.publish(new TileClickedEvent(x, y)));
+                    if (board && board.getUnit(x, y).state instanceof UnitStates.AliveState) {
+                        $("<div/>").addClass("alive").appendTo(tile);
+                    }
+                    row.appendChild(tile);
+                }
+                $("#board-container").append(row);
+            }
+            this.updatePopulation(board.population);
+            this.updateGenerationNumber(0);
+            this.buttonsToNotStartedState();
+        }
+        updateBoard(generation, genNumber) {
+            this.renderBoard(generation);
+            this.updatePopulation(generation.population);
+            this.updateGenerationNumber(genNumber);
+        }
+        renderBoard(generation) {
+            for (let unit of generation) {
+                let tile = $(`#${unit.x}-${unit.y}`).get(0);
+                if (unit.state instanceof UnitStates.AliveState && !tile.hasChildNodes()) {
+                    $("<div/>").addClass("alive").appendTo(tile);
+                }
+                else if (unit.state instanceof UnitStates.DeadState && tile.hasChildNodes()) {
+                    tile.lastElementChild.remove();
+                }
+            }
+        }
+        updateTileAndPopulation(unit, population) {
+            let id = `${unit.x}-${unit.y}`;
+            let tile = document.getElementById(id);
+            // draw alive element if state is Alive
+            if (unit.state instanceof UnitStates.AliveState) {
+                $("<div/>").addClass("alive").appendTo(tile);
+            }
+            else if (unit.state instanceof UnitStates.DeadState) {
+                tile.firstElementChild.remove();
+            }
+            this.updatePopulation(population);
+        }
+        updatePopulation(population) {
+            $("#pop-count").html(population.toString());
+            if (population > 0)
+                this.startButton.enable();
+            else
+                this.startButton.disable();
+        }
+        updateGenerationNumber(genNumber) {
+            $("#gen-count").html(genNumber.toString());
+        }
+        /// Handling game states ///////////////////////////////
+        buttonsToNotStartedState() {
+            this.previousButton.disable();
+            this.nextButton.disable();
+            this.startButton.content = "Start";
+            $(".game-over-block").hide();
+        }
+        buttonsToRunningState() {
+            this.previousButton.disable();
+            this.nextButton.disable();
+            this.startButton.content = "Pause";
+        }
+        buttonsToPausedState() {
+            this.previousButton.enable();
+            this.nextButton.enable();
+            this.startButton.content = "Continue";
+        }
+        makeTilesInactive() {
+            $("#board-container").find(".tile")
+                .off("click")
+                .removeClass("notstarted");
+        }
+        showGameOver(reason) {
+            $(".game-over-block").show("slow");
+            $(".reason").html(reason);
+            this.previousButton.disable();
+            this.nextButton.disable();
+            this.startButton.disable();
+        }
+        //////////////////////////////////////////////////
+        calculateMaxWidth() {
+            let availableWidth = $("#board-container").width();
+            const tileWidth = 30; // div width
+            return Math.floor(availableWidth / tileWidth);
+        }
+    }
+    MVC.View = View;
+    class Button {
+        constructor(id) {
+            this.button = document.getElementById(id);
+        }
+        disable() {
+            this.button.disabled = true;
+        }
+        enable() {
+            this.button.disabled = false;
+        }
+        onClick(callback) {
+            this.button.onclick = callback;
+        }
+        get content() {
+            return this.button.textContent;
+        }
+        set content(content) {
+            this.button.textContent = content;
+        }
+        get disabled() {
+            return this.button.disabled;
+        }
+    }
+    class SpinControl {
+        constructor(textId, upId, downId, initial, max, min) {
+            this.max = max;
+            this.min = min;
+            this.input = document.getElementById(textId);
+            this.upBtn = document.getElementById(upId);
+            this.downBtn = document.getElementById(downId);
+            $(this.input).on("input", () => this.checkAndUpdate());
+            $(this.upBtn).click(() => this.up());
+            $(this.downBtn).click(() => this.down());
+            this.setNewValue(initial);
+        }
+        checkAndUpdate() {
+            if (this.isValid(this.input.value)) {
+                let value = parseInt(this.input.value);
+                if (this.withinBounds(value)) {
+                    this.setNewValue(value);
+                    return;
+                }
+            }
+            this.input.value = this._value.toString(); // if value is invalid then leave old one
+        }
+        withinBounds(value) {
+            return (this.max === undefined || value <= this.max) &&
+                (this.min === undefined || value >= this.min);
+        }
+        setNewValue(value) {
+            this._value = value;
+            this.input.value = value.toString();
+            if (this.max !== undefined && this.max === this._value)
+                this.upBtn.disabled = true;
+            else
+                this.upBtn.disabled = false;
+            if (this.min !== undefined && this.min === this._value)
+                this.downBtn.disabled = true;
+            else
+                this.downBtn.disabled = false;
+        }
+        up() {
+            let potentialValue = this._value + 1;
+            if (this.withinBounds(potentialValue))
+                this.setNewValue(potentialValue);
+        }
+        down() {
+            let potentialValue = this._value - 1;
+            if (this.withinBounds(potentialValue))
+                this.setNewValue(potentialValue);
+        }
+        isValid(maybeNumber) {
+            let regex = new RegExp('^[0-9]+$');
+            return regex.test(maybeNumber);
+        }
+        enable() {
+        }
+        disable() {
+        }
+        get value() {
+            return this._value;
+        }
+        updateMaximum(maximum) {
+            this.max = maximum;
+            if (this._value > maximum)
+                this._value = maximum;
+        }
+    }
+})(MVC || (MVC = {}));
 /// <reference path="Models.ts" />
 /// <reference path="Core.ts" />
 /// <reference path="UnitStates.ts" />
@@ -823,303 +1117,6 @@ var MVP;
         GameState[GameState["Paused"] = 2] = "Paused";
     })(GameState || (GameState = {}));
 })(MVP || (MVP = {}));
-/// <reference path="Core.ts" />
-/// <reference path="Models.ts" />
-/// <reference path="UnitStates.ts" />
-var MVC;
-(function (MVC) {
-    class GameController {
-        constructor() {
-            this.gen0provider = new Core.ZeroGenerationProvider();
-            this.subscribeOnViewEvents();
-            this.stateMachine = this.configureStateMachine();
-        }
-        subscribeOnViewEvents() {
-            EventAggregator.subscribe(new NewGameEvent(), e => this.createNewGame(e));
-            EventAggregator.subscribe(new GameStateChangedEvent(), e => this.handleEvent(e));
-            EventAggregator.subscribe(new RandomGameEvent(), e => this.createRandomGame(e));
-        }
-        configureStateMachine() {
-            let notStarted = new NotStartedState();
-            let running = new RunningState();
-            let paused = new PausedState();
-            return StateMachine.startsFrom(notStarted)
-                .on(new GameStateChangedEvent()).moveTo(running)
-                .on(new NewGameEvent()).moveTo(notStarted)
-                .on(new RandomGameEvent()).moveTo(notStarted)
-                .after(s => s.dispose())
-                .and()
-                .for(running)
-                .before(g => EventAggregator.publish(new GameStartingEvent()))
-                .on(new GameStateChangedEvent()).moveTo(paused)
-                .on(new NewGameEvent()).moveTo(notStarted)
-                .on(new RandomGameEvent()).moveTo(notStarted)
-                .after(s => s.dispose())
-                .and()
-                .for(paused)
-                .before(g => EventAggregator.publish(new GamePausingEvent()))
-                .on(new GameStateChangedEvent()).moveTo(running)
-                .on(new NewGameEvent()).moveTo(notStarted)
-                .on(new RandomGameEvent()).moveTo(notStarted)
-                .after(s => s.dispose())
-                .done();
-        }
-        createNewGame(event) {
-            let gen0 = this.gen0provider.getEmptyGeneration(event.width, event.height);
-            this.game = new Core.Game(gen0);
-            this.handleEvent(event);
-        }
-        createRandomGame(event) {
-            let gen0 = this.gen0provider.getRandomGeneration(event.width, event.height);
-            this.game = new Core.Game(gen0);
-            this.handleEvent(event);
-        }
-        handleEvent(trigger) {
-            this.stateMachine.nextState(trigger).apply(this.game);
-        }
-    }
-    MVC.GameController = GameController;
-    class View {
-        constructor() {
-            this.initializeButtons();
-            this.initializeSpins();
-            this.subscribeOnEvents();
-        }
-        showNotStartedGame() {
-            EventAggregator.publish(new NewGameEvent(this.widthSpin.value, this.heightSpin.value));
-        }
-        /// Initialization
-        subscribeOnEvents() {
-            // subscribe on Controller events
-            // game state events
-            EventAggregator.subscribe(new InitializeGameEvent(), ev => this.renderInitialBoard(ev.generation));
-            // game events
-            EventAggregator.subscribe(new NewGenerationEvent(), ev => this.updateBoard(ev.generation, ev.generationNumber));
-            EventAggregator.subscribe(new UnitUpdatedEvent(), ev => this.updateTileAndPopulation(ev.unit, ev.population));
-            EventAggregator.subscribe(new HistoricalGenerationEvent(), ev => this.renderHistoricalGeneration(ev.generation, ev.generationNumber));
-            EventAggregator.subscribe(new LeavingNotStartedStateEvent(), ev => this.makeTilesInactive());
-            EventAggregator.subscribe(new GameStartingEvent(), ev => this.buttonsToRunningState());
-            EventAggregator.subscribe(new GamePausingEvent(), ev => this.buttonsToPausedState());
-            EventAggregator.subscribe(new GameOverEvent(), ev => this.showGameOver(ev.reason));
-            // subscribe on UI buttons elements
-            this.newGameButton.onClick(() => EventAggregator.publish(new NewGameEvent(this.widthSpin.value, this.heightSpin.value)));
-            this.randomGameButton.onClick(() => EventAggregator.publish(new RandomGameEvent(this.widthSpin.value, this.heightSpin.value)));
-            this.startButton.onClick(() => EventAggregator.publish(new GameStateChangedEvent()));
-            this.nextButton.onClick(() => EventAggregator.publish(new NextGenerationEvent()));
-            this.previousButton.onClick(() => EventAggregator.publish(new PrevGenerationEvent()));
-        }
-        initializeButtons() {
-            this.newGameButton = new Button("newGameBtn");
-            this.randomGameButton = new Button("randomBtn");
-            this.startButton = new Button("game-state-controller");
-            this.nextButton = new Button("nextBtn");
-            this.previousButton = new Button("prevBtn");
-        }
-        initializeSpins() {
-            let maxWidth = this.calculateMaxWidth();
-            const height = 20; // default height
-            this.widthSpin = new SpinControl("widthInput", "widthUp", "widthDown", maxWidth, maxWidth, 1);
-            this.heightSpin = new SpinControl("heightInput", "heightUp", "heightDown", height, undefined, 1);
-            $(window).on("resize", () => {
-                let tempWidth = this.calculateMaxWidth();
-                if (tempWidth !== this.widthSpin.value) {
-                    this.widthSpin.updateMaximum(tempWidth);
-                    EventAggregator.publish(new NewGameEvent(this.widthSpin.value, this.heightSpin.value));
-                }
-            });
-        }
-        //////////////////////////////////////////////////////////////////////////////
-        renderHistoricalGeneration(generation, genNumber) {
-            this.updateBoard(generation, genNumber);
-            if (genNumber == 0 && !this.previousButton.disabled)
-                this.previousButton.disable();
-            if (genNumber > 0 && this.previousButton.disabled)
-                this.previousButton.enable();
-        }
-        renderInitialBoard(board) {
-            $("#board-container").empty();
-            for (let y = 0; y < board.height; y++) {
-                let row = $("<div/>").addClass("row").get(0);
-                for (let x = 0; x < board.width; x++) {
-                    let tile = $("<div/>").attr("id", `${x}-${y}`)
-                        .addClass("tile notstarted")
-                        .get(0);
-                    $(tile).click(() => EventAggregator.publish(new TileClickedEvent(x, y)));
-                    if (board && board.getUnit(x, y).state instanceof UnitStates.AliveState) {
-                        $("<div/>").addClass("alive").appendTo(tile);
-                    }
-                    row.appendChild(tile);
-                }
-                $("#board-container").append(row);
-            }
-            this.updatePopulation(board.population);
-            this.updateGenerationNumber(0);
-            this.buttonsToNotStartedState();
-        }
-        updateBoard(generation, genNumber) {
-            this.renderBoard(generation);
-            this.updatePopulation(generation.population);
-            this.updateGenerationNumber(genNumber);
-        }
-        renderBoard(generation) {
-            for (let unit of generation) {
-                let tile = $(`#${unit.x}-${unit.y}`).get(0);
-                if (unit.state instanceof UnitStates.AliveState && !tile.hasChildNodes()) {
-                    $("<div/>").addClass("alive").appendTo(tile);
-                }
-                else if (unit.state instanceof UnitStates.DeadState && tile.hasChildNodes()) {
-                    tile.lastElementChild.remove();
-                }
-            }
-        }
-        updateTileAndPopulation(unit, population) {
-            let id = `${unit.x}-${unit.y}`;
-            let tile = document.getElementById(id);
-            // draw alive element if state is Alive
-            if (unit.state instanceof UnitStates.AliveState) {
-                $("<div/>").addClass("alive").appendTo(tile);
-            }
-            else if (unit.state instanceof UnitStates.DeadState) {
-                tile.firstElementChild.remove();
-            }
-            this.updatePopulation(population);
-        }
-        updatePopulation(population) {
-            $("#pop-count").html(population.toString());
-            if (population > 0)
-                this.startButton.enable();
-            else
-                this.startButton.disable();
-        }
-        updateGenerationNumber(genNumber) {
-            $("#gen-count").html(genNumber.toString());
-        }
-        /// Handling game states ///////////////////////////////
-        buttonsToNotStartedState() {
-            this.previousButton.disable();
-            this.nextButton.disable();
-            this.startButton.content = "Start";
-            $(".game-over-block").hide();
-        }
-        buttonsToRunningState() {
-            this.previousButton.disable();
-            this.nextButton.disable();
-            this.startButton.content = "Pause";
-        }
-        buttonsToPausedState() {
-            this.previousButton.enable();
-            this.nextButton.enable();
-            this.startButton.content = "Continue";
-        }
-        makeTilesInactive() {
-            $("#board-container").find(".tile")
-                .off("click")
-                .removeClass("notstarted");
-        }
-        showGameOver(reason) {
-            $(".game-over-block").show("slow");
-            $(".reason").html(reason);
-            this.previousButton.disable();
-            this.nextButton.disable();
-            this.startButton.disable();
-        }
-        //////////////////////////////////////////////////
-        calculateMaxWidth() {
-            let availableWidth = $("#board-container").width();
-            const tileWidth = 30; // div width
-            return Math.floor(availableWidth / tileWidth);
-        }
-    }
-    MVC.View = View;
-    class Button {
-        constructor(id) {
-            this.button = document.getElementById(id);
-        }
-        disable() {
-            this.button.disabled = true;
-        }
-        enable() {
-            this.button.disabled = false;
-        }
-        onClick(callback) {
-            this.button.onclick = callback;
-        }
-        get content() {
-            return this.button.textContent;
-        }
-        set content(content) {
-            this.button.textContent = content;
-        }
-        get disabled() {
-            return this.button.disabled;
-        }
-    }
-    class SpinControl {
-        constructor(textId, upId, downId, initial, max, min) {
-            this.max = max;
-            this.min = min;
-            this.input = document.getElementById(textId);
-            this.upBtn = document.getElementById(upId);
-            this.downBtn = document.getElementById(downId);
-            $(this.input).on("input", () => this.checkAndUpdate());
-            $(this.upBtn).click(() => this.up());
-            $(this.downBtn).click(() => this.down());
-            this.setNewValue(initial);
-        }
-        checkAndUpdate() {
-            if (this.isValid(this.input.value)) {
-                let value = parseInt(this.input.value);
-                if (this.withinBounds(value)) {
-                    this.setNewValue(value);
-                    return;
-                }
-            }
-            this.input.value = this._value.toString(); // if value is invalid then leave old one
-        }
-        withinBounds(value) {
-            return (this.max === undefined || value <= this.max) &&
-                (this.min === undefined || value >= this.min);
-        }
-        setNewValue(value) {
-            this._value = value;
-            this.input.value = value.toString();
-            if (this.max !== undefined && this.max === this._value)
-                this.upBtn.disabled = true;
-            else
-                this.upBtn.disabled = false;
-            if (this.min !== undefined && this.min === this._value)
-                this.downBtn.disabled = true;
-            else
-                this.downBtn.disabled = false;
-        }
-        up() {
-            let potentialValue = this._value + 1;
-            if (this.withinBounds(potentialValue))
-                this.setNewValue(potentialValue);
-        }
-        down() {
-            let potentialValue = this._value - 1;
-            if (this.withinBounds(potentialValue))
-                this.setNewValue(potentialValue);
-        }
-        isValid(maybeNumber) {
-            let regex = new RegExp('^[0-9]+$');
-            return regex.test(maybeNumber);
-        }
-        enable() {
-        }
-        disable() {
-        }
-        get value() {
-            return this._value;
-        }
-        updateMaximum(maximum) {
-            this.max = maximum;
-            if (this._value > maximum)
-                this._value = maximum;
-        }
-    }
-})(MVC || (MVC = {}));
 class StateMachine {
     constructor(initialState) {
         this.initialState = initialState;
@@ -1136,10 +1133,10 @@ class StateMachine {
         let key = `${from.name}_${trigger.name}`;
         this.transishionsMap.set(key, to);
     }
-    preAction(state, action) {
+    onTransited(state, action) {
         this.preActionsMap.set(state.name, action);
     }
-    postAction(state, action) {
+    onTransiting(state, action) {
         this.postActionsMap.set(state.name, action);
     }
     nextState(trigger) {
@@ -1181,11 +1178,11 @@ class TriggerConfigurator {
         return new StateConfigurator(this.machine);
     }
     before(action) {
-        this.machine.preAction(this.state, action);
+        this.machine.onTransited(this.state, action);
         return this;
     }
     after(action) {
-        this.machine.postAction(this.state, action);
+        this.machine.onTransiting(this.state, action);
         return this;
     }
     done() {

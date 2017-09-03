@@ -18,11 +18,11 @@
         this.transishionsMap.set(key, to);
     }
 
-    public preAction(state: TState, action: (s: TState) => void): void {
+    public onTransited(state: TState, action: (s: TState) => void): void {
         this.preActionsMap.set(state.name, action);
     }
 
-    public postAction(state: TState, action: (s: TState) => void): void {
+    public onTransiting(state: TState, action: (s: TState) => void): void {
         this.postActionsMap.set(state.name, action);
     }
 
@@ -84,12 +84,12 @@ class TriggerConfigurator<TState extends IState, TTrigger extends Trigger> {
     }
 
     public before(action: (s: TState) => void): TriggerConfigurator<TState, TTrigger> {
-        this.machine.preAction(this.state, action);
+        this.machine.onTransited(this.state, action);
         return this;
     }
 
     public after(action: (s: TState) => void): TriggerConfigurator<TState, TTrigger> {
-        this.machine.postAction(this.state, action);
+        this.machine.onTransiting(this.state, action);
         return this;
     }
 

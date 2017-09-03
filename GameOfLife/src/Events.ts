@@ -160,7 +160,7 @@ class TileClickedEvent implements IEvent {
 class UnitUpdatedEvent implements IEvent {
     public name = "UnitUpdatedEvent";
 
-    public constructor(public unit?: Models.Unit, public population?: number) {
+    public constructor(public readonly unit?: Models.Unit, public readonly population?: number) {
 
     }
 }

@@ -26,6 +26,9 @@
     <Content Include="game.js" />
     <Content Include="styles\app.css" />
     <Content Include="index.html" />
+    <Content Include="tests\event_aggregator.tests.js" />
+    <Content Include="tests\game_states.tests.js" />
+    <Content Include="tests\state_machine.tests.js" />
     <Content Include="web.config" />
   </ItemGroup>
   <ItemGroup>
@@ -46,6 +49,7 @@
     <Content Include="game.js.map" />
     <Content Include="Chutzpah.json" />
     <Content Include="tests\generation.tests.js" />
+    <Content Include="tests\game.tests.js" />
     <None Include="web.Debug.config">
       <DependentUpon>web.config</DependentUpon>
     </None>

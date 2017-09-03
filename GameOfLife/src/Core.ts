@@ -39,7 +39,7 @@ namespace Core {
             };
         }
 
-        // there are 2 possible ways to end game:
+        // there are 2 possible ways to end the game:
         // 1. New generation has zero population
         // 2. Game came to a stable state and no changes in generations expected
         private isGameOver(oldGen: Models.Generation, newGen: Models.Generation) {
@@ -65,8 +65,6 @@ namespace Core {
                 marker: true
             };
         }
-
-        
     }
 
     export class ZeroGenerationProvider {
