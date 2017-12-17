@@ -29,3 +29,7 @@ What was NOT used and still requires to learn:
 * union types (|)
 * intersection types (&)
 * enum flags
+
+### Game of Life TODO:
+* Add speed regulator
+* Add dynamic chart generation/population using SVG
