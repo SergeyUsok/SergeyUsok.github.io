@@ -1,0 +1,21 @@
+﻿body {
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.content {
+  padding-left: 100px;
+  padding-top: 10px;
+}
+
+.canvas {
+    float: left;
+    width: 800px;
+    height: 650px;
+    margin-right: 10px;
+    background-color: #e9ecef;
+    border: 2px solid black; 
+}
+
+.toolset {
+    background-color: #e9ecef;
+}
