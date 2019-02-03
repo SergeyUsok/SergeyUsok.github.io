@@ -10,10 +10,10 @@
 .canvas {
     float: left;
     width: 800px;
-    height: 650px;
+    height: 800px;
     margin-right: 10px;
     background-color: #e9ecef;
-    border: 2px solid black; 
+    /*border: 2px solid black;*/ 
 }
 
 .toolset {
