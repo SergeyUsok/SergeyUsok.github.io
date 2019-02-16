@@ -1,12 +1,14 @@
 ﻿const svgns = "http://www.w3.org/2000/svg";
+const cellSize = 40;
 
 $(document).ready(() => {
     let map = document.getElementById("map");
     
     map.onclick = (event) => {
-        let station = document.createElementNS(svgns, 'circle');
-        station.setAttributeNS(null, 'cx', event.offsetX.toString());
-        station.setAttributeNS(null, 'cy', event.offsetY.toString());
+        let station = document.createElementNS(svgns, 'circle');        
+        var coords = remapToGridCoords(event.offsetX, event.offsetY);        
+        station.setAttributeNS(null, 'cx', coords.x.toString());
+        station.setAttributeNS(null, 'cy', coords.y.toString());
         station.setAttributeNS(null, 'r', "10");
         station.setAttributeNS(null, 'style', 'fill: white; stroke: blue; stroke-width: 1px;');
 
@@ -24,6 +26,39 @@ $(document).ready(() => {
     drawGrid(map);
 });
 
+function gridCellCoords(pixeledX,pixeledY){
+	  
+  return {
+  	x: Math.floor(pixeledX / cellSize),
+    y: Math.floor(pixeledY / cellSize)
+  };
+}
+
+function centerOfGridCell(gridX,gridY){
+	
+  // left border of cell
+  //  + right border of cell
+  // divided by 2 to get center of the cell by x axis
+  let x = gridX * cellSize + cellSize / 2;
+
+  // top border of cell
+  //  + bottom border of cell
+  // divided by 2 to get center of the cell by y axis
+  let y = gridY * cellSize + cellSize / 2;  
+  
+  return {x,y};
+}
+
+function remapToGridCoords(x,y) {
+	let cell = gridCellCoords(x,y);
+  let center = centerOfGridCell(cell.x, cell.y);
+  
+  return {
+  	x: center.x,
+    y: center.y,
+  };
+}
+
 function handleLeftClick(event: MouseEvent) {
     event.stopPropagation();
 }
@@ -35,7 +70,6 @@ function handleRightClick(event: Event) {
 }
 
 function drawGrid(map: HTMLElement): void {
-    let cellSize = 40;
     let canvas = <SVGSVGElement><any>map;
     // draw vertical lines
     for (let x = 0; x <= canvas.width.baseVal.value; x += cellSize) {
