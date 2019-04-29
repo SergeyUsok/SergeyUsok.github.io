@@ -8,14 +8,23 @@
 }
 
 .canvas {
-    float: left;
     width: 800px;
     height: 800px;
-    margin-right: 10px;
-    background-color: #e9ecef;
-    /*border: 2px solid black;*/ 
+    padding-top: 20px;
+    padding-bottom: 20px;
+    /*margin-right: 10px;*/
+    background-color: white;
+    /*border: 2px solid black;*/
 }
 
 .toolset {
-    background-color: #e9ecef;
+    background-color: white;
+    padding-top: 20px;
+    padding-bottom: 20px;
+}
+
+circle {
+    fill: white;
+    stroke: blue;
+    stroke-width: 1px;
 }
