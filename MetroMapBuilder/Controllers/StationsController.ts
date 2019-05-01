@@ -6,15 +6,14 @@ import { LinesController } from "./LinesController";
 export class StationsController implements Controller {
 
     private circles: Array<SVGCircleElement> = [];
+    private addStation = (e) => this.handleLeftClick(e);
+    private removeStation = (e) => this.handleRightClick(e);
 
     public constructor(private map: HTMLElement) {
         this.initialize(map);
     }
 
     public next(): Controller {
-        this.map.removeEventListener("click", this.handleLeftClick);
-        this.map.removeEventListener("contextmenu", this.handleRightClick, false);
-
         var stations = [];
 
         for (var i = 0; i < this.circles.length; i++) {
@@ -28,7 +27,7 @@ export class StationsController implements Controller {
     }
 
     public dispose(): void {
-
+        this.map.removeEventListener("click", this.addStation);
     }
 
     private handleLeftClick(event: MouseEvent) {
@@ -42,26 +41,23 @@ export class StationsController implements Controller {
             var circle = SVG.circle(center.x, center.y, Geometry.radius);
             this.circles.push(circle); // add to internal array
             this.map.appendChild(circle); // add to visual presentation
+            circle.addEventListener("contextmenu", this.removeStation, false);
         }
     }
 
     private handleRightClick(event: MouseEvent) {
         event.preventDefault();
-
-        var center = Geometry.centrify(event.offsetX, event.offsetY);
+        var target = <SVGCircleElement>event.target;
 
         var index = this.circles.findIndex(circle =>
-            circle.cx.baseVal.value == center.x &&
-            circle.cy.baseVal.value == center.y);
+            circle.cx.baseVal.value == target.cx.baseVal.value &&
+            circle.cy.baseVal.value == target.cy.baseVal.value);
 
-        if (index !== -1) {            
-            this.circles[index].remove(); // remove from visual presentation
-            this.circles.splice(index, 1); // remove from array
-        }
+        this.circles[index].remove(); // remove from visual presentation
+        this.circles.splice(index, 1); // remove from array
     }
 
     private initialize(map: HTMLElement) {
-        map.addEventListener("click", this.handleLeftClick);
-        map.addEventListener("contextmenu", this.handleRightClick, false);
+        map.addEventListener("click", this.addStation);
     }
 }

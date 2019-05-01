@@ -241,3 +241,11 @@ ModelManifest.xml
 # FAKE - F# Make
 .fake/
 MetroMapBuilder/app.js.map
+/MetroMapBuilder/LinesBuilder.js.map
+/MetroMapBuilder/main.js.map
+/MetroMapBuilder/Path.js.map
+/MetroMapBuilder/Station.js.map
+/MetroMapBuilder/Utility/SVG.js.map
+/MetroMapBuilder/Controllers/StationsController.js.map
+/MetroMapBuilder/Controllers/LinesController.js.map
+/MetroMapBuilder/Controllers/GridController.js.map

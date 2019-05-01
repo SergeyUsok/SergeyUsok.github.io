@@ -1,84 +1,3 @@
-/// <reference path="Rules.ts" />
-var UnitStates;
-(function (UnitStates) {
-    class AliveState {
-        constructor() {
-            this.name = "Alive";
-        }
-        getRule() {
-            return RulesCache.getRule(this.name);
-        }
-    }
-    UnitStates.AliveState = AliveState;
-    class DeadState {
-        constructor() {
-            this.name = "Dead";
-        }
-        getRule() {
-            return RulesCache.getRule(this.name);
-        }
-    }
-    UnitStates.DeadState = DeadState;
-})(UnitStates || (UnitStates = {}));
-/// <reference path="UnitStates.ts" />
-var states = UnitStates; // just to try use import keyword
-var Models;
-(function (Models) {
-    class Generation {
-        constructor(width, height) {
-            this._population = 0;
-            this.width = width;
-            this.height = height;
-            this.board = this.initializeBoard(width, height);
-        }
-        get population() {
-            return this._population;
-        }
-        add(unit) {
-            if (this.board[unit.y][unit.x].state instanceof states.AliveState &&
-                unit.state instanceof states.DeadState) {
-                this._population--;
-            }
-            else if (this.board[unit.y][unit.x].state instanceof states.DeadState &&
-                unit.state instanceof states.AliveState) {
-                this._population++;
-            }
-            this.board[unit.y][unit.x] = unit;
-        }
-        getUnit(x, y) {
-            if (x < 0 || x >= this.width || y < 0 || y >= this.height)
-                throw new RangeError(`Provided x=${x} and y=${y} out of board borders`);
-            let unit = this.board[y][x];
-            return unit;
-        }
-        *[Symbol.iterator]() {
-            for (let row of this.board) {
-                for (let unit of row) {
-                    yield unit;
-                }
-            }
-        }
-        initializeBoard(width, height) {
-            let result = [];
-            for (let y = 0; y < height; y++) {
-                result[y] = [];
-                for (let x = 0; x < width; x++) {
-                    result[y][x] = new Unit(x, y, new states.DeadState());
-                }
-            }
-            return result;
-        }
-    }
-    Models.Generation = Generation;
-    class Unit {
-        constructor(x, y, state) {
-            this.state = state;
-            this.x = x;
-            this.y = y;
-        }
-    }
-    Models.Unit = Unit;
-})(Models || (Models = {}));
 /// <reference path="Models.ts" />
 /// <reference path="UnitStates.ts" />
 var RulesCache;
@@ -160,6 +79,87 @@ var RulesCache;
         return new (Function.prototype.bind.apply(cls, arguments));
     }
 })(RulesCache || (RulesCache = {}));
+/// <reference path="Rules.ts" />
+var UnitStates;
+(function (UnitStates) {
+    class AliveState {
+        constructor() {
+            this.name = "Alive";
+        }
+        getRule() {
+            return RulesCache.getRule(this.name);
+        }
+    }
+    UnitStates.AliveState = AliveState;
+    class DeadState {
+        constructor() {
+            this.name = "Dead";
+        }
+        getRule() {
+            return RulesCache.getRule(this.name);
+        }
+    }
+    UnitStates.DeadState = DeadState;
+})(UnitStates || (UnitStates = {}));
+/// <reference path="UnitStates.ts" />
+var states = UnitStates; // just to try use import keyword
+var Models;
+(function (Models) {
+    class Generation {
+        constructor(width, height) {
+            this._population = 0;
+            this.width = width;
+            this.height = height;
+            this.board = this.initializeBoard(width, height);
+        }
+        get population() {
+            return this._population;
+        }
+        add(unit) {
+            if (this.board[unit.y][unit.x].state instanceof states.AliveState &&
+                unit.state instanceof states.DeadState) {
+                this._population--;
+            }
+            else if (this.board[unit.y][unit.x].state instanceof states.DeadState &&
+                unit.state instanceof states.AliveState) {
+                this._population++;
+            }
+            this.board[unit.y][unit.x] = unit;
+        }
+        getUnit(x, y) {
+            if (x < 0 || x >= this.width || y < 0 || y >= this.height)
+                throw new RangeError(`Provided x=${x} and y=${y} out of board borders`);
+            let unit = this.board[y][x];
+            return unit;
+        }
+        *[Symbol.iterator]() {
+            for (let row of this.board) {
+                for (let unit of row) {
+                    yield unit;
+                }
+            }
+        }
+        initializeBoard(width, height) {
+            let result = [];
+            for (let y = 0; y < height; y++) {
+                result[y] = [];
+                for (let x = 0; x < width; x++) {
+                    result[y][x] = new Unit(x, y, new states.DeadState());
+                }
+            }
+            return result;
+        }
+    }
+    Models.Generation = Generation;
+    class Unit {
+        constructor(x, y, state) {
+            this.state = state;
+            this.x = x;
+            this.y = y;
+        }
+    }
+    Models.Unit = Unit;
+})(Models || (Models = {}));
 /// <reference path="Models.ts" />
 /// <reference path="UnitStates.ts" />
 var Core;
@@ -513,303 +513,6 @@ $(document).ready(() => {
     let game = new MVC.GameController();
     view.showNotStartedGame();
 });
-/// <reference path="Core.ts" />
-/// <reference path="Models.ts" />
-/// <reference path="UnitStates.ts" />
-var MVC;
-(function (MVC) {
-    class GameController {
-        constructor() {
-            this.gen0provider = new Core.ZeroGenerationProvider();
-            this.subscribeOnViewEvents();
-            this.stateMachine = this.configureStateMachine();
-        }
-        subscribeOnViewEvents() {
-            EventAggregator.subscribe(new NewGameEvent(), e => this.createNewGame(e));
-            EventAggregator.subscribe(new GameStateChangedEvent(), e => this.handleEvent(e));
-            EventAggregator.subscribe(new RandomGameEvent(), e => this.createRandomGame(e));
-        }
-        configureStateMachine() {
-            let notStarted = new NotStartedState();
-            let running = new RunningState();
-            let paused = new PausedState();
-            return StateMachine.startsFrom(notStarted)
-                .on(new GameStateChangedEvent()).moveTo(running)
-                .on(new NewGameEvent()).moveTo(notStarted)
-                .on(new RandomGameEvent()).moveTo(notStarted)
-                .after(s => s.dispose())
-                .and()
-                .for(running)
-                .before(g => EventAggregator.publish(new GameStartingEvent()))
-                .on(new GameStateChangedEvent()).moveTo(paused)
-                .on(new NewGameEvent()).moveTo(notStarted)
-                .on(new RandomGameEvent()).moveTo(notStarted)
-                .after(s => s.dispose())
-                .and()
-                .for(paused)
-                .before(g => EventAggregator.publish(new GamePausingEvent()))
-                .on(new GameStateChangedEvent()).moveTo(running)
-                .on(new NewGameEvent()).moveTo(notStarted)
-                .on(new RandomGameEvent()).moveTo(notStarted)
-                .after(s => s.dispose())
-                .done();
-        }
-        createNewGame(event) {
-            let gen0 = this.gen0provider.getEmptyGeneration(event.width, event.height);
-            this.game = new Core.Game(gen0);
-            this.handleEvent(event);
-        }
-        createRandomGame(event) {
-            let gen0 = this.gen0provider.getRandomGeneration(event.width, event.height);
-            this.game = new Core.Game(gen0);
-            this.handleEvent(event);
-        }
-        handleEvent(trigger) {
-            this.stateMachine.nextState(trigger).apply(this.game);
-        }
-    }
-    MVC.GameController = GameController;
-    class View {
-        constructor() {
-            this.initializeButtons();
-            this.initializeSpins();
-            this.subscribeOnEvents();
-        }
-        showNotStartedGame() {
-            EventAggregator.publish(new NewGameEvent(this.widthSpin.value, this.heightSpin.value));
-        }
-        /// Initialization
-        subscribeOnEvents() {
-            // subscribe on Controller events
-            // game state events
-            EventAggregator.subscribe(new InitializeGameEvent(), ev => this.renderInitialBoard(ev.generation));
-            // game events
-            EventAggregator.subscribe(new NewGenerationEvent(), ev => this.updateBoard(ev.generation, ev.generationNumber));
-            EventAggregator.subscribe(new UnitUpdatedEvent(), ev => this.updateTileAndPopulation(ev.unit, ev.population));
-            EventAggregator.subscribe(new HistoricalGenerationEvent(), ev => this.renderHistoricalGeneration(ev.generation, ev.generationNumber));
-            EventAggregator.subscribe(new LeavingNotStartedStateEvent(), ev => this.makeTilesInactive());
-            EventAggregator.subscribe(new GameStartingEvent(), ev => this.buttonsToRunningState());
-            EventAggregator.subscribe(new GamePausingEvent(), ev => this.buttonsToPausedState());
-            EventAggregator.subscribe(new GameOverEvent(), ev => this.showGameOver(ev.reason));
-            // subscribe on UI buttons elements
-            this.newGameButton.onClick(() => EventAggregator.publish(new NewGameEvent(this.widthSpin.value, this.heightSpin.value)));
-            this.randomGameButton.onClick(() => EventAggregator.publish(new RandomGameEvent(this.widthSpin.value, this.heightSpin.value)));
-            this.startButton.onClick(() => EventAggregator.publish(new GameStateChangedEvent()));
-            this.nextButton.onClick(() => EventAggregator.publish(new NextGenerationEvent()));
-            this.previousButton.onClick(() => EventAggregator.publish(new PrevGenerationEvent()));
-        }
-        initializeButtons() {
-            this.newGameButton = new Button("newGameBtn");
-            this.randomGameButton = new Button("randomBtn");
-            this.startButton = new Button("game-state-controller");
-            this.nextButton = new Button("nextBtn");
-            this.previousButton = new Button("prevBtn");
-        }
-        initializeSpins() {
-            let maxWidth = this.calculateMaxWidth();
-            const height = 20; // default height
-            this.widthSpin = new SpinControl("widthInput", "widthUp", "widthDown", maxWidth, maxWidth, 1);
-            this.heightSpin = new SpinControl("heightInput", "heightUp", "heightDown", height, undefined, 1);
-            $(window).on("resize", () => {
-                let tempWidth = this.calculateMaxWidth();
-                if (tempWidth !== this.widthSpin.value) {
-                    this.widthSpin.updateMaximum(tempWidth);
-                    EventAggregator.publish(new NewGameEvent(this.widthSpin.value, this.heightSpin.value));
-                }
-            });
-        }
-        //////////////////////////////////////////////////////////////////////////////
-        renderHistoricalGeneration(generation, genNumber) {
-            this.updateBoard(generation, genNumber);
-            if (genNumber == 0 && !this.previousButton.disabled)
-                this.previousButton.disable();
-            if (genNumber > 0 && this.previousButton.disabled)
-                this.previousButton.enable();
-        }
-        renderInitialBoard(board) {
-            $("#board-container").empty();
-            for (let y = 0; y < board.height; y++) {
-                let row = $("<div/>").addClass("row").get(0);
-                for (let x = 0; x < board.width; x++) {
-                    let tile = $("<div/>").attr("id", `${x}-${y}`)
-                        .addClass("tile notstarted")
-                        .get(0);
-                    $(tile).click(() => EventAggregator.publish(new TileClickedEvent(x, y)));
-                    if (board && board.getUnit(x, y).state instanceof UnitStates.AliveState) {
-                        $("<div/>").addClass("alive").appendTo(tile);
-                    }
-                    row.appendChild(tile);
-                }
-                $("#board-container").append(row);
-            }
-            this.updatePopulation(board.population);
-            this.updateGenerationNumber(0);
-            this.buttonsToNotStartedState();
-        }
-        updateBoard(generation, genNumber) {
-            this.renderBoard(generation);
-            this.updatePopulation(generation.population);
-            this.updateGenerationNumber(genNumber);
-        }
-        renderBoard(generation) {
-            for (let unit of generation) {
-                let tile = $(`#${unit.x}-${unit.y}`).get(0);
-                if (unit.state instanceof UnitStates.AliveState && !tile.hasChildNodes()) {
-                    $("<div/>").addClass("alive").appendTo(tile);
-                }
-                else if (unit.state instanceof UnitStates.DeadState && tile.hasChildNodes()) {
-                    tile.lastElementChild.remove();
-                }
-            }
-        }
-        updateTileAndPopulation(unit, population) {
-            let id = `${unit.x}-${unit.y}`;
-            let tile = document.getElementById(id);
-            // draw alive element if state is Alive
-            if (unit.state instanceof UnitStates.AliveState) {
-                $("<div/>").addClass("alive").appendTo(tile);
-            }
-            else if (unit.state instanceof UnitStates.DeadState) {
-                tile.firstElementChild.remove();
-            }
-            this.updatePopulation(population);
-        }
-        updatePopulation(population) {
-            $("#pop-count").html(population.toString());
-            if (population > 0)
-                this.startButton.enable();
-            else
-                this.startButton.disable();
-        }
-        updateGenerationNumber(genNumber) {
-            $("#gen-count").html(genNumber.toString());
-        }
-        /// Handling game states ///////////////////////////////
-        buttonsToNotStartedState() {
-            this.previousButton.disable();
-            this.nextButton.disable();
-            this.startButton.content = "Start";
-            $(".game-over-block").hide();
-        }
-        buttonsToRunningState() {
-            this.previousButton.disable();
-            this.nextButton.disable();
-            this.startButton.content = "Pause";
-        }
-        buttonsToPausedState() {
-            this.previousButton.enable();
-            this.nextButton.enable();
-            this.startButton.content = "Continue";
-        }
-        makeTilesInactive() {
-            $("#board-container").find(".tile")
-                .off("click")
-                .removeClass("notstarted");
-        }
-        showGameOver(reason) {
-            $(".game-over-block").show("slow");
-            $(".reason").html(reason);
-            this.previousButton.disable();
-            this.nextButton.disable();
-            this.startButton.disable();
-        }
-        //////////////////////////////////////////////////
-        calculateMaxWidth() {
-            let availableWidth = $("#board-container").width();
-            const tileWidth = 30; // div width
-            return Math.floor(availableWidth / tileWidth);
-        }
-    }
-    MVC.View = View;
-    class Button {
-        constructor(id) {
-            this.button = document.getElementById(id);
-        }
-        disable() {
-            this.button.disabled = true;
-        }
-        enable() {
-            this.button.disabled = false;
-        }
-        onClick(callback) {
-            this.button.onclick = callback;
-        }
-        get content() {
-            return this.button.textContent;
-        }
-        set content(content) {
-            this.button.textContent = content;
-        }
-        get disabled() {
-            return this.button.disabled;
-        }
-    }
-    class SpinControl {
-        constructor(textId, upId, downId, initial, max, min) {
-            this.max = max;
-            this.min = min;
-            this.input = document.getElementById(textId);
-            this.upBtn = document.getElementById(upId);
-            this.downBtn = document.getElementById(downId);
-            $(this.input).on("input", () => this.checkAndUpdate());
-            $(this.upBtn).click(() => this.up());
-            $(this.downBtn).click(() => this.down());
-            this.setNewValue(initial);
-        }
-        checkAndUpdate() {
-            if (this.isValid(this.input.value)) {
-                let value = parseInt(this.input.value);
-                if (this.withinBounds(value)) {
-                    this.setNewValue(value);
-                    return;
-                }
-            }
-            this.input.value = this._value.toString(); // if value is invalid then leave old one
-        }
-        withinBounds(value) {
-            return (this.max === undefined || value <= this.max) &&
-                (this.min === undefined || value >= this.min);
-        }
-        setNewValue(value) {
-            this._value = value;
-            this.input.value = value.toString();
-            if (this.max !== undefined && this.max === this._value)
-                this.upBtn.disabled = true;
-            else
-                this.upBtn.disabled = false;
-            if (this.min !== undefined && this.min === this._value)
-                this.downBtn.disabled = true;
-            else
-                this.downBtn.disabled = false;
-        }
-        up() {
-            let potentialValue = this._value + 1;
-            if (this.withinBounds(potentialValue))
-                this.setNewValue(potentialValue);
-        }
-        down() {
-            let potentialValue = this._value - 1;
-            if (this.withinBounds(potentialValue))
-                this.setNewValue(potentialValue);
-        }
-        isValid(maybeNumber) {
-            let regex = new RegExp('^[0-9]+$');
-            return regex.test(maybeNumber);
-        }
-        enable() {
-        }
-        disable() {
-        }
-        get value() {
-            return this._value;
-        }
-        updateMaximum(maximum) {
-            this.max = maximum;
-            if (this._value > maximum)
-                this._value = maximum;
-        }
-    }
-})(MVC || (MVC = {}));
 /// <reference path="Models.ts" />
 /// <reference path="Core.ts" />
 /// <reference path="UnitStates.ts" />
@@ -1056,6 +759,7 @@ var MVP;
                 if (newState instanceof UnitStates.AliveState) {
                     $("<div/>").addClass("alive").appendTo(tile);
                 }
+                // remove child Alive element if state is Dead
                 else if (newState instanceof UnitStates.DeadState) {
                     tile.firstElementChild.remove();
                 }
@@ -1110,13 +814,316 @@ var MVP;
         }
     }
     MVP.View = View;
-    var GameState;
+    let GameState;
     (function (GameState) {
         GameState[GameState["NotStarted"] = 0] = "NotStarted";
         GameState[GameState["Running"] = 1] = "Running";
         GameState[GameState["Paused"] = 2] = "Paused";
     })(GameState || (GameState = {}));
 })(MVP || (MVP = {}));
+/// <reference path="Core.ts" />
+/// <reference path="Models.ts" />
+/// <reference path="UnitStates.ts" />
+var MVC;
+(function (MVC) {
+    class GameController {
+        constructor() {
+            this.gen0provider = new Core.ZeroGenerationProvider();
+            this.subscribeOnViewEvents();
+            this.stateMachine = this.configureStateMachine();
+        }
+        subscribeOnViewEvents() {
+            EventAggregator.subscribe(new NewGameEvent(), e => this.createNewGame(e));
+            EventAggregator.subscribe(new GameStateChangedEvent(), e => this.handleEvent(e));
+            EventAggregator.subscribe(new RandomGameEvent(), e => this.createRandomGame(e));
+        }
+        configureStateMachine() {
+            let notStarted = new NotStartedState();
+            let running = new RunningState();
+            let paused = new PausedState();
+            return StateMachine.startsFrom(notStarted)
+                .on(new GameStateChangedEvent()).moveTo(running)
+                .on(new NewGameEvent()).moveTo(notStarted)
+                .on(new RandomGameEvent()).moveTo(notStarted)
+                .after(s => s.dispose())
+                .and()
+                .for(running)
+                .before(g => EventAggregator.publish(new GameStartingEvent()))
+                .on(new GameStateChangedEvent()).moveTo(paused)
+                .on(new NewGameEvent()).moveTo(notStarted)
+                .on(new RandomGameEvent()).moveTo(notStarted)
+                .after(s => s.dispose())
+                .and()
+                .for(paused)
+                .before(g => EventAggregator.publish(new GamePausingEvent()))
+                .on(new GameStateChangedEvent()).moveTo(running)
+                .on(new NewGameEvent()).moveTo(notStarted)
+                .on(new RandomGameEvent()).moveTo(notStarted)
+                .after(s => s.dispose())
+                .done();
+        }
+        createNewGame(event) {
+            let gen0 = this.gen0provider.getEmptyGeneration(event.width, event.height);
+            this.game = new Core.Game(gen0);
+            this.handleEvent(event);
+        }
+        createRandomGame(event) {
+            let gen0 = this.gen0provider.getRandomGeneration(event.width, event.height);
+            this.game = new Core.Game(gen0);
+            this.handleEvent(event);
+        }
+        handleEvent(trigger) {
+            this.stateMachine.nextState(trigger).apply(this.game);
+        }
+    }
+    MVC.GameController = GameController;
+    class View {
+        constructor() {
+            this.initializeButtons();
+            this.initializeSpins();
+            this.subscribeOnEvents();
+        }
+        showNotStartedGame() {
+            EventAggregator.publish(new NewGameEvent(this.widthSpin.value, this.heightSpin.value));
+        }
+        /// Initialization
+        subscribeOnEvents() {
+            // subscribe on Controller events
+            // game state events
+            EventAggregator.subscribe(new InitializeGameEvent(), ev => this.renderInitialBoard(ev.generation));
+            // game events
+            EventAggregator.subscribe(new NewGenerationEvent(), ev => this.updateBoard(ev.generation, ev.generationNumber));
+            EventAggregator.subscribe(new UnitUpdatedEvent(), ev => this.updateTileAndPopulation(ev.unit, ev.population));
+            EventAggregator.subscribe(new HistoricalGenerationEvent(), ev => this.renderHistoricalGeneration(ev.generation, ev.generationNumber));
+            EventAggregator.subscribe(new LeavingNotStartedStateEvent(), ev => this.makeTilesInactive());
+            EventAggregator.subscribe(new GameStartingEvent(), ev => this.buttonsToRunningState());
+            EventAggregator.subscribe(new GamePausingEvent(), ev => this.buttonsToPausedState());
+            EventAggregator.subscribe(new GameOverEvent(), ev => this.showGameOver(ev.reason));
+            // subscribe on UI buttons elements
+            this.newGameButton.onClick(() => EventAggregator.publish(new NewGameEvent(this.widthSpin.value, this.heightSpin.value)));
+            this.randomGameButton.onClick(() => EventAggregator.publish(new RandomGameEvent(this.widthSpin.value, this.heightSpin.value)));
+            this.startButton.onClick(() => EventAggregator.publish(new GameStateChangedEvent()));
+            this.nextButton.onClick(() => EventAggregator.publish(new NextGenerationEvent()));
+            this.previousButton.onClick(() => EventAggregator.publish(new PrevGenerationEvent()));
+        }
+        initializeButtons() {
+            this.newGameButton = new Button("newGameBtn");
+            this.randomGameButton = new Button("randomBtn");
+            this.startButton = new Button("game-state-controller");
+            this.nextButton = new Button("nextBtn");
+            this.previousButton = new Button("prevBtn");
+        }
+        initializeSpins() {
+            let maxWidth = this.calculateMaxWidth();
+            const height = 20; // default height
+            this.widthSpin = new SpinControl("widthInput", "widthUp", "widthDown", maxWidth, maxWidth, 1);
+            this.heightSpin = new SpinControl("heightInput", "heightUp", "heightDown", height, undefined, 1);
+            $(window).on("resize", () => {
+                let tempWidth = this.calculateMaxWidth();
+                if (tempWidth !== this.widthSpin.value) {
+                    this.widthSpin.updateMaximum(tempWidth);
+                    EventAggregator.publish(new NewGameEvent(this.widthSpin.value, this.heightSpin.value));
+                }
+            });
+        }
+        //////////////////////////////////////////////////////////////////////////////
+        renderHistoricalGeneration(generation, genNumber) {
+            this.updateBoard(generation, genNumber);
+            if (genNumber == 0 && !this.previousButton.disabled)
+                this.previousButton.disable();
+            if (genNumber > 0 && this.previousButton.disabled)
+                this.previousButton.enable();
+        }
+        renderInitialBoard(board) {
+            $("#board-container").empty();
+            for (let y = 0; y < board.height; y++) {
+                let row = $("<div/>").addClass("row").get(0);
+                for (let x = 0; x < board.width; x++) {
+                    let tile = $("<div/>").attr("id", `${x}-${y}`)
+                        .addClass("tile notstarted")
+                        .get(0);
+                    $(tile).click(() => EventAggregator.publish(new TileClickedEvent(x, y)));
+                    if (board && board.getUnit(x, y).state instanceof UnitStates.AliveState) {
+                        $("<div/>").addClass("alive").appendTo(tile);
+                    }
+                    row.appendChild(tile);
+                }
+                $("#board-container").append(row);
+            }
+            this.updatePopulation(board.population);
+            this.updateGenerationNumber(0);
+            this.buttonsToNotStartedState();
+        }
+        updateBoard(generation, genNumber) {
+            this.renderBoard(generation);
+            this.updatePopulation(generation.population);
+            this.updateGenerationNumber(genNumber);
+            //this.updateChart(genNumber, generation.population);
+        }
+        //private updateChart(genNumber: number, population: number) {
+        //    var svg = <SVGPolylineElement><any>document.getElementById("line");
+        //    svg.points.
+        //}
+        renderBoard(generation) {
+            for (let unit of generation) {
+                let tile = $(`#${unit.x}-${unit.y}`).get(0);
+                if (unit.state instanceof UnitStates.AliveState && !tile.hasChildNodes()) {
+                    $("<div/>").addClass("alive").appendTo(tile);
+                }
+                else if (unit.state instanceof UnitStates.DeadState && tile.hasChildNodes()) {
+                    tile.lastElementChild.remove();
+                }
+            }
+        }
+        updateTileAndPopulation(unit, population) {
+            let id = `${unit.x}-${unit.y}`;
+            let tile = document.getElementById(id);
+            // draw alive element if state is Alive
+            if (unit.state instanceof UnitStates.AliveState) {
+                $("<div/>").addClass("alive").appendTo(tile);
+            }
+            // remove child Alive element if state is Dead
+            else if (unit.state instanceof UnitStates.DeadState) {
+                tile.firstElementChild.remove();
+            }
+            this.updatePopulation(population);
+        }
+        updatePopulation(population) {
+            $("#pop-count").html(population.toString());
+            if (population > 0)
+                this.startButton.enable();
+            else
+                this.startButton.disable();
+        }
+        updateGenerationNumber(genNumber) {
+            $("#gen-count").html(genNumber.toString());
+        }
+        /// Handling game states ///////////////////////////////
+        buttonsToNotStartedState() {
+            this.previousButton.disable();
+            this.nextButton.disable();
+            this.startButton.content = "Start";
+            $(".game-over-block").hide();
+        }
+        buttonsToRunningState() {
+            this.previousButton.disable();
+            this.nextButton.disable();
+            this.startButton.content = "Pause";
+        }
+        buttonsToPausedState() {
+            this.previousButton.enable();
+            this.nextButton.enable();
+            this.startButton.content = "Continue";
+        }
+        makeTilesInactive() {
+            $("#board-container").find(".tile")
+                .off("click")
+                .removeClass("notstarted");
+        }
+        showGameOver(reason) {
+            $(".game-over-block").show("slow");
+            $(".reason").html(reason);
+            this.previousButton.disable();
+            this.nextButton.disable();
+            this.startButton.disable();
+        }
+        //////////////////////////////////////////////////
+        calculateMaxWidth() {
+            let availableWidth = $("#board-container").width();
+            const tileWidth = 30; // div width
+            return Math.floor(availableWidth / tileWidth);
+        }
+    }
+    MVC.View = View;
+    class Button {
+        constructor(id) {
+            this.button = document.getElementById(id);
+        }
+        disable() {
+            this.button.disabled = true;
+        }
+        enable() {
+            this.button.disabled = false;
+        }
+        onClick(callback) {
+            this.button.onclick = callback;
+        }
+        get content() {
+            return this.button.textContent;
+        }
+        set content(content) {
+            this.button.textContent = content;
+        }
+        get disabled() {
+            return this.button.disabled;
+        }
+    }
+    class SpinControl {
+        constructor(textId, upId, downId, initial, max, min) {
+            this.max = max;
+            this.min = min;
+            this.input = document.getElementById(textId);
+            this.upBtn = document.getElementById(upId);
+            this.downBtn = document.getElementById(downId);
+            $(this.input).on("input", () => this.checkAndUpdate());
+            $(this.upBtn).click(() => this.up());
+            $(this.downBtn).click(() => this.down());
+            this.setNewValue(initial);
+        }
+        checkAndUpdate() {
+            if (this.isValid(this.input.value)) {
+                let value = parseInt(this.input.value);
+                if (this.withinBounds(value)) {
+                    this.setNewValue(value);
+                    return;
+                }
+            }
+            this.input.value = this._value.toString(); // if value is invalid then leave old one
+        }
+        withinBounds(value) {
+            return (this.max === undefined || value <= this.max) &&
+                (this.min === undefined || value >= this.min);
+        }
+        setNewValue(value) {
+            this._value = value;
+            this.input.value = value.toString();
+            if (this.max !== undefined && this.max === this._value)
+                this.upBtn.disabled = true;
+            else
+                this.upBtn.disabled = false;
+            if (this.min !== undefined && this.min === this._value)
+                this.downBtn.disabled = true;
+            else
+                this.downBtn.disabled = false;
+        }
+        up() {
+            let potentialValue = this._value + 1;
+            if (this.withinBounds(potentialValue))
+                this.setNewValue(potentialValue);
+        }
+        down() {
+            let potentialValue = this._value - 1;
+            if (this.withinBounds(potentialValue))
+                this.setNewValue(potentialValue);
+        }
+        isValid(maybeNumber) {
+            let regex = new RegExp('^[0-9]+$');
+            return regex.test(maybeNumber);
+        }
+        enable() {
+        }
+        disable() {
+        }
+        get value() {
+            return this._value;
+        }
+        updateMaximum(maximum) {
+            this.max = maximum;
+            if (this._value > maximum)
+                this._value = maximum;
+        }
+    }
+})(MVC || (MVC = {}));
 class StateMachine {
     constructor(initialState) {
         this.initialState = initialState;

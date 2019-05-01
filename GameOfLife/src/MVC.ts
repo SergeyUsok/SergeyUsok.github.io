@@ -174,7 +174,14 @@ namespace MVC {
             this.renderBoard(generation);
             this.updatePopulation(generation.population);
             this.updateGenerationNumber(genNumber);
+            //this.updateChart(genNumber, generation.population);
         }        
+
+        //private updateChart(genNumber: number, population: number) {
+        //    var svg = <SVGPolylineElement><any>document.getElementById("line");
+
+        //    svg.points.
+        //}
 
         private renderBoard(generation: Models.Generation) {
             for (let unit of generation) {

@@ -8,32 +8,43 @@ $(document).ready(() => {
         drawing
     }
 
-    let map = document.getElementById("map");
-
-    let currentState = Phase.customizeGrid;
-
-    var controller: Controller = new GridController(map);
-
     document.getElementById("next").onclick = next;
+
+    let map = document.getElementById("map");
+    let currentState = Phase.customizeGrid;
+    var controller: Controller = new GridController(map);
 
     function next() {
         if (currentState == Phase.customizeGrid) {
             currentState = Phase.stationsSetUp;
-            document.getElementById("grid-customization").classList.add("disabled");
-            document.getElementById("stations-setup").classList.add("active");
-            document.getElementById("stations-setup").classList.remove("disabled");
+            disable("grid-customization");
+            enable("stations-setup");
         }
 
         else if (currentState == Phase.stationsSetUp) {
             currentState = Phase.linesSetUp;
+            disable("stations-setup");
+            enable("lines-setup");
         }
 
         else if (currentState == Phase.linesSetUp) {
             currentState = Phase.drawing;
+            disable("lines-setup");
+            enable("drawing");
         }            
 
         controller.dispose();
         controller = controller.next();
+    }
+
+    function disable(elementId: string) {
+        document.getElementById(elementId).classList.add("disabled");
+        document.getElementById(elementId).classList.remove("activated");
+    }
+
+    function enable(elementId: string) {
+        document.getElementById(elementId).classList.remove("disabled");
+        document.getElementById(elementId).classList.add("activated");
     }
 });
 

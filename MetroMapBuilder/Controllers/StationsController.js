@@ -5,11 +5,11 @@ define(["require", "exports", "../Utility/Geometry", "../Utility/SVG", "./LinesC
         constructor(map) {
             this.map = map;
             this.circles = [];
+            this.addStation = (e) => this.handleLeftClick(e);
+            this.removeStation = (e) => this.handleRightClick(e);
             this.initialize(map);
         }
         next() {
-            this.map.removeEventListener("click", this.handleLeftClick);
-            this.map.removeEventListener("contextmenu", this.handleRightClick, false);
             var stations = [];
             for (var i = 0; i < this.circles.length; i++) {
                 var circle = this.circles[i];
@@ -20,6 +20,7 @@ define(["require", "exports", "../Utility/Geometry", "../Utility/SVG", "./LinesC
             return new LinesController_1.LinesController(this.map, stations);
         }
         dispose() {
+            this.map.removeEventListener("click", this.addStation);
         }
         handleLeftClick(event) {
             var center = Geometry_1.Geometry.centrify(event.offsetX, event.offsetY);
@@ -29,21 +30,19 @@ define(["require", "exports", "../Utility/Geometry", "../Utility/SVG", "./LinesC
                 var circle = SVG_1.SVG.circle(center.x, center.y, Geometry_1.Geometry.radius);
                 this.circles.push(circle); // add to internal array
                 this.map.appendChild(circle); // add to visual presentation
+                circle.addEventListener("contextmenu", this.removeStation, false);
             }
         }
         handleRightClick(event) {
             event.preventDefault();
-            var center = Geometry_1.Geometry.centrify(event.offsetX, event.offsetY);
-            var index = this.circles.findIndex(circle => circle.cx.baseVal.value == center.x &&
-                circle.cy.baseVal.value == center.y);
-            if (index !== -1) {
-                this.circles[index].remove(); // remove from visual presentation
-                this.circles.splice(index, 1); // remove from array
-            }
+            var target = event.target;
+            var index = this.circles.findIndex(circle => circle.cx.baseVal.value == target.cx.baseVal.value &&
+                circle.cy.baseVal.value == target.cy.baseVal.value);
+            this.circles[index].remove(); // remove from visual presentation
+            this.circles.splice(index, 1); // remove from array
         }
         initialize(map) {
-            map.addEventListener("click", this.handleLeftClick);
-            map.addEventListener("contextmenu", this.handleRightClick, false);
+            map.addEventListener("click", this.addStation);
         }
     }
     exports.StationsController = StationsController;

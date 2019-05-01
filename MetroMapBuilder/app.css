@@ -28,3 +28,7 @@ circle {
     stroke: blue;
     stroke-width: 1px;
 }
+
+.activated {
+    background-color: aqua;
+}
