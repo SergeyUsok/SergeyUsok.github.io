@@ -1,8 +1,11 @@
 ﻿import { Controller } from "./GridController";
 
 export class LinesController implements Controller {    
-    private currentFrom: Station;
-    private currentTo: Station;
+    private currentFrom: Station = null;
+    private currentTo: Station = null;
+    private selectStation = e => this.handleClick(e);
+    private deselectStation = e => this.handleRightClick(e);
+
     private currentLine: number = -1;
     private lineColors: string[] = [];
     private connections: Connection[] = [];
@@ -21,7 +24,8 @@ export class LinesController implements Controller {
 
     private initialize(stations: Station[]): void {
         for (var i = 0; i < stations.length; i++) {
-            stations[i].circle.addEventListener("click", this.handleClick);
+            stations[i].circle.addEventListener("click", this.selectStation);
+            stations[i].circle.addEventListener("contextmenu", this.deselectStation);
         }
 
         document.getElementById("addLine").addEventListener("click", this.addLine);
@@ -31,6 +35,22 @@ export class LinesController implements Controller {
     }
 
     private handleClick(event: MouseEvent): void {
+        var selected = this.stations.find((s, index, st) => event.target == s.circle);
+
+        if (this.currentFrom == null) {
+            this.currentFrom = selected;
+            return;
+        }
+
+        this.currentTo = selected;
+        this.addConnection();
+    }
+
+    private handleRightClick(event: MouseEvent): void {
+        
+    }
+
+    private addConnection(): void {
 
     }
 
