@@ -21,6 +21,9 @@ define(["require", "exports", "../Utility/Geometry", "../Utility/SVG", "./LinesC
         }
         dispose() {
             this.map.removeEventListener("click", this.addStation);
+            for (var i = 0; i < this.circles.length; i++) {
+                this.circles[i].removeEventListener("contextmenu", this.removeStation, false);
+            }
         }
         handleLeftClick(event) {
             var center = Geometry_1.Geometry.centrify(event.offsetX, event.offsetY);

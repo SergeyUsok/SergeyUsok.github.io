@@ -28,6 +28,10 @@ export class StationsController implements Controller {
 
     public dispose(): void {
         this.map.removeEventListener("click", this.addStation);
+
+        for (var i = 0; i < this.circles.length; i++) {
+            this.circles[i].removeEventListener("contextmenu", this.removeStation, false);
+        }
     }
 
     private handleLeftClick(event: MouseEvent) {
