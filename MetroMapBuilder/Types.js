@@ -1,3 +1,13 @@
+var Color;
+(function (Color) {
+    Color[Color["green"] = 0] = "green";
+    Color[Color["red"] = 1] = "red";
+    Color[Color["yellow"] = 2] = "yellow";
+    Color[Color["blue"] = 3] = "blue";
+    Color[Color["orange"] = 4] = "orange";
+    Color[Color["black"] = 5] = "black";
+    Color[Color["brown"] = 6] = "brown";
+})(Color || (Color = {}));
 var Direction2;
 (function (Direction2) {
     Direction2[Direction2["horizontal"] = 0] = "horizontal";
@@ -16,4 +26,4 @@ var Direction;
     Direction[Direction["northWest"] = 6] = "northWest";
     Direction[Direction["northEast"] = 7] = "northEast";
 })(Direction || (Direction = {}));
-//# sourceMappingURL=Station.js.map
+//# sourceMappingURL=Types.js.map

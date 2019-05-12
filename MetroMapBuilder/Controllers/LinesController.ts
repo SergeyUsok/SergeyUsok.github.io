@@ -1,15 +1,17 @@
 ﻿import { Controller } from "./GridController";
+import { SingleLineController } from "./SingleLineController";
 
 export class LinesController implements Controller {    
     private currentFrom: Station = null;
     private currentTo: Station = null;
-    private selectStation = e => this.handleClick(e);
-    private deselectStation = e => this.handleRightClick(e);
 
-    private currentLine: number = -1;
-    private lineColors: string[] = [];
-    private connections: Connection[] = [];
-       
+    private selectStation = e => this.handleSelectStation(e);
+    private deselectStation = e => this.handleDeselectStation(e);
+
+    private colors: Color[] = [Color.red, Color.yellow, Color.green, Color.blue, Color.brown, Color.orange, Color.black];
+
+    private lineControllers: SingleLineController[] = [];
+           
     public constructor(private map: HTMLElement, private stations: Station[]) {
         this.initialize(stations);
     }
@@ -29,12 +31,9 @@ export class LinesController implements Controller {
         }
 
         document.getElementById("addLine").addEventListener("click", this.addLine);
-        document.getElementById("removeLine").addEventListener("click", this.removeLine);
-        document.getElementById("changeColor").addEventListener("click", this.changeColor);
-        document.getElementById("chooseLine").addEventListener("click", this.chooseLine);
     }
 
-    private handleClick(event: MouseEvent): void {
+    private handleSelectStation(event: MouseEvent): void {
         var selected = this.stations.find((s, index, st) => event.target == s.circle);
 
         if (this.currentFrom == null) {
@@ -46,7 +45,7 @@ export class LinesController implements Controller {
         this.addConnection();
     }
 
-    private handleRightClick(event: MouseEvent): void {
+    private handleDeselectStation(event: MouseEvent): void {
         
     }
 
@@ -55,18 +54,19 @@ export class LinesController implements Controller {
     }
 
     private addLine(): void {
+        let lineController = new SingleLineController(this.changeLine, this.changeColor, this.removeLine, this.colors);
+        this.lineControllers.push(lineController);
+    }
+
+    private removeLine(id: number): void {
 
     }
 
-    private removeLine(): void {
+    private changeColor(id: number, color: string): void {
 
     }
 
-    private changeColor(): void {
+    private changeLine(id: number): void {
 
-    }
-
-    private chooseLine(): void {
-
-    }
+    }    
 }

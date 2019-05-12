@@ -1,4 +1,4 @@
-define(["require", "exports"], function (require, exports) {
+define(["require", "exports", "./SingleLineController"], function (require, exports, SingleLineController_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     class LinesController {
@@ -7,11 +7,10 @@ define(["require", "exports"], function (require, exports) {
             this.stations = stations;
             this.currentFrom = null;
             this.currentTo = null;
-            this.selectStation = e => this.handleClick(e);
-            this.deselectStation = e => this.handleRightClick(e);
-            this.currentLine = -1;
-            this.lineColors = [];
-            this.connections = [];
+            this.selectStation = e => this.handleSelectStation(e);
+            this.deselectStation = e => this.handleDeselectStation(e);
+            this.colors = [Color.red, Color.yellow, Color.green, Color.blue, Color.brown, Color.orange, Color.black];
+            this.lineControllers = [];
             this.initialize(stations);
         }
         next() {
@@ -26,11 +25,8 @@ define(["require", "exports"], function (require, exports) {
                 stations[i].circle.addEventListener("contextmenu", this.deselectStation);
             }
             document.getElementById("addLine").addEventListener("click", this.addLine);
-            document.getElementById("removeLine").addEventListener("click", this.removeLine);
-            document.getElementById("changeColor").addEventListener("click", this.changeColor);
-            document.getElementById("chooseLine").addEventListener("click", this.chooseLine);
         }
-        handleClick(event) {
+        handleSelectStation(event) {
             var selected = this.stations.find((s, index, st) => event.target == s.circle);
             if (this.currentFrom == null) {
                 this.currentFrom = selected;
@@ -39,17 +35,19 @@ define(["require", "exports"], function (require, exports) {
             this.currentTo = selected;
             this.addConnection();
         }
-        handleRightClick(event) {
+        handleDeselectStation(event) {
         }
         addConnection() {
         }
         addLine() {
+            let lineController = new SingleLineController_1.SingleLineController(this.changeLine, this.changeColor, this.removeLine, this.colors);
+            this.lineControllers.push(lineController);
         }
-        removeLine() {
+        removeLine(id) {
         }
-        changeColor() {
+        changeColor(id, color) {
         }
-        chooseLine() {
+        changeLine(id) {
         }
     }
     exports.LinesController = LinesController;

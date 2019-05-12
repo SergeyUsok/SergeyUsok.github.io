@@ -249,3 +249,5 @@ MetroMapBuilder/app.js.map
 /MetroMapBuilder/Controllers/StationsController.js.map
 /MetroMapBuilder/Controllers/LinesController.js.map
 /MetroMapBuilder/Controllers/GridController.js.map
+/MetroMapBuilder/Controllers/SingleLineController.js.map
+/MetroMapBuilder/Types.js.map

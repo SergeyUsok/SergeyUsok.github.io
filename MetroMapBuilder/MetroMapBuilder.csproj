@@ -29,7 +29,7 @@
     <Content Include="Controllers\StationsController.js" />
     <Content Include="index.html" />
     <Content Include="main.js" />
-    <Content Include="Station.js" />
+    <Content Include="Types.js" />
     <Content Include="Utility\Geometry.js" />
     <Content Include="Utility\SVG.js" />
     <Content Include="web.config">
@@ -37,6 +37,7 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <TypeScriptCompile Include="Controllers\SingleLineController.ts" />
     <TypeScriptCompile Include="main.ts" />
     <TypeScriptCompile Include="Controllers\GridController.ts" />
     <TypeScriptCompile Include="Controllers\LinesController.ts" />
@@ -49,7 +50,7 @@
     <TypeScriptCompile Include="lib\jquery\sizzle\index.d.ts" />
     <TypeScriptCompile Include="LinesBuilder.ts" />
     <TypeScriptCompile Include="Path.ts" />
-    <TypeScriptCompile Include="Station.ts" />
+    <TypeScriptCompile Include="Types.ts" />
     <TypeScriptCompile Include="Controllers\StationsController.ts" />
     <TypeScriptCompile Include="Utility\SVG.ts" />
   </ItemGroup>

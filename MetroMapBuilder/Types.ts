@@ -12,6 +12,11 @@ type Point = { x: number; y: number; }
 type Connection = {
     from: Station;
     to: Station;
+}
+
+type ConnectionDescription = {
+    from: Station;
+    to: Station;
     colors: string[];
 }
 
@@ -31,6 +36,16 @@ type Line = {
     stations: Station[];
     name: string;
     id: number;
+}
+
+enum Color {
+    green,
+    red,
+    yellow,
+    blue,
+    orange,
+    black,
+    brown
 }
 
 enum Direction2 {
