@@ -1,16 +1,23 @@
 ﻿import { Controller } from "./GridController";
 import { SingleLineController } from "./SingleLineController";
+import { Color, Station } from "../Types";
 
 export class LinesController implements Controller {    
-    private currentFrom: Station = null;
-    private currentTo: Station = null;
+    private from: Station = null;
+    private to: Station = null;
 
     private selectStation = e => this.handleSelectStation(e);
     private deselectStation = e => this.handleDeselectStation(e);
+    private addLine = e => this.handleLineAddition();
 
-    private colors: Color[] = [Color.red, Color.yellow, Color.green, Color.blue, Color.brown, Color.orange, Color.black];
+    private changeLine = ctrl => this.handleLineChange(ctrl);
+    private changeColor = (ctrl, c) => this.handleColorChange(ctrl, c);
+    private removeLine = ctrl => this.handleLineRemoval(ctrl);
+
+    private colors: Color[] = [Color.green, Color.red, Color.yellow, Color.blue, Color.orange, Color.black, Color.brown];
 
     private lineControllers: SingleLineController[] = [];
+    private currentController: SingleLineController;
            
     public constructor(private map: HTMLElement, private stations: Station[]) {
         this.initialize(stations);
@@ -36,37 +43,59 @@ export class LinesController implements Controller {
     private handleSelectStation(event: MouseEvent): void {
         var selected = this.stations.find((s, index, st) => event.target == s.circle);
 
-        if (this.currentFrom == null) {
-            this.currentFrom = selected;
+        if (this.from == null) {
+            this.from = selected;
+            // this.from.circle - highlight
             return;
         }
 
-        this.currentTo = selected;
-        this.addConnection();
+        this.to = selected;
+        // this.to.circle - highlight
+        this.currentController.connect(this.from, this.to);
     }
 
     private handleDeselectStation(event: MouseEvent): void {
-        
+        this.from == null;
+        // this.from.circle - remove highlight
     }
 
-    private addConnection(): void {
-
-    }
-
-    private addLine(): void {
+    private handleLineAddition(): void {
         let lineController = new SingleLineController(this.changeLine, this.changeColor, this.removeLine, this.colors);
-        this.lineControllers.push(lineController);
+        this.lineControllers.push(lineController);        
+        this.handleLineChange(lineController);
     }
 
-    private removeLine(id: number): void {
+    private handleLineRemoval(toRemove: SingleLineController): void {
+        let newArr = [];
 
+        for (let i = 0; i < this.lineControllers.length; i++) {
+            let ctrl = this.lineControllers[i];
+
+            if (ctrl != toRemove)
+                newArr.push(ctrl);
+        }
+
+        if (this.currentController == toRemove)
+            this.handleLineChange(newArr.length > 0 ? newArr[0] : null);
+
+        toRemove.dispose();
+        this.lineControllers = newArr;
     }
 
-    private changeColor(id: number, color: string): void {
-
+    private handleColorChange(lineCtrl: SingleLineController, color: Color): void {
+        // may be add complex logic to handle occupied colors
+        // and notify about them other single line controllers
     }
 
-    private changeLine(id: number): void {
+    private handleLineChange(selectedController: SingleLineController): void {
+        if (this.currentController != null) {
+            this.currentController.deselect();
+            this.currentController.hideConnections();
+        }
 
+        if (selectedController != null)
+            selectedController.showConnnections();
+
+        this.currentController = selectedController;
     }    
 }

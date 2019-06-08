@@ -1,15 +1,19 @@
-define(["require", "exports", "./SingleLineController"], function (require, exports, SingleLineController_1) {
+define(["require", "exports", "./SingleLineController", "../Types"], function (require, exports, SingleLineController_1, Types_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     class LinesController {
         constructor(map, stations) {
             this.map = map;
             this.stations = stations;
-            this.currentFrom = null;
-            this.currentTo = null;
+            this.from = null;
+            this.to = null;
             this.selectStation = e => this.handleSelectStation(e);
             this.deselectStation = e => this.handleDeselectStation(e);
-            this.colors = [Color.red, Color.yellow, Color.green, Color.blue, Color.brown, Color.orange, Color.black];
+            this.addLine = e => this.handleLineAddition();
+            this.changeLine = ctrl => this.handleLineChange(ctrl);
+            this.changeColor = (ctrl, c) => this.handleColorChange(ctrl, c);
+            this.removeLine = ctrl => this.handleLineRemoval(ctrl);
+            this.colors = [Types_1.Color.green, Types_1.Color.red, Types_1.Color.yellow, Types_1.Color.blue, Types_1.Color.orange, Types_1.Color.black, Types_1.Color.brown];
             this.lineControllers = [];
             this.initialize(stations);
         }
@@ -28,26 +32,48 @@ define(["require", "exports", "./SingleLineController"], function (require, expo
         }
         handleSelectStation(event) {
             var selected = this.stations.find((s, index, st) => event.target == s.circle);
-            if (this.currentFrom == null) {
-                this.currentFrom = selected;
+            if (this.from == null) {
+                this.from = selected;
+                // this.from.circle - highlight
                 return;
             }
-            this.currentTo = selected;
-            this.addConnection();
+            this.to = selected;
+            // this.to.circle - highlight
+            this.currentController.connect(this.from, this.to);
         }
         handleDeselectStation(event) {
+            this.from == null;
+            // this.from.circle - remove highlight
         }
-        addConnection() {
-        }
-        addLine() {
+        handleLineAddition() {
             let lineController = new SingleLineController_1.SingleLineController(this.changeLine, this.changeColor, this.removeLine, this.colors);
             this.lineControllers.push(lineController);
+            this.handleLineChange(lineController);
         }
-        removeLine(id) {
+        handleLineRemoval(toRemove) {
+            let newArr = [];
+            for (let i = 0; i < this.lineControllers.length; i++) {
+                let ctrl = this.lineControllers[i];
+                if (ctrl != toRemove)
+                    newArr.push(ctrl);
+            }
+            if (this.currentController == toRemove)
+                this.handleLineChange(newArr.length > 0 ? newArr[0] : null);
+            toRemove.dispose();
+            this.lineControllers = newArr;
         }
-        changeColor(id, color) {
+        handleColorChange(lineCtrl, color) {
+            // may be add complex logic to handle occupied colors
+            // and notify about them other single line controllers
         }
-        changeLine(id) {
+        handleLineChange(selectedController) {
+            if (this.currentController != null) {
+                this.currentController.deselect();
+                this.currentController.hideConnections();
+            }
+            if (selectedController != null)
+                selectedController.showConnnections();
+            this.currentController = selectedController;
         }
     }
     exports.LinesController = LinesController;

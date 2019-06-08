@@ -1,4 +1,6 @@
-﻿export class GridConfig {
+﻿import { Point } from "../Types";
+
+export class GridConfig {
     public static size: number = 40;
     public static pixelSize: number = 800;
 }

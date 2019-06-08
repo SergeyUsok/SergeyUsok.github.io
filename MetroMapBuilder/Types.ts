@@ -1,4 +1,4 @@
-﻿type Station = {
+﻿export type Station = {
     id: number;
     name: string;
     x: number;
@@ -7,7 +7,18 @@
     circle: SVGCircleElement;
 }
 
-type Point = { x: number; y: number; }
+export type Point = { x: number; y: number; }
+
+export enum Color {
+    none = "none",
+    green = "green",
+    red = "red",
+    yellow = "yellow",
+    blue = "blue",
+    orange = "orange",
+    black = "black",
+    brown = "brown"
+}
 
 type Connection = {
     from: Station;
@@ -36,16 +47,6 @@ type Line = {
     stations: Station[];
     name: string;
     id: number;
-}
-
-enum Color {
-    green,
-    red,
-    yellow,
-    blue,
-    orange,
-    black,
-    brown
 }
 
 enum Direction2 {
