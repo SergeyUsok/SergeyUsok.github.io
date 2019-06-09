@@ -14,12 +14,12 @@ export class StationsController implements Controller {
     }
 
     public next(): Controller {
-        var stations = [];
+        let stations = [];
 
-        for (var i = 0; i < this.circles.length; i++) {
-            var circle = this.circles[i];
-            var gridPoint = Geometry.normalizeToGridCell(circle.cx.baseVal.value, circle.cy.baseVal.value);
-            var station = { id: i, name: "", x: gridPoint.x, y: gridPoint.y, circle: circle };
+        for (let i = 0; i < this.circles.length; i++) {
+            let circle = this.circles[i];
+            let gridPoint = Geometry.normalizeToGridCell(circle.cx.baseVal.value, circle.cy.baseVal.value);
+            let station = { id: i, name: "", x: gridPoint.x, y: gridPoint.y, circle: circle };
             stations.push(station);
         }
 
@@ -28,32 +28,27 @@ export class StationsController implements Controller {
 
     public dispose(): void {
         this.map.removeEventListener("click", this.addStation);
-
-        for (var i = 0; i < this.circles.length; i++) {
-            this.circles[i].removeEventListener("contextmenu", this.removeStation, false);
-        }
+        this.map.removeEventListener("contextmenu", this.removeStation, false);
     }
 
     private handleLeftClick(event: MouseEvent) {
-        var center = Geometry.centrify(event.offsetX, event.offsetY);
-
-        var index = this.circles.findIndex(circle =>
-            circle.cx.baseVal.value == center.x &&
-            circle.cy.baseVal.value == center.y);
-
-        if (index === -1) {
-            var circle = SVG.circle(center.x, center.y, Geometry.radius);
-            this.circles.push(circle); // add to internal array
-            this.map.appendChild(circle); // add to visual presentation
-            circle.addEventListener("contextmenu", this.removeStation, false);
-        }
+        if (event.target instanceof SVGCircleElement) // nothing to process if existing circle was clicked
+            return;
+        
+        let center = Geometry.centrify(event.offsetX, event.offsetY);
+        let circle = SVG.circle(center.x, center.y, Geometry.radius);
+        this.circles.push(circle); // add to internal array
+        this.map.appendChild(circle); // add to visual presentation
     }
 
     private handleRightClick(event: MouseEvent) {
         event.preventDefault();
-        var target = <SVGCircleElement>event.target;
+        let target = event.target as SVGCircleElement;
 
-        var index = this.circles.findIndex(circle =>
+        if (target == null) // nothing to remove if empty cell was clicked
+            return;
+
+        let index = this.circles.findIndex(circle =>
             circle.cx.baseVal.value == target.cx.baseVal.value &&
             circle.cy.baseVal.value == target.cy.baseVal.value);
 
@@ -63,5 +58,6 @@ export class StationsController implements Controller {
 
     private initialize(map: HTMLElement) {
         map.addEventListener("click", this.addStation);
+        map.addEventListener("contextmenu", this.removeStation, false);
     }
 }

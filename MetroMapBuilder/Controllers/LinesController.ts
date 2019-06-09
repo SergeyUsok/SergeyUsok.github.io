@@ -3,11 +3,6 @@ import { SingleLineController } from "./SingleLineController";
 import { Color, Station } from "../Types";
 
 export class LinesController implements Controller {    
-    private from: Station = null;
-    private to: Station = null;
-
-    private selectStation = e => this.handleSelectStation(e);
-    private deselectStation = e => this.handleDeselectStation(e);
     private addLine = e => this.handleLineAddition();
 
     private changeLine = ctrl => this.handleLineChange(ctrl);
@@ -20,7 +15,7 @@ export class LinesController implements Controller {
     private currentController: SingleLineController;
            
     public constructor(private map: HTMLElement, private stations: Station[]) {
-        this.initialize(stations);
+        document.getElementById("addLine").addEventListener("click", this.addLine);
     }
 
     public next(): Controller {
@@ -28,39 +23,11 @@ export class LinesController implements Controller {
     }
 
     public dispose(): void {
-        throw new Error("Method not implemented.");
-    }
-
-    private initialize(stations: Station[]): void {
-        for (var i = 0; i < stations.length; i++) {
-            stations[i].circle.addEventListener("click", this.selectStation);
-            stations[i].circle.addEventListener("contextmenu", this.deselectStation);
-        }
-
-        document.getElementById("addLine").addEventListener("click", this.addLine);
-    }
-
-    private handleSelectStation(event: MouseEvent): void {
-        var selected = this.stations.find((s, index, st) => event.target == s.circle);
-
-        if (this.from == null) {
-            this.from = selected;
-            // this.from.circle - highlight
-            return;
-        }
-
-        this.to = selected;
-        // this.to.circle - highlight
-        this.currentController.connect(this.from, this.to);
-    }
-
-    private handleDeselectStation(event: MouseEvent): void {
-        this.from == null;
-        // this.from.circle - remove highlight
+        document.getElementById("addLine").removeEventListener("click", this.addLine);
     }
 
     private handleLineAddition(): void {
-        let lineController = new SingleLineController(this.changeLine, this.changeColor, this.removeLine, this.colors);
+        let lineController = new SingleLineController(this.stations, this.changeLine, this.changeColor, this.removeLine, this.colors);
         this.lineControllers.push(lineController);        
         this.handleLineChange(lineController);
     }
@@ -83,6 +50,9 @@ export class LinesController implements Controller {
     }
 
     private handleColorChange(lineCtrl: SingleLineController, color: Color): void {
+        if (this.currentController == lineCtrl)
+            this.currentController.redraw(); // redraw lines since color changed
+
         // may be add complex logic to handle occupied colors
         // and notify about them other single line controllers
     }
@@ -90,11 +60,10 @@ export class LinesController implements Controller {
     private handleLineChange(selectedController: SingleLineController): void {
         if (this.currentController != null) {
             this.currentController.deselect();
-            this.currentController.hideConnections();
         }
 
         if (selectedController != null)
-            selectedController.showConnnections();
+            selectedController.select();
 
         this.currentController = selectedController;
     }    

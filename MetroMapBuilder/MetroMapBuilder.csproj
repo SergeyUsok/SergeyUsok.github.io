@@ -26,6 +26,7 @@
     <Content Include="app.css" />
     <Content Include="Controllers\GridController.js" />
     <Content Include="Controllers\LinesController.js" />
+    <Content Include="Controllers\SingleLineController.js" />
     <Content Include="Controllers\StationsController.js" />
     <Content Include="index.html" />
     <Content Include="main.js" />
@@ -48,8 +49,6 @@
     <TypeScriptCompile Include="lib\jquery\legacy.d.ts" />
     <TypeScriptCompile Include="lib\jquery\misc.d.ts" />
     <TypeScriptCompile Include="lib\jquery\sizzle\index.d.ts" />
-    <TypeScriptCompile Include="LinesBuilder.ts" />
-    <TypeScriptCompile Include="Path.ts" />
     <TypeScriptCompile Include="Types.ts" />
     <TypeScriptCompile Include="Controllers\StationsController.ts" />
     <TypeScriptCompile Include="Utility\SVG.ts" />

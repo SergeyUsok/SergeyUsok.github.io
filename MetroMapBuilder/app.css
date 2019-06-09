@@ -13,8 +13,11 @@
     padding-top: 20px;
     padding-bottom: 20px;
     /*margin-right: 10px;*/
-    background-color: white;
     /*border: 2px solid black;*/
+}
+
+.canvas svg {
+    background-color: #f0f8ff;
 }
 
 .toolset {
@@ -26,7 +29,21 @@
 circle {
     fill: white;
     stroke: blue;
-    stroke-width: 1px;
+    stroke-width: 2px;
+}
+
+circle:hover {
+    cursor: pointer;
+    /*fill: gold;*/
+    stroke: dodgerblue;
+    stroke-width: 3px;
+}
+
+.selected {
+    cursor: pointer;
+    fill: gold;
+    stroke: dodgerblue;
+    stroke-width: 3px;
 }
 
 .activated {

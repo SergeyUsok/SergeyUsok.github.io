@@ -8,6 +8,8 @@ export interface Controller {
 }
 
 export class GridController implements Controller {    
+    private update = () => this.handleUpdate();
+
     public constructor(private map: HTMLElement) {
         this.initialize(map);
     }
@@ -17,7 +19,7 @@ export class GridController implements Controller {
     }
 
     public dispose(): void {
-
+        document.getElementById("update").removeEventListener("click", this.update);
     }
 
     private draw() {
@@ -74,7 +76,7 @@ export class GridController implements Controller {
         label.textContent = `${GridConfig.size}X${GridConfig.size}`;
 
         document.getElementById("update")
-            .addEventListener("click", () => this.handleUpdate());
+            .addEventListener("click", this.update);
 
         this.draw();
     }

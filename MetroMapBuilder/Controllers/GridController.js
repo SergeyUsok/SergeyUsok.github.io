@@ -4,12 +4,14 @@ define(["require", "exports", "../Utility/SVG", "../Utility/Geometry", "./Statio
     class GridController {
         constructor(map) {
             this.map = map;
+            this.update = () => this.handleUpdate();
             this.initialize(map);
         }
         next() {
             return new StationsController_1.StationsController(this.map);
         }
         dispose() {
+            document.getElementById("update").removeEventListener("click", this.update);
         }
         draw() {
             let canvas = this.map;
@@ -53,7 +55,7 @@ define(["require", "exports", "../Utility/SVG", "../Utility/Geometry", "./Statio
             var label = document.getElementById("sizeLabel");
             label.textContent = `${Geometry_1.GridConfig.size}X${Geometry_1.GridConfig.size}`;
             document.getElementById("update")
-                .addEventListener("click", () => this.handleUpdate());
+                .addEventListener("click", this.update);
             this.draw();
         }
     }

@@ -1,33 +1,93 @@
 ﻿import { Color, Station } from "../Types";
+import { SVG } from "../Utility/SVG";
 
-export class SingleLineController {     
+export class SingleLineController {   
     private controlPanel: HTMLDivElement;
     private lineSelected = e => this.handleLineSelected();
     private colorChanged = e => this.handleColorChanged();
     private lineRemoved = e => this.handleLineRemoved();
+    private stationClick = e => this.handleSelection(e);
 
     private myColor: Color;
+    private lineStations: Station[] = [];
 
-    public constructor(private lineSelectedCallback: (me: SingleLineController) => void,
-                        private colorChangedCallback: (me: SingleLineController, color: Color) => void,
-                        private removeCallback: (me: SingleLineController) => void,
+    public constructor(private stations: Station[],
+                       private lineSelectedCallback: (me: SingleLineController) => void,
+                       private colorChangedCallback: (me: SingleLineController, color: Color) => void,
+                       private removeCallback: (me: SingleLineController) => void,
                        colors: Color[]) {
         this.controlPanel = this.createControlPanel(colors);
     }
 
-    public connect(currentFrom: Station, currentTo: Station): void {
-        
-    }  
-
     public deselect(): void {
         (<HTMLInputElement>this.controlPanel.querySelector("input[type=radio]")).checked = false;
+        document.getElementById("map").removeEventListener("click", this.stationClick);
+        this.hideConnections();
     }
 
-    public showConnnections(): void {
+    public select(): void {
+        document.getElementById("map").addEventListener("click", this.stationClick);
+        this.showConnnections();
     }
 
-    public hideConnections(): void {
+    private showConnnections(): void {
+        if (this.myColor !== undefined) {
+            let map  = document.getElementById("map");
+            // create and add line to map
+            let line = SVG.polyline(this.lineStations, this.myColor);
+            map.appendChild(line);
+            // after that recreate circles in order to overlap line
+            for (let i = 0; i < this.lineStations.length; i++) {
+                this.lineStations[i].circle.remove();
+                this.lineStations[i].circle.classList.add("selected");
+                map.appendChild(this.lineStations[i].circle);
+            }
+        }
     }
+
+    private hideConnections(): void {
+        let lines = document.getElementsByTagName("polyline");
+        for (let i = 0; i < lines.length; i++) {
+            lines[i].remove();
+        }
+        for (let i = 0; i < this.lineStations.length; i++) {
+            this.lineStations[i].circle.classList.remove("selected");
+        }
+    }
+
+    private removeStation(toRemove: Station): void {        
+        let newArr = [];
+
+        for (let i = 0; i < this.lineStations.length; i++) {
+            let station = this.lineStations[i];
+
+            if (station != toRemove)
+                newArr.push(station);
+        }
+
+        this.lineStations = newArr;
+    }
+
+    public redraw(): void {
+        this.hideConnections();
+        this.showConnnections();
+    }
+
+    private handleSelection(event: MouseEvent): void {
+        if (!(event.target instanceof SVGCircleElement))
+            return;
+
+        let clicked = this.stations.find(s => event.target == s.circle);
+
+        if (clicked.circle.classList.contains("selected")) { // if already selected then should be deselected
+            this.removeStation(clicked);
+        }
+        else {
+            this.lineStations.push(clicked);
+        }
+
+        this.redraw();
+    }  
 
     public dispose(): void {
         this.lineSelectedCallback = null;
@@ -42,6 +102,8 @@ export class SingleLineController {
 
         let colorsControl = this.controlPanel.querySelector("select");
         colorsControl.removeEventListener("change", this.colorChanged);
+
+        document.getElementById("map").removeEventListener("click", this.stationClick);
 
         this.controlPanel.remove();
     }
