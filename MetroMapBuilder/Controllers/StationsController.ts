@@ -2,6 +2,7 @@
 import { SVG } from "../Utility/SVG";
 import { Controller } from "./GridController";
 import { LinesController } from "./LinesController";
+import { Point } from "../Types";
 
 export class StationsController implements Controller {
 
@@ -9,7 +10,7 @@ export class StationsController implements Controller {
     private addStation = (e) => this.handleLeftClick(e);
     private removeStation = (e) => this.handleRightClick(e);
     private highlightCell = (e) => this.handleHighlightCell(e);
-
+    private tooltipSpan: HTMLElement;
     private highlightedLines: HTMLElement[] = [];
 
     public constructor(private map: HTMLElement) {
@@ -36,13 +37,25 @@ export class StationsController implements Controller {
     }
 
     private handleHighlightCell(event: MouseEvent) {
-        let cell = event.target instanceof SVGCircleElement ?
-            Geometry.normalizeToGridCell(event.target.cx.baseVal.value, event.target.cy.baseVal.value):
-            Geometry.normalizeToGridCell(event.offsetX, event.offsetY);
+        let cell = null;
+
+        if (event.target instanceof SVGLineElement) {
+            // get coords relative to of svg canvas rather than just line ones
+            let rect = (<any>(event.currentTarget)).getBoundingClientRect();
+            cell = Geometry.normalizeToGridCell(event.clientX - rect.left, event.clientY - rect.top);
+        }
+        else if (event.target instanceof SVGCircleElement) {
+            cell = Geometry.normalizeToGridCell(event.target.cx.baseVal.value, event.target.cy.baseVal.value);
+        }
+        else {
+            cell = Geometry.normalizeToGridCell(event.offsetX, event.offsetY);
+        }
 
         for (let i = 0; i < this.highlightedLines.length; i++) {
             this.highlightedLines[i].classList.remove("highlightCell");
         }
+
+        this.updateTooltip(cell, event);
 
         this.highlightedLines = [];
 
@@ -65,8 +78,18 @@ export class StationsController implements Controller {
         this.highlightedLines.push(lineY2);
     }
 
+    private updateTooltip(cell: Point, event: MouseEvent): void {
+        // positioning tooltip over cursor (get initial coords relative to window)
+        // factors 1.2 and 0.1 were selected empirically
+        this.tooltipSpan.style.top = (event.clientY - this.tooltipSpan.clientHeight*1.2) + 'px';
+        this.tooltipSpan.style.left = (event.clientX + this.tooltipSpan.clientWidth*0.1) + 'px';
+
+        this.tooltipSpan.innerText = `${cell.x} ${cell.y}`;
+    }
+
     private handleLeftClick(event: MouseEvent) {
-        if (event.target instanceof SVGCircleElement) // nothing to process if existing circle was clicked
+        // nothing to process if existing circle or line was clicked
+        if (event.target instanceof SVGCircleElement || event.target instanceof SVGLineElement)
             return;
         
         let center = Geometry.centrify(event.offsetX, event.offsetY);
@@ -95,5 +118,6 @@ export class StationsController implements Controller {
         map.addEventListener("click", this.addStation);
         map.addEventListener("contextmenu", this.removeStation, false);
         map.addEventListener("mousemove", this.highlightCell);
+        this.tooltipSpan = document.getElementById('tooltip');
     }
 }

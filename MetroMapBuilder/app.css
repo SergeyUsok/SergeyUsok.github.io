@@ -10,10 +10,8 @@
 .canvas {
     width: 800px;
     height: 800px;
-    padding-top: 20px;
-    padding-bottom: 20px;
-    /*margin-right: 10px;*/
-    /*border: 2px solid black;*/
+    margin-top: 20px;
+    margin-bottom: 20px;
 }
 
 .canvas svg {
@@ -42,6 +40,7 @@ circle:hover {
 .highlightCell {
     stroke-width: 2px;
     stroke: Highlight;
+    stroke-dasharray: 4 1;
 }
 
 .selected {
@@ -53,4 +52,23 @@ circle:hover {
 
 .activated {
     background-color: aqua;
+}
+
+.canvas span {
+    display: none;
+}
+
+.canvas:hover span {
+    display: block;
+    position: fixed;
+    overflow: hidden;
+}
+
+#tooltip {
+    background-color: black;
+    color: blueviolet;
+    width: 50px;
+    height: 30px;
+    border-radius: 5px;
+    text-align: center;
 }
