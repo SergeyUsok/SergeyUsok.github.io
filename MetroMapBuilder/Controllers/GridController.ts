@@ -26,15 +26,21 @@ export class GridController implements Controller {
         let canvas = <SVGSVGElement><any>this.map;
 
         // draw vertical lines
+        let index = 0;
         for (let x = 0; x <= canvas.width.baseVal.value; x += Geometry.cellSize) {
             let line = SVG.gridLine(x, 0, x, canvas.height.baseVal.value);
+            line.setAttribute("id", `x${index}`);
             canvas.appendChild(line);
+            index++;
         }
 
         // draw horizontal lines
+        index = 0;
         for (let y = 0; y <= canvas.height.baseVal.value; y += Geometry.cellSize) {
             let line = SVG.gridLine(0, y, canvas.width.baseVal.value, y);
+            line.setAttribute("id", `y${index}`);
             canvas.appendChild(line);
+            index++;
         }
     }
 

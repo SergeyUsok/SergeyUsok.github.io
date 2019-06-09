@@ -39,6 +39,11 @@ circle:hover {
     stroke-width: 3px;
 }
 
+.highlightCell {
+    stroke-width: 2px;
+    stroke: Highlight;
+}
+
 .selected {
     cursor: pointer;
     fill: gold;

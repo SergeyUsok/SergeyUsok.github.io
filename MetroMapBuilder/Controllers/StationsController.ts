@@ -8,6 +8,9 @@ export class StationsController implements Controller {
     private circles: Array<SVGCircleElement> = [];
     private addStation = (e) => this.handleLeftClick(e);
     private removeStation = (e) => this.handleRightClick(e);
+    private highlightCell = (e) => this.handleHighlightCell(e);
+
+    private highlightedLines: HTMLElement[] = [];
 
     public constructor(private map: HTMLElement) {
         this.initialize(map);
@@ -29,6 +32,37 @@ export class StationsController implements Controller {
     public dispose(): void {
         this.map.removeEventListener("click", this.addStation);
         this.map.removeEventListener("contextmenu", this.removeStation, false);
+        this.map.removeEventListener("mousemove", this.highlightCell);
+    }
+
+    private handleHighlightCell(event: MouseEvent) {
+        let cell = event.target instanceof SVGCircleElement ?
+            Geometry.normalizeToGridCell(event.target.cx.baseVal.value, event.target.cy.baseVal.value):
+            Geometry.normalizeToGridCell(event.offsetX, event.offsetY);
+
+        for (let i = 0; i < this.highlightedLines.length; i++) {
+            this.highlightedLines[i].classList.remove("highlightCell");
+        }
+
+        this.highlightedLines = [];
+
+        // lines which surrounds this cell by x axis
+        let lineX1 = document.getElementById(`x${cell.x}`);
+        lineX1.classList.add("highlightCell");
+        this.highlightedLines.push(lineX1);
+
+        let lineX2 = document.getElementById(`x${cell.x + 1}`);
+        lineX2.classList.add("highlightCell");
+        this.highlightedLines.push(lineX2);
+
+        // lines which surrounds this cell by y axis
+        let lineY1 = document.getElementById(`y${cell.y}`);
+        lineY1.classList.add("highlightCell");
+        this.highlightedLines.push(lineY1);
+
+        let lineY2 = document.getElementById(`y${cell.y + 1}`);
+        lineY2.classList.add("highlightCell");
+        this.highlightedLines.push(lineY2);
     }
 
     private handleLeftClick(event: MouseEvent) {
@@ -41,12 +75,13 @@ export class StationsController implements Controller {
         this.map.appendChild(circle); // add to visual presentation
     }
 
-    private handleRightClick(event: MouseEvent) {
-        event.preventDefault();
-        let target = event.target as SVGCircleElement;
-
-        if (target == null) // nothing to remove if empty cell was clicked
+    private handleRightClick(event: MouseEvent) {        
+        if (!(event.target instanceof SVGCircleElement)) { // nothing to remove if empty cell was clicked
             return;
+        }
+
+        event.preventDefault();            
+        let target = event.target as SVGCircleElement;
 
         let index = this.circles.findIndex(circle =>
             circle.cx.baseVal.value == target.cx.baseVal.value &&
@@ -59,5 +94,6 @@ export class StationsController implements Controller {
     private initialize(map: HTMLElement) {
         map.addEventListener("click", this.addStation);
         map.addEventListener("contextmenu", this.removeStation, false);
+        map.addEventListener("mousemove", this.highlightCell);
     }
 }
