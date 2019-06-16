@@ -14,8 +14,14 @@
     margin-bottom: 20px;
 }
 
-.canvas svg {
+.bgd-color {
     background-color: #f0f8ff;
+}
+
+.bgd {
+    background-color: none;
+    background-size: contain;
+    background-repeat: no-repeat;
 }
 
 .toolset {

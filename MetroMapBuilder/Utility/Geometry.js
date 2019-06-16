@@ -26,6 +26,24 @@ define(["require", "exports"], function (require, exports) {
                 y: Math.floor(y / Geometry.cellSize)
             };
         }
+        static radiusAsDistance(stationA, stationB) {
+            let point1 = Geometry.getCenterOfCell(stationA);
+            let point2 = Geometry.getCenterOfCell(stationB);
+            return Math.sqrt(Math.pow(point1.x - point2.x, 2) +
+                Math.pow(point1.y - point2.y, 2));
+        }
+        // get angle between X axis and a line
+        static calculateAngle(stationA, stationB) {
+            let point1 = Geometry.getCenterOfCell(stationA);
+            let point2 = Geometry.getCenterOfCell(stationB);
+            return Math.atan2(point2.y - point1.y, point2.x - point1.x);
+        }
+        static parametricCircleEquation(center, radius, angle) {
+            return {
+                x: center.x + (radius * Math.cos(angle)),
+                y: center.y + (radius * Math.sin(angle))
+            };
+        }
         static getCenterOfCell(point) {
             // left border of a cell
             //  + right border of a cell

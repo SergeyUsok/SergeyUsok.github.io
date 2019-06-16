@@ -1,4 +1,4 @@
-﻿import { Station, Color } from "../Types";
+﻿import { Station, Color, Point } from "../Types";
 import { Geometry } from "./Geometry";
 
 export class SVG {
@@ -36,6 +36,17 @@ export class SVG {
         line.setAttribute('fill', 'none');
         line.setAttribute('stroke', color.toString());
         line.setAttribute('stroke-width', Geometry.lineWidth.toString());
+        return line;
+    }
+
+    public static line(start: Point, finish: Point, color: Color, width: number): SVGLineElement {
+        let line = document.createElementNS("http://www.w3.org/2000/svg", 'line');
+        line.setAttribute('x1', start.x.toString());
+        line.setAttribute('y1', start.y.toString());
+        line.setAttribute('x2', finish.x.toString());
+        line.setAttribute('y2', finish.y.toString());
+        line.setAttribute('stroke', color);
+        line.setAttribute('stroke-width', width.toString());
         return line;
     }
 }

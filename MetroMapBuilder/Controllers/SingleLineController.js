@@ -82,11 +82,17 @@ define(["require", "exports", "../Types", "../Utility/SVG"], function (require, 
             let colorsControl = this.controlPanel.querySelector("select");
             colorsControl.removeEventListener("change", this.colorChanged);
             document.getElementById("map").removeEventListener("click", this.stationClick);
-            this.controlPanel.remove();
+        }
+        toLine(lineId) {
+            let stationIds = [];
+            for (var i = 0; i < this.lineStations.length; i++) {
+                stationIds.push(this.lineStations[i].id);
+            }
+            return { id: lineId, stations: stationIds, name: "", color: this.myColor };
         }
         createControlPanel(colors) {
             let clone = document.getElementById("linePanel").cloneNode(true);
-            clone.removeAttribute("id"); // save uniqueness of basis element
+            clone.removeAttribute("id"); // save uniqueness of template element
             clone.classList.remove("d-none"); // make element visible
             let radioButton = clone.querySelector("input[type=radio]");
             radioButton.addEventListener("click", this.lineSelected);
@@ -121,6 +127,8 @@ define(["require", "exports", "../Types", "../Utility/SVG"], function (require, 
             this.colorChangedCallback(this, this.myColor);
         }
         handleLineRemoved() {
+            this.dispose();
+            this.controlPanel.remove();
             this.removeCallback(this);
         }
     }

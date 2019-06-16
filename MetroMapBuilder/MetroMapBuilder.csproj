@@ -38,6 +38,7 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <TypeScriptCompile Include="Controllers\DrawingController.ts" />
     <TypeScriptCompile Include="Controllers\SingleLineController.ts" />
     <TypeScriptCompile Include="main.ts" />
     <TypeScriptCompile Include="Controllers\GridController.ts" />

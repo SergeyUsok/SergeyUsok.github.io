@@ -1,4 +1,4 @@
-﻿import { Color, Station } from "../Types";
+﻿import { Color, Station, Line } from "../Types";
 import { SVG } from "../Utility/SVG";
 
 export class SingleLineController {   
@@ -104,13 +104,20 @@ export class SingleLineController {
         colorsControl.removeEventListener("change", this.colorChanged);
 
         document.getElementById("map").removeEventListener("click", this.stationClick);
+    }
 
-        this.controlPanel.remove();
+    public toLine(lineId: number): Line {
+        let stationIds = [];
+        for (var i = 0; i < this.lineStations.length; i++) {
+            stationIds.push(this.lineStations[i].id);
+        }
+
+        return { id: lineId, stations: stationIds, name: "", color: this.myColor };
     }
 
     private createControlPanel(colors: Color[]): HTMLDivElement {
         let clone = <HTMLDivElement>document.getElementById("linePanel").cloneNode(true);
-        clone.removeAttribute("id"); // save uniqueness of basis element
+        clone.removeAttribute("id"); // save uniqueness of template element
         clone.classList.remove("d-none"); // make element visible
 
         let radioButton = clone.querySelector("input[type=radio]");        
@@ -156,6 +163,8 @@ export class SingleLineController {
     }
 
     private handleLineRemoved(): void {
+        this.dispose();
+        this.controlPanel.remove();
         this.removeCallback(this);
     }
 }

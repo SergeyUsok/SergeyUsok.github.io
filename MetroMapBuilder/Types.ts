@@ -3,7 +3,7 @@
     name: string;
     x: number;
     y: number;
-    //connections: Connection[];
+    connections: number[];
     circle: SVGCircleElement;
 }
 
@@ -20,43 +20,28 @@ export enum Color {
     brown = "brown"
 }
 
-type Connection = {
-    from: Station;
-    to: Station;
+export type Connection = {
+    id: number;
+    a: number;
+    b: number;
+    lines: number[];
 }
 
-type ConnectionDescription = {
-    from: Station;
-    to: Station;
-    colors: string[];
-}
-
-type Connection2 = {
-    start: Point;
-    end: Point;
-    lines: LineDescription[];
-    direction: Direction2;
-}
-
-type LineDescription = {
-    name: string;
-    color: string;
-}
-
-type Line = {
-    stations: Station[];
+export type Line = {
+    stations: number[];
     name: string;
     id: number;
+    color: Color;
 }
 
-enum Direction2 {
+export enum Direction {
     horizontal,
     vertical,
     rightDiagonal,
     leftDiagonal
 }
 
-enum Direction {
+enum Direction2 {
     south,
     north,
     west,

@@ -5,6 +5,9 @@ define(["require", "exports", "../Utility/SVG", "../Utility/Geometry", "./Statio
         constructor(map) {
             this.map = map;
             this.update = () => this.handleUpdate();
+            this.loadBackground = () => this.handleLoadBackground();
+            this.clearBackground = () => this.handleClearBackground();
+            this.urlTextChaged = e => this.handleUrlTextChaged(e);
             this.initialize(map);
         }
         next() {
@@ -12,6 +15,9 @@ define(["require", "exports", "../Utility/SVG", "../Utility/Geometry", "./Statio
         }
         dispose() {
             document.getElementById("update").removeEventListener("click", this.update);
+            document.getElementById("url").removeEventListener("input", this.urlTextChaged);
+            document.getElementById("load").removeEventListener("click", this.loadBackground);
+            document.getElementById("clear").removeEventListener("click", this.clearBackground);
         }
         draw() {
             let canvas = this.map;
@@ -30,6 +36,33 @@ define(["require", "exports", "../Utility/SVG", "../Utility/Geometry", "./Statio
                 line.setAttribute("id", `y${index}`);
                 canvas.appendChild(line);
                 index++;
+            }
+        }
+        handleLoadBackground() {
+            let url = document.getElementById("url").value;
+            let map = document.getElementById("map");
+            map.classList.add("bgd");
+            map.classList.remove("bgd-color");
+            map.style.backgroundImage = `url(${url})`;
+            document.getElementById("load").setAttribute("disabled", "disabled");
+            document.getElementById("clear").removeAttribute("disabled");
+        }
+        handleClearBackground() {
+            let map = document.getElementById("map");
+            map.classList.remove("bgd");
+            map.classList.add("bgd-color");
+            map.style.backgroundImage = '';
+            document.getElementById("url").value = '';
+            document.getElementById("clear").setAttribute("disabled", "disabled");
+        }
+        handleUrlTextChaged(e) {
+            if (e.target.value != "") {
+                document.getElementById("load").removeAttribute("disabled");
+                document.getElementById("clear").removeAttribute("disabled");
+            }
+            else {
+                document.getElementById("load").setAttribute("disabled", "disabled");
+                document.getElementById("clear").setAttribute("disabled", "disabled");
             }
         }
         handleUpdate() {
@@ -62,6 +95,12 @@ define(["require", "exports", "../Utility/SVG", "../Utility/Geometry", "./Statio
             label.textContent = `${Geometry_1.GridConfig.size}X${Geometry_1.GridConfig.size}`;
             document.getElementById("update")
                 .addEventListener("click", this.update);
+            document.getElementById("url")
+                .addEventListener("input", this.urlTextChaged);
+            document.getElementById("load")
+                .addEventListener("click", this.loadBackground);
+            document.getElementById("clear")
+                .addEventListener("click", this.clearBackground);
             this.draw();
         }
     }

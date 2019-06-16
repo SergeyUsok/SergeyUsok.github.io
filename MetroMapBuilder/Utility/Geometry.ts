@@ -1,4 +1,4 @@
-﻿import { Point } from "../Types";
+﻿import { Point, Station } from "../Types";
 
 export class GridConfig {
     public static size: number = 40;
@@ -28,7 +28,30 @@ export class Geometry {
         };
     }
 
-    private static getCenterOfCell(point: Point): Point {
+    public static radiusAsDistance(stationA: Station, stationB: Station): number {
+        let point1 = Geometry.getCenterOfCell(stationA);
+        let point2 = Geometry.getCenterOfCell(stationB);
+
+        return Math.sqrt(Math.pow(point1.x - point2.x, 2) +
+            Math.pow(point1.y - point2.y, 2));
+    }
+
+    // get angle between X axis and a line
+    public static calculateAngle(stationA: Station, stationB: Station): number {
+        let point1 = Geometry.getCenterOfCell(stationA);
+        let point2 = Geometry.getCenterOfCell(stationB);
+
+        return Math.atan2(point2.y - point1.y, point2.x - point1.x);
+    }
+
+    public static parametricCircleEquation(center: Point, radius: number, angle: number): Point {
+        return {
+            x: center.x + (radius * Math.cos(angle)),
+            y: center.y + (radius * Math.sin(angle))
+        };
+    }
+
+    public static getCenterOfCell(point: Point): Point {
         // left border of a cell
         //  + right border of a cell
         // divided by 2 (half of a cell) to get center of the cell by x axis

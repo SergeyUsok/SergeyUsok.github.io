@@ -8,7 +8,9 @@ define(["require", "exports", "../Utility/Geometry", "../Utility/SVG", "./LinesC
             this.addStation = (e) => this.handleLeftClick(e);
             this.removeStation = (e) => this.handleRightClick(e);
             this.highlightCell = (e) => this.handleHighlightCell(e);
+            this.background = (e) => this.handleBackground(e);
             this.highlightedLines = [];
+            this.backgroundUrl = null;
             this.initialize(map);
         }
         next() {
@@ -16,15 +18,21 @@ define(["require", "exports", "../Utility/Geometry", "../Utility/SVG", "./LinesC
             for (let i = 0; i < this.circles.length; i++) {
                 let circle = this.circles[i];
                 let gridPoint = Geometry_1.Geometry.normalizeToGridCell(circle.cx.baseVal.value, circle.cy.baseVal.value);
-                let station = { id: i, name: "", x: gridPoint.x, y: gridPoint.y, circle: circle };
+                let station = { id: i, name: "", x: gridPoint.x, y: gridPoint.y, circle: circle, connections: [] };
                 stations.push(station);
             }
-            return new LinesController_1.LinesController(this.map, stations);
+            return new LinesController_1.LinesController(stations, this.backgroundUrl);
         }
         dispose() {
             this.map.removeEventListener("click", this.addStation);
             this.map.removeEventListener("contextmenu", this.removeStation, false);
             this.map.removeEventListener("mousemove", this.highlightCell);
+            document.getElementById("background-switch").removeEventListener("click", this.background);
+            document.getElementById("background-switch").setAttribute("disabled", "disabled");
+            for (let i = 0; i < this.highlightedLines.length; i++) {
+                this.highlightedLines[i].classList.remove("highlightCell");
+            }
+            this.tooltipSpan.remove();
         }
         handleHighlightCell(event) {
             let cell = null;
@@ -66,6 +74,19 @@ define(["require", "exports", "../Utility/Geometry", "../Utility/SVG", "./LinesC
             this.tooltipSpan.style.left = (event.clientX + this.tooltipSpan.clientWidth * 0.1) + 'px';
             this.tooltipSpan.innerText = `${cell.x} ${cell.y}`;
         }
+        handleBackground(e) {
+            let checkbox = e.target;
+            if (checkbox.checked) {
+                this.map.classList.remove("bgd-color");
+                this.map.classList.add("bgd");
+                this.map.style.backgroundImage = this.backgroundUrl;
+            }
+            else {
+                this.map.classList.remove("bgd");
+                this.map.classList.add("bgd-color");
+                this.map.style.backgroundImage = "";
+            }
+        }
         handleLeftClick(event) {
             // nothing to process if existing circle or line was clicked
             if (event.target instanceof SVGCircleElement || event.target instanceof SVGLineElement)
@@ -90,7 +111,19 @@ define(["require", "exports", "../Utility/Geometry", "../Utility/SVG", "./LinesC
             map.addEventListener("click", this.addStation);
             map.addEventListener("contextmenu", this.removeStation, false);
             map.addEventListener("mousemove", this.highlightCell);
-            this.tooltipSpan = document.getElementById('tooltip');
+            let backgroundCheckbox = document.getElementById("background-switch");
+            if (map.classList.contains("bgd")) {
+                backgroundCheckbox.addEventListener("click", this.background);
+                this.backgroundUrl = map.style.backgroundImage;
+                backgroundCheckbox.checked = true;
+            }
+            else {
+                backgroundCheckbox.setAttribute("disabled", "disabled");
+            }
+            let span = document.createElement("span");
+            span.id = 'tooltip';
+            map.parentElement.appendChild(span);
+            this.tooltipSpan = span;
         }
     }
     exports.StationsController = StationsController;

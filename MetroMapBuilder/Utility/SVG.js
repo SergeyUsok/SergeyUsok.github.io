@@ -32,6 +32,16 @@ define(["require", "exports", "./Geometry"], function (require, exports, Geometr
             line.setAttribute('stroke-width', Geometry_1.Geometry.lineWidth.toString());
             return line;
         }
+        static line(start, finish, color, width) {
+            let line = document.createElementNS("http://www.w3.org/2000/svg", 'line');
+            line.setAttribute('x1', start.x.toString());
+            line.setAttribute('y1', start.y.toString());
+            line.setAttribute('x2', finish.x.toString());
+            line.setAttribute('y2', finish.y.toString());
+            line.setAttribute('stroke', color);
+            line.setAttribute('stroke-width', width.toString());
+            return line;
+        }
     }
     exports.SVG = SVG;
 });
