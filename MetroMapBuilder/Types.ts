@@ -1,9 +1,19 @@
 ﻿export type Station = {
     id: number;
-    name: string;
+    label: {
+        x: number;
+        y: number;
+        name: string[];
+    };
     x: number;
     y: number;
     connections: number[];
+}
+
+export type StationKeeper = {
+    id: number;
+    x: number;
+    y: number;
     circle: SVGCircleElement;
 }
 
@@ -28,9 +38,13 @@ export type Connection = {
 }
 
 export type Line = {
-    stations: number[];
-    name: string;
     id: number;
+    stations: number[];
+    label: {
+        x: number;
+        y: number;
+        name: string[];
+    };
     color: Color;
 }
 
@@ -41,7 +55,7 @@ export enum Direction {
     leftDiagonal
 }
 
-enum Direction2 {
+export enum Direction2 {
     south,
     north,
     west,

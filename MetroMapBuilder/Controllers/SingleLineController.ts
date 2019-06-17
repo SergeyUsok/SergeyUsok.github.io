@@ -1,4 +1,4 @@
-﻿import { Color, Station, Line } from "../Types";
+﻿import { Color, StationKeeper, Line } from "../Types";
 import { SVG } from "../Utility/SVG";
 
 export class SingleLineController {   
@@ -9,9 +9,9 @@ export class SingleLineController {
     private stationClick = e => this.handleSelection(e);
 
     private myColor: Color;
-    private lineStations: Station[] = [];
+    private lineStations: StationKeeper[] = [];
 
-    public constructor(private stations: Station[],
+    public constructor(private stations: StationKeeper[],
                        private lineSelectedCallback: (me: SingleLineController) => void,
                        private colorChangedCallback: (me: SingleLineController, color: Color) => void,
                        private removeCallback: (me: SingleLineController) => void,
@@ -55,7 +55,7 @@ export class SingleLineController {
         }
     }
 
-    private removeStation(toRemove: Station): void {        
+    private removeStation(toRemove: StationKeeper): void {        
         let newArr = [];
 
         for (let i = 0; i < this.lineStations.length; i++) {
@@ -81,6 +81,7 @@ export class SingleLineController {
 
         if (clicked.circle.classList.contains("selected")) { // if already selected then should be deselected
             this.removeStation(clicked);
+            clicked.circle.classList.remove("selected");
         }
         else {
             this.lineStations.push(clicked);
@@ -112,7 +113,7 @@ export class SingleLineController {
             stationIds.push(this.lineStations[i].id);
         }
 
-        return { id: lineId, stations: stationIds, name: "", color: this.myColor };
+        return { id: lineId, stations: stationIds, label: { x: 0, y: 0, name: [] }, color: this.myColor };
     }
 
     private createControlPanel(colors: Color[]): HTMLDivElement {
@@ -163,8 +164,8 @@ export class SingleLineController {
     }
 
     private handleLineRemoved(): void {
+        this.removeCallback(this);
         this.dispose();
         this.controlPanel.remove();
-        this.removeCallback(this);
     }
 }

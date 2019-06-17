@@ -5,9 +5,6 @@ define(["require", "exports", "../Utility/SVG", "../Utility/Geometry", "./Statio
         constructor(map) {
             this.map = map;
             this.update = () => this.handleUpdate();
-            this.loadBackground = () => this.handleLoadBackground();
-            this.clearBackground = () => this.handleClearBackground();
-            this.urlTextChaged = e => this.handleUrlTextChaged(e);
             this.initialize(map);
         }
         next() {
@@ -15,18 +12,16 @@ define(["require", "exports", "../Utility/SVG", "../Utility/Geometry", "./Statio
         }
         dispose() {
             document.getElementById("update").removeEventListener("click", this.update);
-            document.getElementById("url").removeEventListener("input", this.urlTextChaged);
-            document.getElementById("load").removeEventListener("click", this.loadBackground);
-            document.getElementById("clear").removeEventListener("click", this.clearBackground);
         }
         draw() {
             let canvas = this.map;
+            let gridContainer = SVG_1.SVG.groupGridLines("grid");
             // draw vertical lines
             let index = 0;
             for (let x = 0; x <= canvas.width.baseVal.value; x += Geometry_1.Geometry.cellSize) {
                 let line = SVG_1.SVG.gridLine(x, 0, x, canvas.height.baseVal.value);
                 line.setAttribute("id", `x${index}`);
-                canvas.appendChild(line);
+                gridContainer.appendChild(line);
                 index++;
             }
             // draw horizontal lines
@@ -34,36 +29,10 @@ define(["require", "exports", "../Utility/SVG", "../Utility/Geometry", "./Statio
             for (let y = 0; y <= canvas.height.baseVal.value; y += Geometry_1.Geometry.cellSize) {
                 let line = SVG_1.SVG.gridLine(0, y, canvas.width.baseVal.value, y);
                 line.setAttribute("id", `y${index}`);
-                canvas.appendChild(line);
+                gridContainer.appendChild(line);
                 index++;
             }
-        }
-        handleLoadBackground() {
-            let url = document.getElementById("url").value;
-            let map = document.getElementById("map");
-            map.classList.add("bgd");
-            map.classList.remove("bgd-color");
-            map.style.backgroundImage = `url(${url})`;
-            document.getElementById("load").setAttribute("disabled", "disabled");
-            document.getElementById("clear").removeAttribute("disabled");
-        }
-        handleClearBackground() {
-            let map = document.getElementById("map");
-            map.classList.remove("bgd");
-            map.classList.add("bgd-color");
-            map.style.backgroundImage = '';
-            document.getElementById("url").value = '';
-            document.getElementById("clear").setAttribute("disabled", "disabled");
-        }
-        handleUrlTextChaged(e) {
-            if (e.target.value != "") {
-                document.getElementById("load").removeAttribute("disabled");
-                document.getElementById("clear").removeAttribute("disabled");
-            }
-            else {
-                document.getElementById("load").setAttribute("disabled", "disabled");
-                document.getElementById("clear").setAttribute("disabled", "disabled");
-            }
+            canvas.appendChild(gridContainer);
         }
         handleUpdate() {
             var input = document.getElementById("gridSize");
@@ -95,12 +64,6 @@ define(["require", "exports", "../Utility/SVG", "../Utility/Geometry", "./Statio
             label.textContent = `${Geometry_1.GridConfig.size}X${Geometry_1.GridConfig.size}`;
             document.getElementById("update")
                 .addEventListener("click", this.update);
-            document.getElementById("url")
-                .addEventListener("input", this.urlTextChaged);
-            document.getElementById("load")
-                .addEventListener("click", this.loadBackground);
-            document.getElementById("clear")
-                .addEventListener("click", this.clearBackground);
             this.draw();
         }
     }

@@ -65,6 +65,7 @@ define(["require", "exports", "../Types", "../Utility/SVG"], function (require, 
             let clicked = this.stations.find(s => event.target == s.circle);
             if (clicked.circle.classList.contains("selected")) { // if already selected then should be deselected
                 this.removeStation(clicked);
+                clicked.circle.classList.remove("selected");
             }
             else {
                 this.lineStations.push(clicked);
@@ -88,7 +89,7 @@ define(["require", "exports", "../Types", "../Utility/SVG"], function (require, 
             for (var i = 0; i < this.lineStations.length; i++) {
                 stationIds.push(this.lineStations[i].id);
             }
-            return { id: lineId, stations: stationIds, name: "", color: this.myColor };
+            return { id: lineId, stations: stationIds, label: { x: 0, y: 0, name: [] }, color: this.myColor };
         }
         createControlPanel(colors) {
             let clone = document.getElementById("linePanel").cloneNode(true);
@@ -127,9 +128,9 @@ define(["require", "exports", "../Types", "../Utility/SVG"], function (require, 
             this.colorChangedCallback(this, this.myColor);
         }
         handleLineRemoved() {
+            this.removeCallback(this);
             this.dispose();
             this.controlPanel.remove();
-            this.removeCallback(this);
         }
     }
     exports.SingleLineController = SingleLineController;

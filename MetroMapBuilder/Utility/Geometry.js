@@ -16,6 +16,14 @@ define(["require", "exports"], function (require, exports) {
         static get lineWidth() {
             return Geometry.cellSize / 5;
         }
+        // SVG draws thin line and then calculates its width by making it wider proportionally from both sides from center
+        static get lineCenter() {
+            return Geometry.lineWidth / 2;
+        }
+        // let distance be half of line width
+        static get distanceBetweenLines() {
+            return Geometry.lineWidth / 2;
+        }
         static centrify(x, y) {
             var gridCell = Geometry.normalizeToGridCell(x, y);
             return Geometry.getCenterOfCell(gridCell);

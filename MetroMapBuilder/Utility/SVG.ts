@@ -1,4 +1,4 @@
-﻿import { Station, Color, Point } from "../Types";
+﻿import { Color, Point, Station, StationKeeper } from "../Types";
 import { Geometry } from "./Geometry";
 
 export class SVG {
@@ -17,12 +17,10 @@ export class SVG {
         line.setAttribute('y1', y1.toString());
         line.setAttribute('x2', x2.toString());
         line.setAttribute('y2', y2.toString());
-        line.setAttribute('stroke', "#4e4e4e");
-        line.setAttribute('stroke-width', "0.5");
         return line;
     }
 
-    public static polyline(stations: Station[], color: Color): SVGPolylineElement {
+    public static polyline(stations: StationKeeper[], color: Color): SVGPolylineElement {
         let line = document.createElementNS("http://www.w3.org/2000/svg", 'polyline');
 
         let points = "";
@@ -48,5 +46,14 @@ export class SVG {
         line.setAttribute('stroke', color);
         line.setAttribute('stroke-width', width.toString());
         return line;
+    }
+
+    public static groupGridLines(id: string) {
+        let group = document.createElementNS("http://www.w3.org/2000/svg", 'g');
+        group.setAttribute('id', id);
+        group.setAttribute('stroke', "#4e4e4e");
+        group.setAttribute('stroke-width', "0.5");
+        group.setAttribute('visibility', "visible");
+        return group;
     }
 }

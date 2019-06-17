@@ -24,6 +24,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="app.css" />
+    <Content Include="Controllers\DrawingController.js" />
     <Content Include="Controllers\GridController.js" />
     <Content Include="Controllers\LinesController.js" />
     <Content Include="Controllers\SingleLineController.js" />

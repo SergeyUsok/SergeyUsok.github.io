@@ -2,7 +2,7 @@
 import { SVG } from "../Utility/SVG";
 import { Controller } from "./GridController";
 import { LinesController } from "./LinesController";
-import { Point, Station } from "../Types";
+import { Point, StationKeeper } from "../Types";
 
 export class StationsController implements Controller {
 
@@ -10,18 +10,15 @@ export class StationsController implements Controller {
     private addStation = (e) => this.handleLeftClick(e);
     private removeStation = (e) => this.handleRightClick(e);
     private highlightCell = (e) => this.handleHighlightCell(e);
-    private background = (e) => this.handleBackground(e);
     private tooltipSpan: HTMLElement;
     private highlightedLines: HTMLElement[] = [];
-
-    private backgroundUrl: string = null;
 
     public constructor(private map: HTMLElement) {
         this.initialize(map);
     }
 
     public next(): Controller {
-        let stations: Station[] = [];
+        let stations: StationKeeper[] = [];
 
         for (let i = 0; i < this.circles.length; i++) {
             let circle = this.circles[i];
@@ -30,15 +27,13 @@ export class StationsController implements Controller {
             stations.push(station);
         }
 
-        return new LinesController(stations, this.backgroundUrl);
+        return new LinesController(stations);
     }
 
     public dispose(): void {
         this.map.removeEventListener("click", this.addStation);
         this.map.removeEventListener("contextmenu", this.removeStation, false);
         this.map.removeEventListener("mousemove", this.highlightCell);
-        document.getElementById("background-switch").removeEventListener("click", this.background);
-        document.getElementById("background-switch").setAttribute("disabled", "disabled");
 
         for (let i = 0; i < this.highlightedLines.length; i++) {
             this.highlightedLines[i].classList.remove("highlightCell");
@@ -98,21 +93,6 @@ export class StationsController implements Controller {
         this.tooltipSpan.innerText = `${cell.x} ${cell.y}`;
     }
 
-    private handleBackground(e: MouseEvent) {
-        let checkbox = <any>e.target;
-
-        if (checkbox.checked) {            
-            this.map.classList.remove("bgd-color");
-            this.map.classList.add("bgd");
-            this.map.style.backgroundImage = this.backgroundUrl;
-        }
-        else {
-            this.map.classList.remove("bgd");
-            this.map.classList.add("bgd-color");            
-            this.map.style.backgroundImage = "";
-        }
-    }
-
     private handleLeftClick(event: MouseEvent) {
         // nothing to process if existing circle or line was clicked
         if (event.target instanceof SVGCircleElement || event.target instanceof SVGLineElement)
@@ -144,18 +124,7 @@ export class StationsController implements Controller {
         map.addEventListener("click", this.addStation);
         map.addEventListener("contextmenu", this.removeStation, false);
         map.addEventListener("mousemove", this.highlightCell);
-
-        let backgroundCheckbox = <HTMLInputElement>document.getElementById("background-switch");
-
-        if (map.classList.contains("bgd")) {
-            backgroundCheckbox.addEventListener("click", this.background);
-            this.backgroundUrl = map.style.backgroundImage;
-            backgroundCheckbox.checked = true;
-        }
-        else {
-            backgroundCheckbox.setAttribute("disabled", "disabled");
-        }
-
+        
         let span = document.createElement("span");
         span.id = 'tooltip';
         map.parentElement.appendChild(span);

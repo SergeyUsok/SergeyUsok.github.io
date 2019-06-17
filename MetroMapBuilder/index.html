@@ -23,7 +23,6 @@
                     <svg width="800px" height="800px" id="map" class="bgd-color">
 
                     </svg>
-                    <!--<span id="tooltip"></span>-->
                 </div>
             </div>
             <div class="col">
@@ -43,15 +42,10 @@
                                 </div>
                             </div>
                             <input type="button" class="btn btn-info mb-1" value="update" id="update">
-                            <button class="btn btn-info mb-1" id="bgd-img" data-toggle="modal" data-target="#insertImg">background</button>
                         </div>
                         <div class="list-group-item list-group-item-action disabled" id="stations-setup">
                             <div class="d-flex w-100 justify-content-between">
                                 <h5 class="mb-1">Set up stations</h5>
-                                <div class="custom-control custom-switch">
-                                    <input type="checkbox" class="custom-control-input" id="background-switch">
-                                    <label class="custom-control-label" for="background-switch">Background</label>
-                                </div>
                             </div>
                             <p class="mb-1">Left click: add station</p>
                             <p class="mb-1">Right click: remove station</p>
@@ -60,10 +54,6 @@
                             <div class="d-flex w-100 justify-content-between">
                                 <h5 class="mb-1">Set up lines</h5>
                                 <input type="button" class="btn btn-info mb-1" value="add line" id="addLine">
-                            </div>
-                            <div class="custom-control custom-switch">
-                                <input type="checkbox" class="custom-control-input" id="background-switch2">
-                                <label class="custom-control-label" for="background-switch2">Background</label>
                             </div>
                             <div class="input-group d-none" id="linePanel">
                                 <div class="input-group-prepend">
@@ -84,9 +74,18 @@
                                 <h5 class="mb-1">Draw map</h5>
                                 <input type="button" class="btn btn-info mb-1" value="json" id="json">
                             </div>
+                            <div class="custom-control custom-switch">
+                                <input type="checkbox" class="custom-control-input" id="grid-switch" disabled>
+                                <label class="custom-control-label" for="grid-switch">Toggle Grid</label>
+                            </div>
                         </div>
                     </div>
                     <input type="button" class="btn btn-primary mt-3" value="Next" id="next">
+                    <input type="button" class="btn btn-primary mt-3" value="Background" id="bgd-img" data-toggle="modal" data-target="#insertImg">
+                    <div class="custom-control custom-switch">
+                        <input type="checkbox" class="custom-control-input" disabled id="background-switch">
+                        <label class="custom-control-label" for="background-switch">Toggle background</label>
+                    </div>
                 </div>
 
                 <div class="modal fade" id="insertImg" tabindex="-1" role="dialog" aria-labelledby="insertUrl" aria-hidden="true">

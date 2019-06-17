@@ -15,6 +15,14 @@ export class Geometry {
     public static get lineWidth(): number {
         return Geometry.cellSize / 5;
     }
+    // SVG draws thin line and then calculates its width by making it wider proportionally from both sides from center
+    public static get lineCenter(): number {
+        return Geometry.lineWidth / 2;
+    }
+    // let distance be half of line width
+    public static get distanceBetweenLines(): number {
+        return Geometry.lineWidth / 2;
+    }
 
     public static centrify(x: number, y: number): Point {
         var gridCell = Geometry.normalizeToGridCell(x, y);

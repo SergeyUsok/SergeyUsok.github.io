@@ -29,6 +29,6 @@ define(["require", "exports"], function (require, exports) {
         Direction2[Direction2["southEast"] = 5] = "southEast";
         Direction2[Direction2["northWest"] = 6] = "northWest";
         Direction2[Direction2["northEast"] = 7] = "northEast";
-    })(Direction2 || (Direction2 = {}));
+    })(Direction2 = exports.Direction2 || (exports.Direction2 = {}));
 });
 //# sourceMappingURL=Types.js.map

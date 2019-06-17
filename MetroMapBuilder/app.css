@@ -24,6 +24,10 @@
     background-repeat: no-repeat;
 }
 
+.hideGrid {
+    visibility: hidden;
+}
+
 .toolset {
     background-color: white;
     padding-top: 20px;

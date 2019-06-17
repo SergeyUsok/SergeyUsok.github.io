@@ -1,29 +1,36 @@
 ﻿import { Controller } from "./GridController";
 import { SingleLineController } from "./SingleLineController";
-import { Color, Station, Line, Connection } from "../Types";
+import { Color, StationKeeper, Line, Connection, Station } from "../Types";
 import { DrawingController } from "./DrawingController";
 
 export class LinesController implements Controller {    
     private addLine = e => this.handleLineAddition();
 
-    private changeLine = ctrl => this.handleLineChange(ctrl);
-    private changeColor = (ctrl, c) => this.handleColorChange(ctrl, c);
-    private removeLine = ctrl => this.handleLineRemoval(ctrl);
-    private background = (e) => this.handleBackground(e);
+    private changeLine = (ctrl: SingleLineController) => this.handleLineChange(ctrl);
+    private changeColor = (ctrl: SingleLineController, c: Color) => this.handleColorChange(ctrl, c);
+    private removeLine = (ctrl: SingleLineController) => this.handleLineRemoval(ctrl);
 
     private colors: Color[] = [Color.green, Color.red, Color.yellow, Color.blue, Color.orange, Color.black, Color.brown];
 
     private lineControllers: SingleLineController[] = [];
     private currentController: SingleLineController;
            
-    public constructor(private stations: Station[], private backgroundUrl) {
-        this.initialize(this.backgroundUrl);
+    public constructor(private stations: StationKeeper[]) {
+        this.initialize();
     }
 
     public next(): Controller {
         // prepare stations
+        let stations: Station[] = [];
         for (let stId = 0; stId < this.stations.length; stId++) {
             this.stations[stId].id = stId;
+            let station = {
+                id: stId, label: {x: 0, y: 0, name: []},
+                x: this.stations[stId].x,
+                y: this.stations[stId].y,
+                connections: []
+            };
+            stations.push(station);
         }
         // prepare lines
         let lines: Line[] = [];
@@ -46,8 +53,8 @@ export class LinesController implements Controller {
                     connection.lines.push(lineId);
                     connections.push(connection);
                     // add connection info to stations
-                    this.stations[a].connections.push(connectionId);
-                    this.stations[b].connections.push(connectionId);
+                    stations[a].connections.push(connectionId);
+                    stations[b].connections.push(connectionId);
                     ++connectionId;
                 }
                 else {
@@ -58,36 +65,14 @@ export class LinesController implements Controller {
             }
         }
 
-        return new DrawingController(this.stations, lines, connections);
+        return new DrawingController(stations, lines, connections);
     }
 
     public dispose(): void {
         document.getElementById("addLine").removeEventListener("click", this.addLine);
-        document.getElementById("background-switch2").removeEventListener("click", this.background);
-        document.getElementById("background-switch2").setAttribute("disabled", "disabled");
-
-        document.getElementById("map").style.backgroundImage = "";
-        document.getElementById("map").classList.remove("bgd");
-        document.getElementById("map").classList.add("bgd-color");
 
         for (let i = 0; i < this.lineControllers.length; i++) {
             this.lineControllers[i].dispose();
-        }
-    }
-
-    private handleBackground(e: MouseEvent) {
-        let checkbox = <any>e.target;
-        let map = document.getElementById("map");
-
-        if (checkbox.checked) {
-            map.classList.remove("bgd-color");
-            map.classList.add("bgd");
-            map.style.backgroundImage = this.backgroundUrl;
-        }
-        else {
-            map.classList.remove("bgd");
-            map.classList.add("bgd-color");
-            map.style.backgroundImage = "";
         }
     }
 
@@ -132,24 +117,7 @@ export class LinesController implements Controller {
         this.currentController = selectedController;
     }
 
-    private initialize(background: string) {
+    private initialize() {
         document.getElementById("addLine").addEventListener("click", this.addLine);
-
-        let backgroundCheckbox = <HTMLInputElement>document.getElementById("background-switch2");
-        let map = document.getElementById("map");
-
-        if (background != null) {
-            backgroundCheckbox.addEventListener("click", this.background);            
-        }
-        else {
-            backgroundCheckbox.setAttribute("disabled", "disabled");
-        }
-
-        if (map.style.backgroundImage == background) {
-            backgroundCheckbox.checked = true;
-        }
-        else {
-            backgroundCheckbox.checked = false;
-        }
     }
 }
