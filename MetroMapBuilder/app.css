@@ -7,11 +7,16 @@
   padding-top: 10px;
 }
 
-.canvas {
-    width: 800px;
-    height: 800px;
+.container {
+    max-width: 100%;
+    padding-left: 50px;
+    padding-right: 50px;
+}
+
+#canvas {
     margin-top: 20px;
     margin-bottom: 20px;
+    width:auto;
 }
 
 .bgd-color {
@@ -24,10 +29,6 @@
     background-repeat: no-repeat;
 }
 
-.hideGrid {
-    visibility: hidden;
-}
-
 .toolset {
     background-color: white;
     padding-top: 20px;
@@ -38,6 +39,7 @@ circle {
     fill: white;
     stroke: blue;
     stroke-width: 2px;
+    z-index: 10;
 }
 
 circle:hover {
@@ -61,24 +63,25 @@ circle:hover {
 }
 
 .activated {
-    background-color: aqua;
+    background-color: rgba(171, 235, 198, 0.5);
+    border-color: rgba(171, 235, 198, 0.125);
 }
 
-.canvas span {
+.activated:hover {
+    background-color: rgba(171, 235, 198, 0.5);
+    border-color: rgba(171, 235, 198, 0.125);
+}
+
+#canvas span {
     display: none;
 }
 
-.canvas:hover span {
+#canvas:hover span {
     display: block;
     position: fixed;
     overflow: hidden;
 }
 
-#tooltip {
-    background-color: black;
-    color: blueviolet;
-    width: 50px;
-    height: 30px;
-    border-radius: 5px;
-    text-align: center;
+.list-group-item {
+    cursor: pointer;
 }

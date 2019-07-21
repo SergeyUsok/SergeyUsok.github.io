@@ -10,7 +10,7 @@
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <DebugType>full</DebugType>
     <DebugSymbols>true</DebugSymbols>
-    <TypeScriptToolsVersion>3.3</TypeScriptToolsVersion>
+    <TypeScriptToolsVersion>3.4</TypeScriptToolsVersion>
     <UseIISExpress>true</UseIISExpress>
     <IISExpressSSLPort />
     <IISExpressAnonymousAuthentication />
@@ -24,36 +24,23 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="app.css" />
-    <Content Include="Controllers\DrawingController.js" />
-    <Content Include="Controllers\GridController.js" />
-    <Content Include="Controllers\LinesController.js" />
-    <Content Include="Controllers\SingleLineController.js" />
-    <Content Include="Controllers\StationsController.js" />
     <Content Include="index.html" />
-    <Content Include="main.js" />
-    <Content Include="Types.js" />
-    <Content Include="Utility\Geometry.js" />
-    <Content Include="Utility\SVG.js" />
     <Content Include="web.config">
       <SubType>Designer</SubType>
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <TypeScriptCompile Include="Controllers\DrawingController.ts" />
-    <TypeScriptCompile Include="Controllers\SingleLineController.ts" />
+    <TypeScriptCompile Include="Controllers\BackgroundController.ts" />
+    <TypeScriptCompile Include="Controllers\ControlPanelController.ts" />
+    <TypeScriptCompile Include="Controllers\RemovalController.ts" />
     <TypeScriptCompile Include="main.ts" />
     <TypeScriptCompile Include="Controllers\GridController.ts" />
-    <TypeScriptCompile Include="Controllers\LinesController.ts" />
-    <TypeScriptCompile Include="Utility\Geometry.ts" />
-    <TypeScriptCompile Include="lib\jquery\index.d.ts" />
-    <TypeScriptCompile Include="lib\jquery\JQuery.d.ts" />
-    <TypeScriptCompile Include="lib\jquery\JQueryStatic.d.ts" />
-    <TypeScriptCompile Include="lib\jquery\legacy.d.ts" />
-    <TypeScriptCompile Include="lib\jquery\misc.d.ts" />
-    <TypeScriptCompile Include="lib\jquery\sizzle\index.d.ts" />
-    <TypeScriptCompile Include="Types.ts" />
+    <TypeScriptCompile Include="Controllers\RoutesController.ts" />
+    <TypeScriptCompile Include="Utils\MapDrawer.ts" />
+    <TypeScriptCompile Include="Utils\Metadata.ts" />
+    <TypeScriptCompile Include="Utils\Geometry.ts" />
     <TypeScriptCompile Include="Controllers\StationsController.ts" />
-    <TypeScriptCompile Include="Utility\SVG.ts" />
+    <TypeScriptCompile Include="Utils\SVG.ts" />
   </ItemGroup>
   <ItemGroup>
     <None Include="web.Debug.config">

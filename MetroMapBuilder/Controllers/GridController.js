@@ -1,70 +1,80 @@
-define(["require", "exports", "../Utility/SVG", "../Utility/Geometry", "./StationsController"], function (require, exports, SVG_1, Geometry_1, StationsController_1) {
+define(["require", "exports", "../Utils/Geometry"], function (require, exports, Geometry_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     class GridController {
-        constructor(map) {
-            this.map = map;
-            this.update = () => this.handleUpdate();
-            this.initialize(map);
+        constructor(metadata, drawer) {
+            this.metadata = metadata;
+            this.drawer = drawer;
+            this.highlightedLines = [];
+            this.initialize(metadata, drawer.getCanvas());
+            drawer.redrawGrid();
         }
-        next() {
-            return new StationsController_1.StationsController(this.map);
+        initialize(metadata, map) {
+            let textInput = document.getElementById("gridSize");
+            textInput.value = `${metadata.gridConfig.gridSize}`;
+            let label = document.getElementById("sizeLabel");
+            label.textContent = `${metadata.gridConfig.gridSize}X${metadata.gridConfig.gridSize}`;
+            document.getElementById("update")
+                .addEventListener("click", () => this.redrawGrid(metadata));
+            document.getElementById("grid-switch")
+                .addEventListener("click", () => this.toggleGrid());
+            map.addEventListener("mousemove", event => this.highlightCell(event));
         }
-        dispose() {
-            document.getElementById("update").removeEventListener("click", this.update);
-        }
-        draw() {
-            let canvas = this.map;
-            let gridContainer = SVG_1.SVG.groupGridLines("grid");
-            // draw vertical lines
-            let index = 0;
-            for (let x = 0; x <= canvas.width.baseVal.value; x += Geometry_1.Geometry.cellSize) {
-                let line = SVG_1.SVG.gridLine(x, 0, x, canvas.height.baseVal.value);
-                line.setAttribute("id", `x${index}`);
-                gridContainer.appendChild(line);
-                index++;
+        highlightCell(event) {
+            let cell = null;
+            if (event.target instanceof SVGLineElement) {
+                // get coords relative to of svg canvas rather than just line ones
+                let rect = (event.currentTarget).getBoundingClientRect();
+                cell = Geometry_1.Geometry.normalizeToGridCell(event.clientX - rect.left, event.clientY - rect.top);
             }
-            // draw horizontal lines
-            index = 0;
-            for (let y = 0; y <= canvas.height.baseVal.value; y += Geometry_1.Geometry.cellSize) {
-                let line = SVG_1.SVG.gridLine(0, y, canvas.width.baseVal.value, y);
-                line.setAttribute("id", `y${index}`);
-                gridContainer.appendChild(line);
-                index++;
+            else if (event.target instanceof SVGCircleElement) {
+                cell = Geometry_1.Geometry.normalizeToGridCell(event.target.cx.baseVal.value, event.target.cy.baseVal.value);
             }
-            canvas.appendChild(gridContainer);
+            else {
+                cell = Geometry_1.Geometry.normalizeToGridCell(event.offsetX, event.offsetY);
+            }
+            for (let i = 0; i < this.highlightedLines.length; i++) {
+                this.highlightedLines[i].classList.remove("highlightCell");
+            }
+            this.highlightedLines = [];
+            // lines which surrounds this cell by x axis
+            let lineX1 = document.getElementById(`x${cell.x}`);
+            lineX1.classList.add("highlightCell");
+            this.highlightedLines.push(lineX1);
+            let lineX2 = document.getElementById(`x${cell.x + 1}`);
+            lineX2.classList.add("highlightCell");
+            this.highlightedLines.push(lineX2);
+            // lines which surrounds this cell by y axis
+            let lineY1 = document.getElementById(`y${cell.y}`);
+            lineY1.classList.add("highlightCell");
+            this.highlightedLines.push(lineY1);
+            let lineY2 = document.getElementById(`y${cell.y + 1}`);
+            lineY2.classList.add("highlightCell");
+            this.highlightedLines.push(lineY2);
         }
-        handleUpdate() {
-            var input = document.getElementById("gridSize");
+        redrawGrid(metadata) {
+            let input = document.getElementById("gridSize");
             input.classList.remove("is-invalid");
-            var text = input.value;
-            var size = parseInt(text);
+            let size = parseInt(input.value);
             if (Number.isNaN(size) || size <= 0 || size > 400) {
                 input.classList.add("is-invalid");
             }
-            else if (size === Geometry_1.GridConfig.size) {
+            else if (size === metadata.gridConfig.gridSize) {
                 return;
             }
             else {
-                var map = document.getElementById("map");
-                map.innerHTML = null;
-                Geometry_1.GridConfig.size = size;
-                var label = document.getElementById("sizeLabel");
-                label.textContent = `${Geometry_1.GridConfig.size}X${Geometry_1.GridConfig.size}`;
-                this.draw();
+                metadata.gridConfig.gridSize = size;
+                let label = document.getElementById("sizeLabel");
+                label.textContent = `${metadata.gridConfig.gridSize}X${metadata.gridConfig.gridSize}`;
+                this.drawer.redrawGrid();
+                this.drawer.redrawMap(metadata);
             }
         }
-        initialize(map) {
-            let canvas = map;
-            Geometry_1.GridConfig.pixelSize = canvas.width.baseVal.value;
-            Geometry_1.GridConfig.size = 40;
-            var textInput = document.getElementById("gridSize");
-            textInput.value = `${Geometry_1.GridConfig.size}`;
-            var label = document.getElementById("sizeLabel");
-            label.textContent = `${Geometry_1.GridConfig.size}X${Geometry_1.GridConfig.size}`;
-            document.getElementById("update")
-                .addEventListener("click", this.update);
-            this.draw();
+        toggleGrid() {
+            let grid = document.getElementById("grid");
+            grid.getAttribute("visibility") == "visible" ?
+                grid.setAttribute("visibility", "hidden") :
+                grid.setAttribute("visibility", "visible");
         }
     }
     exports.GridController = GridController;
