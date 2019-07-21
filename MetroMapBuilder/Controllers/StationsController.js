@@ -1,10 +1,11 @@
-define(["require", "exports", "../Utils/Geometry"], function (require, exports, Geometry_1) {
+define(["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     class StationsController {
-        constructor(metadata, drawer) {
-            this.metadata = metadata;
+        constructor(subwayMap, drawer, geometry) {
+            this.subwayMap = subwayMap;
             this.drawer = drawer;
+            this.geometry = geometry;
             this.stationsCounter = 0;
             this.initialize(drawer.getCanvas());
         }
@@ -19,13 +20,13 @@ define(["require", "exports", "../Utils/Geometry"], function (require, exports, 
             if (event.target instanceof SVGLineElement) {
                 // get coords relative to of svg canvas rather than just line ones
                 let rect = (event.currentTarget).getBoundingClientRect();
-                cell = Geometry_1.Geometry.normalizeToGridCell(event.clientX - rect.left, event.clientY - rect.top);
+                cell = this.geometry.normalizeToGridCell(event.clientX - rect.left, event.clientY - rect.top);
             }
             else {
-                cell = Geometry_1.Geometry.normalizeToGridCell(event.offsetX, event.offsetY);
+                cell = this.geometry.normalizeToGridCell(event.offsetX, event.offsetY);
             }
             let id = this.stationsCounter++;
-            let station = this.metadata.newStation(id, cell.x, cell.y);
+            let station = this.subwayMap.newStation(id, cell.x, cell.y);
             this.drawer.drawStation(station);
         }
     }

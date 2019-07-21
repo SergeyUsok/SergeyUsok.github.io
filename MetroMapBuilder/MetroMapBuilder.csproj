@@ -36,8 +36,11 @@
     <TypeScriptCompile Include="main.ts" />
     <TypeScriptCompile Include="Controllers\GridController.ts" />
     <TypeScriptCompile Include="Controllers\RoutesController.ts" />
+    <TypeScriptCompile Include="Models\ConnectionModel.ts" />
+    <TypeScriptCompile Include="Models\Route.ts" />
+    <TypeScriptCompile Include="Models\StationModel.ts" />
     <TypeScriptCompile Include="Utils\MapDrawer.ts" />
-    <TypeScriptCompile Include="Utils\Metadata.ts" />
+    <TypeScriptCompile Include="Models\SubwayMap.ts" />
     <TypeScriptCompile Include="Utils\Geometry.ts" />
     <TypeScriptCompile Include="Controllers\StationsController.ts" />
     <TypeScriptCompile Include="Utils\SVG.ts" />

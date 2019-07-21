@@ -1,24 +1,27 @@
-﻿import { Metadata, RouteMetadata, StationMetadata } from "../Utils/Metadata";
-import { Geometry } from "../Utils/Geometry";
+﻿import { SubwayMap } from "../Models/SubwayMap";
+import { Route } from "../Models/Route";
 import { MapDrawer } from "../Utils/MapDrawer";
 
 export class RoutesController {
     private lineIdCounter: number = 0;
 
-    public constructor(private metadata: Metadata, private drawer: MapDrawer) {
+    public constructor(private subwayMap: SubwayMap, private drawer: MapDrawer) {
         this.initialize(drawer.getCanvas());
     }
 
-    private removeRoute(toRemoveId: number): void {
-        this.metadata.removeRoute(toRemoveId);
+    private removeRoute(route: Route): void {
+        this.subwayMap.removeRoute(route);
 
-        if (this.metadata.currentRoute.id == toRemoveId)
-            this.routeSelectionChanged(this.metadata.routes.length > 0 ? this.metadata.routes[0] : null);
+        // if current/selected route was removed
+        if (this.subwayMap.currentRoute == null)
+            this.routeSelectionChanged(this.subwayMap.routes.length > 0 ? this.subwayMap.routes[0] : null);
+
+        this.drawer.redrawMap(this.subwayMap);
     }
 
-    private routeSelectionChanged(newSelection: RouteMetadata): void {
-        if (this.metadata.currentRoute != null) {
-            this.drawer.deselectRoute(this.metadata.currentRoute);
+    private routeSelectionChanged(newSelection: Route): void {
+        if (this.subwayMap.currentRoute != null) {
+            this.drawer.deselectRoute(this.subwayMap.currentRoute);
         }
 
         if (newSelection != null) {
@@ -26,7 +29,7 @@ export class RoutesController {
             this.highlightPanel(newSelection);
         }            
 
-        this.metadata.currentRoute = newSelection;
+        this.subwayMap.currentRoute = newSelection;
     }    
 
     private initialize(canvas: SVGSVGElement) {
@@ -36,8 +39,8 @@ export class RoutesController {
         document.getElementById("lineWidth")
             .addEventListener("change", e => {
                 let factor = parseFloat((<HTMLInputElement>e.target).value);
-                this.metadata.lineWidthFactor = factor;
-                this.drawer.redrawMap(this.metadata);
+                this.subwayMap.sizeSettings.lineWidthFactor = factor;
+                this.drawer.redrawMap(this.subwayMap);
             });
 
         canvas.addEventListener("click", event => this.addConnection(event));
@@ -45,13 +48,13 @@ export class RoutesController {
 
     private addRoute(): void {
         let id = this.lineIdCounter++;
-        let route = this.metadata.newRoute(id);        
+        let route = this.subwayMap.newRoute(id);        
         this.createControlPanel(route);
         this.routeSelectionChanged(route);
     }
 
     private addConnection(event: MouseEvent): void {
-        if (this.metadata.currentRoute == null) {
+        if (this.subwayMap.currentRoute == null) {
             // TODO show error about not selected route
             return;
         }
@@ -60,19 +63,19 @@ export class RoutesController {
             return; // nothing to do
         }
 
-        let station = this.metadata.getStation(this.drawer.getId(event.target));
-        let result = this.metadata.newConnection(this.metadata.currentRoute, station);
+        let station = this.subwayMap.getStation(this.drawer.getId(event.target));
+        let result = this.subwayMap.newConnection(this.subwayMap.currentRoute, station);
 
         
         if (result.ok) {
-            this.drawer.redrawMap(this.metadata);
+            this.drawer.redrawMap(this.subwayMap);
         }
         else {
             // TODO show error from result object
         }     
     }
 
-    private createControlPanel(route: RouteMetadata): HTMLDivElement {
+    private createControlPanel(route: Route): HTMLDivElement {
         let clone = <HTMLDivElement>document.getElementById("linePanel").cloneNode(true);
         clone.setAttribute("id", `panel-${route.id}`); // save uniqueness of template element
         clone.classList.remove("d-none"); // make element visible
@@ -80,8 +83,7 @@ export class RoutesController {
         let removeButton = clone.querySelector("button");
         removeButton.addEventListener("click", e => {            
             clone.remove();
-            this.removeRoute(route.id);            
-            this.drawer.redrawMap(this.metadata);
+            this.removeRoute(route);
             e.stopPropagation();
         });
 
@@ -94,7 +96,7 @@ export class RoutesController {
         });
 
         clone.addEventListener("click", () => {
-            if (this.metadata.currentRoute == route)
+            if (this.subwayMap.currentRoute == route)
                 return;
 
             this.routeSelectionChanged(route);
@@ -106,7 +108,7 @@ export class RoutesController {
         return clone;
     }
 
-    private highlightPanel(route: RouteMetadata) {
+    private highlightPanel(route: Route) {
         let panels = document.getElementById("panels").children;
 
         for (let i = 0; i < panels.length; i++) {

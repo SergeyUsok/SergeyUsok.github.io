@@ -2,26 +2,28 @@ define(["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     class RoutesController {
-        constructor(metadata, drawer) {
-            this.metadata = metadata;
+        constructor(subwayMap, drawer) {
+            this.subwayMap = subwayMap;
             this.drawer = drawer;
             this.lineIdCounter = 0;
             this.initialize(drawer.getCanvas());
         }
-        removeRoute(toRemoveId) {
-            this.metadata.removeRoute(toRemoveId);
-            if (this.metadata.currentRoute.id == toRemoveId)
-                this.routeSelectionChanged(this.metadata.routes.length > 0 ? this.metadata.routes[0] : null);
+        removeRoute(route) {
+            this.subwayMap.removeRoute(route);
+            // if current/selected route was removed
+            if (this.subwayMap.currentRoute == null)
+                this.routeSelectionChanged(this.subwayMap.routes.length > 0 ? this.subwayMap.routes[0] : null);
+            this.drawer.redrawMap(this.subwayMap);
         }
         routeSelectionChanged(newSelection) {
-            if (this.metadata.currentRoute != null) {
-                this.drawer.deselectRoute(this.metadata.currentRoute);
+            if (this.subwayMap.currentRoute != null) {
+                this.drawer.deselectRoute(this.subwayMap.currentRoute);
             }
             if (newSelection != null) {
                 this.drawer.selectRoute(newSelection);
                 this.highlightPanel(newSelection);
             }
-            this.metadata.currentRoute = newSelection;
+            this.subwayMap.currentRoute = newSelection;
         }
         initialize(canvas) {
             document.getElementById("addRoute")
@@ -29,29 +31,29 @@ define(["require", "exports"], function (require, exports) {
             document.getElementById("lineWidth")
                 .addEventListener("change", e => {
                 let factor = parseFloat(e.target.value);
-                this.metadata.lineWidthFactor = factor;
-                this.drawer.redrawMap(this.metadata);
+                this.subwayMap.sizeSettings.lineWidthFactor = factor;
+                this.drawer.redrawMap(this.subwayMap);
             });
             canvas.addEventListener("click", event => this.addConnection(event));
         }
         addRoute() {
             let id = this.lineIdCounter++;
-            let route = this.metadata.newRoute(id);
+            let route = this.subwayMap.newRoute(id);
             this.createControlPanel(route);
             this.routeSelectionChanged(route);
         }
         addConnection(event) {
-            if (this.metadata.currentRoute == null) {
+            if (this.subwayMap.currentRoute == null) {
                 // TODO show error about not selected route
                 return;
             }
             if (!(event.target instanceof SVGCircleElement)) {
                 return; // nothing to do
             }
-            let station = this.metadata.getStation(this.drawer.getId(event.target));
-            let result = this.metadata.newConnection(this.metadata.currentRoute, station);
+            let station = this.subwayMap.getStation(this.drawer.getId(event.target));
+            let result = this.subwayMap.newConnection(this.subwayMap.currentRoute, station);
             if (result.ok) {
-                this.drawer.redrawMap(this.metadata);
+                this.drawer.redrawMap(this.subwayMap);
             }
             else {
                 // TODO show error from result object
@@ -64,8 +66,7 @@ define(["require", "exports"], function (require, exports) {
             let removeButton = clone.querySelector("button");
             removeButton.addEventListener("click", e => {
                 clone.remove();
-                this.removeRoute(route.id);
-                this.drawer.redrawMap(this.metadata);
+                this.removeRoute(route);
                 e.stopPropagation();
             });
             let colorsControl = clone.querySelector("input[type=text]");
@@ -76,7 +77,7 @@ define(["require", "exports"], function (require, exports) {
                 this.drawer.changeRouteColor(route.id, color);
             });
             clone.addEventListener("click", () => {
-                if (this.metadata.currentRoute == route)
+                if (this.subwayMap.currentRoute == route)
                     return;
                 this.routeSelectionChanged(route);
             });

@@ -2,51 +2,47 @@ define(["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     class Geometry {
-        static init(gridConfig) {
-            this.gridConfig = gridConfig;
+        constructor(sizeSettings) {
+            this.sizeSettings = sizeSettings;
         }
-        static get cellSize() {
-            return Geometry.gridConfig.canvasSize / Geometry.gridConfig.gridSize;
+        get cellSize() {
+            return this.sizeSettings.canvasSize / this.sizeSettings.gridSize;
         }
-        static get radius() {
-            return Geometry.cellSize / 2;
+        get radius() {
+            return this.cellSize / 2;
         }
-        static get lineWidth() {
-            return Geometry.cellSize / 5;
+        get lineWidth() {
+            return this.cellSize * this.sizeSettings.lineWidthFactor;
         }
         // SVG draws thin line and then calculates its width by making it wider proportionally from both sides from the center
-        static get lineCenter() {
-            return Geometry.lineWidth / 2;
+        get lineCenter() {
+            return this.lineWidth / 2;
         }
         // let distance be half of line width
-        static get distanceBetweenLines() {
-            return Geometry.lineWidth / 2;
+        get distanceBetweenLines() {
+            return this.lineWidth / 2;
         }
-        static centrify(x, y) {
-            var gridCell = Geometry.normalizeToGridCell(x, y);
-            return Geometry.getCenterOfCell(gridCell);
-        }
-        static normalizeToGridCell(x, y) {
+        normalizeToGridCell(x, y) {
             return {
-                x: Math.floor(x / Geometry.cellSize),
-                y: Math.floor(y / Geometry.cellSize)
+                x: Math.floor(x / this.cellSize),
+                y: Math.floor(y / this.cellSize)
             };
         }
-        static getCenterOfCell(point) {
+        centrify(point) {
             // left border of a cell
             //  + right border of a cell
             // divided by 2 (half of a cell) to get center of the cell by x axis
-            let x = point.x * Geometry.cellSize + Geometry.cellSize / 2;
+            let x = point.x * this.cellSize + this.cellSize / 2;
             // top border of a cell
             //  + bottom border of a cell
             // divided by 2 (half of a cell) to get center of the cell by y axis
-            let y = point.y * Geometry.cellSize + Geometry.cellSize / 2;
+            let y = point.y * this.cellSize + this.cellSize / 2;
             return { x, y };
         }
         // Algorithm taken from:
         // https://seant23.wordpress.com/2010/11/12/offset-bezier-curves/
         // http://forums.codeguru.com/showthread.php?524278-Algoritme-for-doubling-a-line&p=2070354#post2070354
-        static offsetConnection(from, to, offset) {
+        offsetConnection(from, to, offset) {
             if (offset == 0)
                 return {
                     from: from,
@@ -118,9 +114,9 @@ define(["require", "exports"], function (require, exports) {
         //    }
         //}
         // https://en.wikipedia.org/wiki/Digital_differential_analyzer_(graphics_algorithm)
-        static *digitalDiffAnalyzer(segment) {
-            let point1 = Geometry.normalizeToGridCell(segment.from.x, segment.from.y);
-            let point2 = Geometry.normalizeToGridCell(segment.to.x, segment.to.y);
+        *digitalDiffAnalyzer(segment) {
+            let point1 = this.normalizeToGridCell(segment.from.x, segment.from.y);
+            let point2 = this.normalizeToGridCell(segment.to.x, segment.to.y);
             let dx = point1.x - point2.x;
             let dy = point1.y - point2.y;
             let bound = 0;

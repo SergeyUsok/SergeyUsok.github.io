@@ -2,8 +2,8 @@ define(["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     class RemovalController {
-        constructor(metadata, drawer) {
-            this.metadata = metadata;
+        constructor(subwayMap, drawer) {
+            this.subwayMap = subwayMap;
             this.drawer = drawer;
             this.initialize(drawer.getCanvas());
         }
@@ -32,11 +32,11 @@ define(["require", "exports"], function (require, exports) {
         }
         getStation(element) {
             let id = this.drawer.getId(element);
-            return this.metadata.getStation(id);
+            return this.subwayMap.getStation(id);
         }
         buildMenu(target) {
             let station = this.getStation(target);
-            let route = this.metadata.currentRoute;
+            let route = this.subwayMap.currentRoute;
             let hasConnections = route != null && route.passesThrough(station);
             let disabled = hasConnections ? "" : " disabled";
             let color = hasConnections ? ` style='color: ${route.color}'` : "";
@@ -53,15 +53,15 @@ define(["require", "exports"], function (require, exports) {
         addEventHandlers(menu, targetStation, route) {
             // remove station menu item
             menu.children[0].addEventListener("click", () => {
-                this.metadata.removeStation(targetStation);
-                this.drawer.redrawMap(this.metadata);
+                this.subwayMap.removeStation(targetStation);
+                this.drawer.redrawMap(this.subwayMap);
             });
             // menu.children[1] -- is divider line
             // remove connection - item
             menu.children[2].addEventListener("click", () => {
                 if (route != null) {
-                    this.metadata.removeConnection(route, targetStation);
-                    this.drawer.redrawMap(this.metadata);
+                    this.subwayMap.removeConnection(route, targetStation);
+                    this.drawer.redrawMap(this.subwayMap);
                 }
             });
             return menu;

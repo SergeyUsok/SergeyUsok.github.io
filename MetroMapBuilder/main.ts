@@ -1,5 +1,5 @@
 ﻿import { GridController } from "./Controllers/GridController";
-import { GridSettings, Metadata } from "./Utils/Metadata";
+import { SizeSettings, SubwayMap } from "./Models/SubwayMap";
 import { BackgroundController } from "./Controllers/BackgroundController";
 import { RoutesController } from "./Controllers/RoutesController";
 import { StationsController } from "./Controllers/StationsController";
@@ -15,25 +15,25 @@ if (document.readyState === 'complete') {
 
 function initApp() {
 
-    let gridConfig = getGridSettings();
-    let metadata = new Metadata(gridConfig);
+    let sizeSettings = getSizeSettings();
+    let mapModel = new SubwayMap(sizeSettings);
+    let geometry = new Geometry(sizeSettings);
 
-    let map = createMapCanvas(metadata.gridConfig.canvasSize);
-    let drawer = new MapDrawer(map);
-
-    Geometry.init(gridConfig);
-
-    let gridController = new GridController(metadata, drawer); // ok
-    let backgroundController = new BackgroundController(drawer); // ok
-    let routesController = new RoutesController(metadata, drawer); // ok
-    let stationsController = new StationsController(metadata, drawer);
-    let contextMenuController = new RemovalController(metadata, drawer);
+    let map = createMapCanvas(mapModel.sizeSettings.canvasSize);
+    let drawer = new MapDrawer(map, geometry);
+    
+    let gridController = new GridController(mapModel, drawer);
+    let backgroundController = new BackgroundController(drawer);
+    let routesController = new RoutesController(mapModel, drawer);
+    let stationsController = new StationsController(mapModel, drawer, geometry);
+    let removalController = new RemovalController(mapModel, drawer);
     // add ControlPanelController
 
-    function getGridSettings() {
+    function getSizeSettings() {
         let gridSize = 80;
         let canvasSize = 1000;
-        return new GridSettings(gridSize, canvasSize);
+        let lineWidthFactor = 0.2;
+        return new SizeSettings(gridSize, canvasSize, lineWidthFactor);
     }
 
     function createMapCanvas(size: number) {

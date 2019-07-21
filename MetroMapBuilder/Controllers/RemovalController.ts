@@ -1,8 +1,10 @@
-﻿import { StationMetadata, RouteMetadata, Metadata } from "../Utils/Metadata";
+﻿import { SubwayMap } from "../Models/SubwayMap";
+import { Route } from "../Models/Route";
+import { Station } from "../Models/StationModel";
 import { MapDrawer } from "../Utils/MapDrawer";
 
 export class RemovalController {
-    public constructor(private metadata: Metadata, private drawer: MapDrawer) {
+    public constructor(private subwayMap: SubwayMap, private drawer: MapDrawer) {
         this.initialize(drawer.getCanvas());
     }
 
@@ -39,12 +41,12 @@ export class RemovalController {
 
     private getStation(element: Element) {
         let id = this.drawer.getId(element);
-        return this.metadata.getStation(id);
+        return this.subwayMap.getStation(id);
     }
 
     private buildMenu(target: Element): HTMLElement {
         let station = this.getStation(target);
-        let route = this.metadata.currentRoute;
+        let route = this.subwayMap.currentRoute;
 
         let hasConnections = route != null && route.passesThrough(station);
         let disabled = hasConnections ? "" : " disabled";
@@ -63,12 +65,12 @@ export class RemovalController {
         return this.addEventHandlers(menu, station, route);
     }
 
-    private addEventHandlers(menu: Element, targetStation: StationMetadata, route: RouteMetadata): HTMLElement {
+    private addEventHandlers(menu: Element, targetStation: Station, route: Route): HTMLElement {
 
         // remove station menu item
         menu.children[0].addEventListener("click", () => {
-            this.metadata.removeStation(targetStation);
-            this.drawer.redrawMap(this.metadata);
+            this.subwayMap.removeStation(targetStation);
+            this.drawer.redrawMap(this.subwayMap);
         });
 
         // menu.children[1] -- is divider line
@@ -76,8 +78,8 @@ export class RemovalController {
         // remove connection - item
         menu.children[2].addEventListener("click", () => {
             if (route != null) {
-                this.metadata.removeConnection(route, targetStation);
-                this.drawer.redrawMap(this.metadata);
+                this.subwayMap.removeConnection(route, targetStation);
+                this.drawer.redrawMap(this.subwayMap);
             }
         });
 
