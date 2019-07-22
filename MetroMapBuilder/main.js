@@ -1,7 +1,7 @@
 define(["require", "exports", "./Controllers/GridController", "./Models/SubwayMap", "./Controllers/BackgroundController", "./Controllers/RoutesController", "./Controllers/StationsController", "./Utils/MapDrawer", "./Utils/Geometry", "./Controllers/RemovalController"], function (require, exports, GridController_1, SubwayMap_1, BackgroundController_1, RoutesController_1, StationsController_1, MapDrawer_1, Geometry_1, RemovalController_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    if (document.readyState === 'complete') {
+    if (document.readyState !== 'loading') {
         initApp();
     }
     else {
