@@ -7,7 +7,7 @@ import { MapDrawer } from "./Utils/MapDrawer";
 import { Geometry } from "./Utils/Geometry";
 import { RemovalController } from "./Controllers/RemovalController";
 
-if (document.readyState === 'complete') {
+if (document.readyState !== 'loading') {
     initApp();
 } else {
     document.addEventListener("DOMContentLoaded", initApp);
