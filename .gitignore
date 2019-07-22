@@ -252,3 +252,4 @@ MetroMapBuilder/app.js.map
 /MetroMapBuilder/Controllers/SingleLineController.js.map
 /MetroMapBuilder/Types.js.map
 /MetroMapBuilder/Controllers/DrawingController.js.map
+*.map
