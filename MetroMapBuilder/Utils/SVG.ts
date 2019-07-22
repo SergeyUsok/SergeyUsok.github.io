@@ -1,13 +1,6 @@
 ﻿import { Point } from "./Geometry";
 
 export class SVG {
-    public static circle(x: number, y: number, radius: number): SVGCircleElement {
-        let circle = document.createElementNS("http://www.w3.org/2000/svg", 'circle');
-        circle.setAttribute('cx', x.toString());
-        circle.setAttribute('cy', y.toString());
-        circle.setAttribute('r', radius.toString());
-        return circle;
-    }
 
     public static circleStation(x: number, y: number, radius: number, id: string, dataId: number): SVGCircleElement {
         let circle = document.createElementNS("http://www.w3.org/2000/svg", 'circle');
@@ -38,26 +31,13 @@ export class SVG {
         return line;
     }
 
-    public static groupGridLines(id: string) {
+    public static gridGroup(id: string) {
         let group = document.createElementNS("http://www.w3.org/2000/svg", 'g');
         group.setAttribute('id', id);
         group.setAttribute('stroke', "#4e4e4e");
         group.setAttribute('stroke-width', "0.5");
         group.setAttribute('visibility', "visible");
         return group;
-    }
-
-    public static rect(start: Point, width: number, height: number): SVGRectElement {
-        let rect = document.createElementNS("http://www.w3.org/2000/svg", 'rect');
-        //group.setAttribute('id', id);
-        rect.setAttribute('x', <any>start.x);
-        rect.setAttribute('y', <any>start.y);
-        rect.setAttribute('width', <any>width);
-        rect.setAttribute('height', <any>height);
-        rect.setAttribute('fill', "white");
-        rect.setAttribute('stroke', "#4e4e4e");
-        rect.setAttribute('stroke-width', "1");
-        return rect;
     }
 
     public static routeGroup(id: string, lineWidth: number, color: string) {

@@ -1,4 +1,4 @@
-define(["require", "exports", "./StationModel", "./Route", "./ConnectionModel"], function (require, exports, StationModel_1, Route_1, ConnectionModel_1) {
+define(["require", "exports", "./StationModel", "./Route", "./ConnectionModel", "../Utils/Strings"], function (require, exports, StationModel_1, Route_1, ConnectionModel_1, Strings_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     class SizeSettings {
@@ -73,27 +73,26 @@ define(["require", "exports", "./StationModel", "./Route", "./ConnectionModel"],
         newConnection(route, station) {
             if (route.last == null) {
                 return {
-                    error: "",
+                    error: Strings_1.Strings.empty,
                     ok: route.addConnection(station)
                 };
             }
             if (route.last == station) {
                 return {
-                    error: `Loop connections between same station are not allowed. Station Id: ${station.id}, Label: ${station.label.name.join(" ")}`,
+                    error: Strings_1.Strings.loopsAreNotAllowedError(station.id, station.label.name.join(" ")),
                     ok: false
                 };
             }
             let added = this.connectionsCache.add(route.last, station, route);
             if (added) {
                 return {
-                    error: "",
+                    error: Strings_1.Strings.empty,
                     ok: route.addConnection(station)
                 };
             }
             else {
                 return {
-                    error: `Connection between ${route.last.label.name.join(" ")} (id: ${route.last.id}) and ` +
-                        `${station.label.name.join(" ")} (id: ${station.id}) already exist for selected route`,
+                    error: Strings_1.Strings.connectionExistsError(route.last.label.name.join(" "), route.last.id, station.label.name.join(" "), station.id),
                     ok: false
                 };
             }

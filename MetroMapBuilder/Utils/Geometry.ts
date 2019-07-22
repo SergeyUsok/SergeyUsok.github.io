@@ -1,5 +1,4 @@
 ﻿import { SizeSettings } from "../Models/SubwayMap";
-import { Connection } from "../Models/ConnectionModel";
 
 export type Segment = {
     from: {
@@ -25,6 +24,7 @@ export class Geometry {
     public get cellSize(): number {
         return this.sizeSettings.canvasSize / this.sizeSettings.gridSize;
     }
+    // TODO make radius dependent on lineWidthFactor
     public get radius(): number {
         return this.cellSize / 2;
     }

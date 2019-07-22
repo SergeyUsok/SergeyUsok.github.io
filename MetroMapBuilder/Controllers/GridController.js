@@ -13,7 +13,7 @@ define(["require", "exports"], function (require, exports) {
             let label = document.getElementById("sizeLabel");
             label.textContent = `${subwayMap.sizeSettings.gridSize}X${subwayMap.sizeSettings.gridSize}`;
             document.getElementById("update")
-                .addEventListener("click", () => this.redrawGrid(subwayMap));
+                .addEventListener("click", () => this.updateGrid(subwayMap));
             document.getElementById("grid-switch")
                 .addEventListener("click", () => this.toggleGrid());
             canvas.addEventListener("mousemove", event => this.highlightCell(event));
@@ -31,7 +31,7 @@ define(["require", "exports"], function (require, exports) {
                 this.drawer.highlightCell(event.offsetX, event.offsetY);
             }
         }
-        redrawGrid(metadata) {
+        updateGrid(metadata) {
             let input = document.getElementById("gridSize");
             input.classList.remove("is-invalid");
             let size = parseInt(input.value);

@@ -1,6 +1,7 @@
 ﻿import { Station } from "./StationModel";
 import { Route } from "./Route";
 import { ConnectionsManager } from "./ConnectionModel";
+import { Strings } from "../Utils/Strings";
 
 export class SizeSettings {
     constructor(public gridSize: number, public canvasSize: number, public lineWidthFactor: number) {
@@ -88,14 +89,14 @@ export class SubwayMap {
     public newConnection(route: Route, station: Station) {
         if (route.last == null) {
             return {
-                error: "",
+                error: Strings.empty,
                 ok: route.addConnection(station)
             };
         }
 
         if (route.last == station) {
             return {
-                error: `Loop connections between same station are not allowed. Station Id: ${station.id}, Label: ${station.label.name.join(" ")}`,
+                error: Strings.loopsAreNotAllowedError(station.id, station.label.name.join(" ")),
                 ok: false
             };
         }
@@ -104,14 +105,14 @@ export class SubwayMap {
 
         if (added) {
             return {
-                error: "",
+                error: Strings.empty,
                 ok: route.addConnection(station)
             }
         }
         else {
             return {
-                error: `Connection between ${route.last.label.name.join(" ")} (id: ${route.last.id}) and ` +
-                       `${station.label.name.join(" ")} (id: ${station.id}) already exist for selected route`,
+                error: Strings.connectionExistsError(route.last.label.name.join(" "), route.last.id,
+                                                            station.label.name.join(" "), station.id),
                 ok: false
             }
         }        

@@ -1,5 +1,6 @@
 ﻿import { Station } from "./StationModel";
 import { Route } from "./Route";
+import { Strings } from "../Utils/Strings";
 
 export class ConnectionsManager {
     private connections: Map<string, Connection> = new Map<string, Connection>();
@@ -8,7 +9,7 @@ export class ConnectionsManager {
         let key = this.getKey(from, to);
 
         if (!this.connections.has(key)) {
-            throw new Error(`No connection found between ${from.id} and ${to.id} stations`);
+            throw new Error(Strings.noConnectionFound(from.id, to.id));
         }
 
         return this.connections.get(key);

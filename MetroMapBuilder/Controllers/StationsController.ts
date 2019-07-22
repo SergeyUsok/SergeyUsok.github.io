@@ -1,5 +1,4 @@
 ﻿import { Geometry } from "../Utils/Geometry";
-import { SVG } from "../Utils/SVG";
 import { MapDrawer } from "../Utils/MapDrawer";
 import { SubwayMap } from "../Models/SubwayMap";
 

@@ -1,9 +1,10 @@
-﻿
+﻿import { Strings } from "../Utils/Strings";
+
 export class Station {
     public label: Label = null;
 
     public constructor(private _id: number, private _x: number, private _y: number) {
-        this.label = new Label(`Station ${_id}`);
+        this.label = new Label(Strings.defaultLabel(_id));
     }
     public get id(): number {
         return this._id;

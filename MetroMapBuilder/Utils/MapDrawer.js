@@ -21,7 +21,7 @@ define(["require", "exports", "./SVG"], function (require, exports, SVG_1) {
             let oldGrid = document.getElementById("grid");
             if (oldGrid != null)
                 oldGrid.remove();
-            let gridContainer = SVG_1.SVG.groupGridLines("grid");
+            let gridContainer = SVG_1.SVG.gridGroup("grid");
             // draw vertical lines
             let index = 0;
             for (let x = 0; x <= this.canvas.width.baseVal.value; x += this.geometry.cellSize) {

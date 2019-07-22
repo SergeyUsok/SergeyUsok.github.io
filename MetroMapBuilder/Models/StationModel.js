@@ -1,4 +1,4 @@
-define(["require", "exports"], function (require, exports) {
+define(["require", "exports", "../Utils/Strings"], function (require, exports, Strings_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     class Station {
@@ -7,7 +7,7 @@ define(["require", "exports"], function (require, exports) {
             this._x = _x;
             this._y = _y;
             this.label = null;
-            this.label = new Label(`Station ${_id}`);
+            this.label = new Label(Strings_1.Strings.defaultLabel(_id));
         }
         get id() {
             return this._id;

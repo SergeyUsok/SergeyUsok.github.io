@@ -8,6 +8,7 @@ define(["require", "exports"], function (require, exports) {
         get cellSize() {
             return this.sizeSettings.canvasSize / this.sizeSettings.gridSize;
         }
+        // TODO make radius dependent on lineWidthFactor
         get radius() {
             return this.cellSize / 2;
         }

@@ -1,4 +1,4 @@
-define(["require", "exports"], function (require, exports) {
+define(["require", "exports", "../Utils/Strings"], function (require, exports, Strings_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     class Route {
@@ -6,7 +6,7 @@ define(["require", "exports"], function (require, exports) {
             this._id = _id;
             this.connectionCache = connectionCache;
             this._stations = [];
-            this.color = "red"; // default color
+            this.color = Strings_1.Strings.defaultColor;
         }
         get id() {
             return this._id;

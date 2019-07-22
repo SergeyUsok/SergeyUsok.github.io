@@ -1,5 +1,6 @@
 ﻿import { Station } from "./StationModel";
 import { Connection, ConnectionsManager } from "./ConnectionModel";
+import { Strings } from "../Utils/Strings";
 
 export class Route {
     private _stations: Station[] = [];
@@ -7,7 +8,7 @@ export class Route {
     public constructor(private _id: number, private connectionCache: ConnectionsManager) {
     }
 
-    public color: string = "red"; // default color
+    public color: string = Strings.defaultColor;
 
     public get id(): number {
         return this._id;

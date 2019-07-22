@@ -15,7 +15,7 @@ export class GridController {
         label.textContent = `${subwayMap.sizeSettings.gridSize}X${subwayMap.sizeSettings.gridSize}`;
 
         document.getElementById("update")
-            .addEventListener("click", () => this.redrawGrid(subwayMap));
+            .addEventListener("click", () => this.updateGrid(subwayMap));
 
         document.getElementById("grid-switch")
             .addEventListener("click", () => this.toggleGrid());
@@ -37,7 +37,7 @@ export class GridController {
         }
     }
 
-    private redrawGrid(metadata: SubwayMap) {
+    private updateGrid(metadata: SubwayMap) {
         let input = <HTMLInputElement>document.getElementById("gridSize");
         input.classList.remove("is-invalid");
         let size = parseInt(input.value);

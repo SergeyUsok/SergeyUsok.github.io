@@ -30,7 +30,7 @@ export class MapDrawer {
         if (oldGrid != null)
             oldGrid.remove();
 
-        let gridContainer = SVG.groupGridLines("grid");
+        let gridContainer = SVG.gridGroup("grid");
         // draw vertical lines
         let index = 0;
         for (let x = 0; x <= this.canvas.width.baseVal.value; x += this.geometry.cellSize) {

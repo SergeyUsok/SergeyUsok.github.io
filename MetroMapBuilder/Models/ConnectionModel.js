@@ -1,4 +1,4 @@
-define(["require", "exports"], function (require, exports) {
+define(["require", "exports", "../Utils/Strings"], function (require, exports, Strings_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     class ConnectionsManager {
@@ -8,7 +8,7 @@ define(["require", "exports"], function (require, exports) {
         get(from, to) {
             let key = this.getKey(from, to);
             if (!this.connections.has(key)) {
-                throw new Error(`No connection found between ${from.id} and ${to.id} stations`);
+                throw new Error(Strings_1.Strings.noConnectionFound(from.id, to.id));
             }
             return this.connections.get(key);
         }
