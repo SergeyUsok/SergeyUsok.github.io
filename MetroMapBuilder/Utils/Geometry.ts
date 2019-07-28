@@ -35,9 +35,21 @@ export class Geometry {
     public get lineCenter(): number {
         return this.lineWidth / 2;
     }
+    public get fontSize(): number {
+        const svgDefaultFontSize = 16;
+        return this.cellSize * 100 / svgDefaultFontSize; // font size in percents
+    }
     // let distance be half of line width
     public get distanceBetweenLines(): number {
         return this.lineWidth / 2;
+    }
+
+    public get gridSize(): number {
+        return this.sizeSettings.gridSize;
+    }
+
+    public labelWidthInCells(labelWidthInSymbols: number): number {
+        return Math.ceil(labelWidthInSymbols / 2); // 1 cell can be occupied by 2 symbols
     }
 
     public normalizeToGridCell(x: number, y: number): Point {
@@ -45,6 +57,22 @@ export class Geometry {
             x: Math.floor(x / this.cellSize),
             y: Math.floor(y / this.cellSize)
         };
+    }
+
+    public baselinePoint(point: Point): Point {
+        let center = this.centrify(point);
+        return {
+            x: center.x,
+            y: center.y + this.cellSize / 3
+        };
+    }
+
+    public topLeftCorner(point: Point): Point {
+        let center = this.centrify(point);
+        return {
+            x: center.x - this.cellSize / 2,
+            y: center.y - this.cellSize / 2
+        }
     }
 
     public centrify(point: Point): Point {

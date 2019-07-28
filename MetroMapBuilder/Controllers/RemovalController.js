@@ -2,10 +2,10 @@ define(["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     class RemovalController {
-        constructor(subwayMap, drawer) {
+        constructor(subwayMap, mapView) {
             this.subwayMap = subwayMap;
-            this.drawer = drawer;
-            this.initialize(drawer.getCanvas());
+            this.mapView = mapView;
+            this.initialize(mapView.getCanvas());
         }
         initialize(canvas) {
             document.addEventListener("click", () => this.hideMenu(), false);
@@ -31,7 +31,7 @@ define(["require", "exports"], function (require, exports) {
             return false;
         }
         getStation(element) {
-            let id = this.drawer.getId(element);
+            let id = this.mapView.getId(element);
             return this.subwayMap.getStation(id);
         }
         buildMenu(target) {
@@ -44,7 +44,7 @@ define(["require", "exports"], function (require, exports) {
                 `<button class='dropdown-item' type='button'>Remove station</button>` +
                 `<div class='dropdown-divider'></div>` +
                 `<button class='dropdown-item${disabled}' type='button'${color}>Remove from current route</button>` +
-                "</ul>";
+                "</div>";
             let temp = document.createElement('div');
             temp.innerHTML = menuTemplate;
             let menu = temp.firstElementChild;
@@ -54,14 +54,14 @@ define(["require", "exports"], function (require, exports) {
             // remove station menu item
             menu.children[0].addEventListener("click", () => {
                 this.subwayMap.removeStation(targetStation);
-                this.drawer.redrawMap(this.subwayMap);
+                this.mapView.redrawMap(this.subwayMap);
             });
             // menu.children[1] -- is divider line
             // remove connection - item
             menu.children[2].addEventListener("click", () => {
                 if (route != null) {
                     this.subwayMap.removeConnection(route, targetStation);
-                    this.drawer.redrawMap(this.subwayMap);
+                    this.mapView.redrawMap(this.subwayMap);
                 }
             });
             return menu;

@@ -112,7 +112,7 @@ export class SubwayMap {
         else {
             return {
                 error: Strings.connectionExistsError(route.last.label.name.join(" "), route.last.id,
-                                                            station.label.name.join(" "), station.id),
+                                                     station.label.name.join(" "), station.id),
                 ok: false
             }
         }        

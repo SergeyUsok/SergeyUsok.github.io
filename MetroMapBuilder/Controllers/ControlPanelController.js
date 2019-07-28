@@ -2,6 +2,7 @@ define(["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     class ControlPanelController {
+        // TODO save and read map fom cookies
         handleExportJson() {
             //let map = {
             //    city: "",

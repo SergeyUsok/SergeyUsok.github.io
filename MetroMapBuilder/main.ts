@@ -3,7 +3,7 @@ import { SizeSettings, SubwayMap } from "./Models/SubwayMap";
 import { BackgroundController } from "./Controllers/BackgroundController";
 import { RoutesController } from "./Controllers/RoutesController";
 import { StationsController } from "./Controllers/StationsController";
-import { MapDrawer } from "./Utils/MapDrawer";
+import { MapView } from "./Utils/MapView";
 import { Geometry } from "./Utils/Geometry";
 import { RemovalController } from "./Controllers/RemovalController";
 
@@ -20,7 +20,7 @@ function initApp() {
     let geometry = new Geometry(sizeSettings);
 
     let map = createMapCanvas(mapModel.sizeSettings.canvasSize);
-    let drawer = new MapDrawer(map, geometry);
+    let drawer = new MapView(map, geometry);
     
     let gridController = new GridController(mapModel, drawer);
     let backgroundController = new BackgroundController(drawer);

@@ -19,14 +19,38 @@ define(["require", "exports"], function (require, exports) {
         get lineCenter() {
             return this.lineWidth / 2;
         }
+        get fontSize() {
+            const svgDefaultFontSize = 16;
+            return this.cellSize * 100 / svgDefaultFontSize; // font size in percents
+        }
         // let distance be half of line width
         get distanceBetweenLines() {
             return this.lineWidth / 2;
+        }
+        get gridSize() {
+            return this.sizeSettings.gridSize;
+        }
+        labelWidthInCells(labelWidthInSymbols) {
+            return Math.ceil(labelWidthInSymbols / 2); // 1 cell can be occupied by 2 symbols
         }
         normalizeToGridCell(x, y) {
             return {
                 x: Math.floor(x / this.cellSize),
                 y: Math.floor(y / this.cellSize)
+            };
+        }
+        baselinePoint(point) {
+            let center = this.centrify(point);
+            return {
+                x: center.x,
+                y: center.y + this.cellSize / 3
+            };
+        }
+        topLeftCorner(point) {
+            let center = this.centrify(point);
+            return {
+                x: center.x - this.cellSize / 2,
+                y: center.y - this.cellSize / 2
             };
         }
         centrify(point) {

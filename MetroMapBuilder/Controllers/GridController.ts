@@ -1,10 +1,10 @@
 ﻿import { SubwayMap } from "../Models/SubwayMap";
-import { MapDrawer } from "../Utils/MapDrawer";
+import { MapView } from "../Utils/MapView";
 
 export class GridController {    
-    public constructor(subwayMap: SubwayMap, private drawer: MapDrawer) {
-        this.initialize(subwayMap, drawer.getCanvas());
-        drawer.redrawGrid();
+    public constructor(subwayMap: SubwayMap, private mapView: MapView) {
+        this.initialize(subwayMap, mapView.getCanvas());
+        mapView.redrawGrid();
     }  
 
     private initialize(subwayMap: SubwayMap, canvas: SVGSVGElement): void {
@@ -18,23 +18,14 @@ export class GridController {
             .addEventListener("click", () => this.updateGrid(subwayMap));
 
         document.getElementById("grid-switch")
-            .addEventListener("click", () => this.toggleGrid());
+            .addEventListener("click", () => this.mapView.toggleGrid());
 
         canvas.addEventListener("mousemove", event => this.highlightCell(event));
     }
 
     private highlightCell(event: MouseEvent): void {
-        if (event.target instanceof SVGLineElement) {
-            // get coords relative to svg canvas rather than just line ones
-            let rect = (<any>(event.currentTarget)).getBoundingClientRect();
-            this.drawer.highlightCell(event.clientX - rect.left, event.clientY - rect.top);
-        }
-        else if (event.target instanceof SVGCircleElement) {
-            this.drawer.highlightCell(event.target.cx.baseVal.value, event.target.cy.baseVal.value);
-        }
-        else {
-            this.drawer.highlightCell(event.offsetX, event.offsetY);
-        }
+        let rect = (<any>(event.currentTarget)).getBoundingClientRect();
+        this.mapView.highlightCell(event.clientX - rect.left, event.clientY - rect.top);
     }
 
     private updateGrid(metadata: SubwayMap) {
@@ -54,16 +45,8 @@ export class GridController {
             let label = document.getElementById("sizeLabel");
             label.textContent = `${metadata.sizeSettings.gridSize}X${metadata.sizeSettings.gridSize}`;
 
-            this.drawer.redrawGrid();
-            this.drawer.redrawMap(metadata);
+            this.mapView.redrawGrid();
+            this.mapView.redrawMap(metadata);
         }
-    }
-
-    private toggleGrid() {
-        let grid = document.getElementById("grid");
-
-        grid.getAttribute("visibility") == "visible" ?
-            grid.setAttribute("visibility", "hidden") :
-            grid.setAttribute("visibility", "visible");
     }
 }

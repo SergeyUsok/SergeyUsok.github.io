@@ -1,27 +1,28 @@
 define(["require", "exports", "./SVG"], function (require, exports, SVG_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    class MapDrawer {
+    class MapView {
         constructor(canvas, geometry) {
             this.canvas = canvas;
             this.geometry = geometry;
             this.occupiedCells = new Set();
             this.highlightedLines = [];
+            this.gridElementId = "grid";
         }
         getCanvas() {
             return this.canvas;
         }
-        getGroupId(target) {
-            return parseInt(target.parentElement.getAttribute("data-groupId")); // parent of all route elements is is g element
-        }
         getId(target) {
             return parseInt(target.getAttribute("data-id"));
         }
+        isCellAvailable(cell) {
+            return !this.occupiedCells.has(`${cell.x}-${cell.y}`);
+        }
         redrawGrid() {
-            let oldGrid = document.getElementById("grid");
+            let oldGrid = document.getElementById(this.gridElementId);
             if (oldGrid != null)
                 oldGrid.remove();
-            let gridContainer = SVG_1.SVG.gridGroup("grid");
+            let gridContainer = SVG_1.SVG.gridGroup(this.gridElementId);
             // draw vertical lines
             let index = 0;
             for (let x = 0; x <= this.canvas.width.baseVal.value; x += this.geometry.cellSize) {
@@ -40,6 +41,12 @@ define(["require", "exports", "./SVG"], function (require, exports, SVG_1) {
                 this.canvas.firstElementChild.before(gridContainer);
             else
                 this.canvas.appendChild(gridContainer);
+        }
+        toggleGrid() {
+            let grid = document.getElementById(this.gridElementId);
+            grid.getAttribute("visibility") == "visible" ?
+                grid.setAttribute("visibility", "hidden") :
+                grid.setAttribute("visibility", "visible");
         }
         highlightCell(x, y) {
             let cell = this.geometry.normalizeToGridCell(x, y);
@@ -68,6 +75,13 @@ define(["require", "exports", "./SVG"], function (require, exports, SVG_1) {
             if (lineX2 != null) {
                 lineY2.classList.add("highlightCell");
                 this.highlightedLines.push(lineY2);
+            }
+            // let user know if he can put station to the current cell
+            if (this.isCellAvailable(cell)) {
+                this.canvas.style.cursor = "cell";
+            }
+            else {
+                this.canvas.style.cursor = "not-allowed";
             }
         }
         redrawMap(subwayMap) {
@@ -102,6 +116,7 @@ define(["require", "exports", "./SVG"], function (require, exports, SVG_1) {
             }
         }
         drawStation(station) {
+            this.storeCellsOccupiedByStation(station);
             let center = this.geometry.centrify(station);
             let circle = SVG_1.SVG.circleStation(center.x, center.y, this.geometry.radius, `station-${station.id}`, station.id);
             this.canvas.appendChild(circle);
@@ -109,7 +124,7 @@ define(["require", "exports", "./SVG"], function (require, exports, SVG_1) {
         changeRouteColor(routeId, color) {
             let route = document.getElementById(`route-${routeId}`);
             if (route == null) {
-                console.error(`Cannot find route ${routeId} to change it color`);
+                console.error(`Cannot find route ${routeId} to change its color`);
                 return;
             }
             route.setAttribute('stroke', color);
@@ -122,12 +137,13 @@ define(["require", "exports", "./SVG"], function (require, exports, SVG_1) {
                 let offset = this.calculateOffset(connection, route);
                 let segment = this.geometry.offsetConnection(from, to, offset);
                 this.drawConnection(routeParent, segment);
-                this.storeOccupiedCells(segment);
+                this.storeCellsOccupiedByLine(segment);
             }
             // insert routes after Grid BUT before stations
             this.canvas.firstChild.after(routeParent);
         }
-        storeOccupiedCells(segment) {
+        storeCellsOccupiedByLine(segment) {
+            // TODO take into account line width (lineWidthFactor)
             for (let point of this.geometry.digitalDiffAnalyzer(segment)) {
                 let key = `${point.x}-${point.y}`;
                 this.occupiedCells.add(key);
@@ -151,7 +167,7 @@ define(["require", "exports", "./SVG"], function (require, exports, SVG_1) {
         eraseMap() {
             this.occupiedCells.clear();
             let node = this.canvas;
-            while (node.lastElementChild.id != "grid") {
+            while (node.lastElementChild.id != this.gridElementId) {
                 node.lastElementChild.remove();
             }
         }
@@ -166,7 +182,18 @@ define(["require", "exports", "./SVG"], function (require, exports, SVG_1) {
                 this.drawStation(subwayMap.stations[i]);
             }
         }
+        // walking through current and neighboring cells and mark them as unavailable for 
+        // further station set up - stations must not be placed in neighboring cells
+        storeCellsOccupiedByStation(station) {
+            for (let dx = -1; dx < 2; dx++) {
+                for (let dy = -1; dy < 2; dy++) {
+                    let x = station.x + dx;
+                    let y = station.y + dy;
+                    this.occupiedCells.add(`${x}-${y}`);
+                }
+            }
+        }
     }
-    exports.MapDrawer = MapDrawer;
+    exports.MapView = MapView;
 });
 //# sourceMappingURL=MapDrawer.js.map

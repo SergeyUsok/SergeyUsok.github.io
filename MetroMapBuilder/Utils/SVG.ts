@@ -1,6 +1,25 @@
 ﻿import { Point } from "./Geometry";
 
 export class SVG {
+    public static labelText(start: Point, fontSizeInPercents: number, cellSize: number, names: string[], id: number): SVGTextElement {
+        let text = document.createElementNS("http://www.w3.org/2000/svg", 'text');
+        text.setAttribute('font-size', `${fontSizeInPercents}%`);
+        text.setAttribute('font-weight', 'bold');
+        text.setAttribute('font-family', 'Times New Roman');
+        text.setAttribute('data-id', `${id}`);
+
+        let y = start.y;
+        for (let i = 0; i < names.length; i++) {
+            let textPart = document.createElementNS("http://www.w3.org/2000/svg", 'tspan');
+            textPart.textContent = names[i];
+            textPart.setAttribute('x', <any>start.x);
+            textPart.setAttribute('y', <any>y);
+            text.appendChild(textPart);
+            y += cellSize;
+        }
+
+        return text;
+    }
 
     public static circleStation(x: number, y: number, radius: number, id: string, dataId: number): SVGCircleElement {
         let circle = document.createElementNS("http://www.w3.org/2000/svg", 'circle');
@@ -34,9 +53,9 @@ export class SVG {
     public static gridGroup(id: string) {
         let group = document.createElementNS("http://www.w3.org/2000/svg", 'g');
         group.setAttribute('id', id);
-        group.setAttribute('stroke', "#4e4e4e");
-        group.setAttribute('stroke-width', "0.5");
-        group.setAttribute('visibility', "visible");
+        group.setAttribute('stroke', '#4e4e4e');
+        group.setAttribute('stroke-width', '0.5');
+        group.setAttribute('visibility', 'visible');
         return group;
     }
 

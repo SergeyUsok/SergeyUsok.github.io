@@ -1,12 +1,12 @@
 ﻿import { SubwayMap } from "../Models/SubwayMap";
 import { Route } from "../Models/Route";
-import { MapDrawer } from "../Utils/MapDrawer";
+import { MapView } from "../Utils/MapView";
 
 export class RoutesController {
     private lineIdCounter: number = 0;
 
-    public constructor(private subwayMap: SubwayMap, private drawer: MapDrawer) {
-        this.initialize(drawer.getCanvas());
+    public constructor(private subwayMap: SubwayMap, private mapView: MapView) {
+        this.initialize(mapView.getCanvas());
     }
 
     private removeRoute(route: Route): void {
@@ -16,16 +16,16 @@ export class RoutesController {
         if (this.subwayMap.currentRoute == null)
             this.routeSelectionChanged(this.subwayMap.routes.length > 0 ? this.subwayMap.routes[0] : null);
 
-        this.drawer.redrawMap(this.subwayMap);
+        this.mapView.redrawMap(this.subwayMap);
     }
 
     private routeSelectionChanged(newSelection: Route): void {
         if (this.subwayMap.currentRoute != null) {
-            this.drawer.deselectRoute(this.subwayMap.currentRoute);
+            this.mapView.deselectRoute(this.subwayMap.currentRoute);
         }
 
         if (newSelection != null) {
-            this.drawer.selectRoute(newSelection);
+            this.mapView.selectRoute(newSelection);
             this.highlightPanel(newSelection);
         }            
 
@@ -40,7 +40,7 @@ export class RoutesController {
             .addEventListener("change", e => {
                 let factor = parseFloat((<HTMLInputElement>e.target).value);
                 this.subwayMap.sizeSettings.lineWidthFactor = factor;
-                this.drawer.redrawMap(this.subwayMap);
+                this.mapView.redrawMap(this.subwayMap);
             });
 
         canvas.addEventListener("click", event => this.addConnection(event));
@@ -59,16 +59,17 @@ export class RoutesController {
             return;
         }
 
-        if (!(event.target instanceof SVGCircleElement)) {
-            return; // nothing to do
+        if (event.target instanceof SVGSVGElement ||
+            event.target instanceof SVGLineElement ||
+            event.target instanceof SVGTextPositioningElement) {
+            return; // nothing to do if canvas, any line (grid or route) or text label was clicked
         }
 
-        let station = this.subwayMap.getStation(this.drawer.getId(event.target));
+        let station = this.subwayMap.getStation(this.mapView.getId(event.target as Element));
         let result = this.subwayMap.newConnection(this.subwayMap.currentRoute, station);
-
         
         if (result.ok) {
-            this.drawer.redrawMap(this.subwayMap);
+            this.mapView.redrawMap(this.subwayMap);
         }
         else {
             // TODO show error from result object
@@ -92,7 +93,7 @@ export class RoutesController {
         colorsControl.addEventListener("input", () => {
             let color = colorsControl.value;
             route.color = color;
-            this.drawer.changeRouteColor(route.id, color);
+            this.mapView.changeRouteColor(route.id, color);
         });
 
         clone.addEventListener("click", () => {

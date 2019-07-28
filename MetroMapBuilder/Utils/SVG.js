@@ -2,6 +2,23 @@ define(["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     class SVG {
+        static labelText(start, fontSizeInPercents, cellSize, names, id) {
+            let text = document.createElementNS("http://www.w3.org/2000/svg", 'text');
+            text.setAttribute('font-size', `${fontSizeInPercents}%`);
+            text.setAttribute('font-weight', 'bold');
+            text.setAttribute('font-family', 'Times New Roman');
+            text.setAttribute('data-id', `${id}`);
+            let y = start.y;
+            for (let i = 0; i < names.length; i++) {
+                let textPart = document.createElementNS("http://www.w3.org/2000/svg", 'tspan');
+                textPart.textContent = names[i];
+                textPart.setAttribute('x', start.x);
+                textPart.setAttribute('y', y);
+                text.appendChild(textPart);
+                y += cellSize;
+            }
+            return text;
+        }
         static circleStation(x, y, radius, id, dataId) {
             let circle = document.createElementNS("http://www.w3.org/2000/svg", 'circle');
             circle.setAttribute('cx', x.toString());
@@ -31,9 +48,9 @@ define(["require", "exports"], function (require, exports) {
         static gridGroup(id) {
             let group = document.createElementNS("http://www.w3.org/2000/svg", 'g');
             group.setAttribute('id', id);
-            group.setAttribute('stroke', "#4e4e4e");
-            group.setAttribute('stroke-width', "0.5");
-            group.setAttribute('visibility', "visible");
+            group.setAttribute('stroke', '#4e4e4e');
+            group.setAttribute('stroke-width', '0.5');
+            group.setAttribute('visibility', 'visible');
             return group;
         }
         static routeGroup(id, lineWidth, color) {

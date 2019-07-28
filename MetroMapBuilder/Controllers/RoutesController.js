@@ -2,25 +2,25 @@ define(["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     class RoutesController {
-        constructor(subwayMap, drawer) {
+        constructor(subwayMap, mapView) {
             this.subwayMap = subwayMap;
-            this.drawer = drawer;
+            this.mapView = mapView;
             this.lineIdCounter = 0;
-            this.initialize(drawer.getCanvas());
+            this.initialize(mapView.getCanvas());
         }
         removeRoute(route) {
             this.subwayMap.removeRoute(route);
             // if current/selected route was removed
             if (this.subwayMap.currentRoute == null)
                 this.routeSelectionChanged(this.subwayMap.routes.length > 0 ? this.subwayMap.routes[0] : null);
-            this.drawer.redrawMap(this.subwayMap);
+            this.mapView.redrawMap(this.subwayMap);
         }
         routeSelectionChanged(newSelection) {
             if (this.subwayMap.currentRoute != null) {
-                this.drawer.deselectRoute(this.subwayMap.currentRoute);
+                this.mapView.deselectRoute(this.subwayMap.currentRoute);
             }
             if (newSelection != null) {
-                this.drawer.selectRoute(newSelection);
+                this.mapView.selectRoute(newSelection);
                 this.highlightPanel(newSelection);
             }
             this.subwayMap.currentRoute = newSelection;
@@ -32,7 +32,7 @@ define(["require", "exports"], function (require, exports) {
                 .addEventListener("change", e => {
                 let factor = parseFloat(e.target.value);
                 this.subwayMap.sizeSettings.lineWidthFactor = factor;
-                this.drawer.redrawMap(this.subwayMap);
+                this.mapView.redrawMap(this.subwayMap);
             });
             canvas.addEventListener("click", event => this.addConnection(event));
         }
@@ -47,13 +47,15 @@ define(["require", "exports"], function (require, exports) {
                 // TODO show error about not selected route
                 return;
             }
-            if (!(event.target instanceof SVGCircleElement)) {
-                return; // nothing to do
+            if (event.target instanceof SVGSVGElement ||
+                event.target instanceof SVGLineElement ||
+                event.target instanceof SVGTextPositioningElement) {
+                return; // nothing to do if canvas, any line (grid or route) or text label was clicked
             }
-            let station = this.subwayMap.getStation(this.drawer.getId(event.target));
+            let station = this.subwayMap.getStation(this.mapView.getId(event.target));
             let result = this.subwayMap.newConnection(this.subwayMap.currentRoute, station);
             if (result.ok) {
-                this.drawer.redrawMap(this.subwayMap);
+                this.mapView.redrawMap(this.subwayMap);
             }
             else {
                 // TODO show error from result object
@@ -74,7 +76,7 @@ define(["require", "exports"], function (require, exports) {
             colorsControl.addEventListener("input", () => {
                 let color = colorsControl.value;
                 route.color = color;
-                this.drawer.changeRouteColor(route.id, color);
+                this.mapView.changeRouteColor(route.id, color);
             });
             clone.addEventListener("click", () => {
                 if (this.subwayMap.currentRoute == route)

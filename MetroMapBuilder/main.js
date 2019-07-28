@@ -1,4 +1,4 @@
-define(["require", "exports", "./Controllers/GridController", "./Models/SubwayMap", "./Controllers/BackgroundController", "./Controllers/RoutesController", "./Controllers/StationsController", "./Utils/MapDrawer", "./Utils/Geometry", "./Controllers/RemovalController"], function (require, exports, GridController_1, SubwayMap_1, BackgroundController_1, RoutesController_1, StationsController_1, MapDrawer_1, Geometry_1, RemovalController_1) {
+define(["require", "exports", "./Controllers/GridController", "./Models/SubwayMap", "./Controllers/BackgroundController", "./Controllers/RoutesController", "./Controllers/StationsController", "./Utils/MapView", "./Utils/Geometry", "./Controllers/RemovalController"], function (require, exports, GridController_1, SubwayMap_1, BackgroundController_1, RoutesController_1, StationsController_1, MapView_1, Geometry_1, RemovalController_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     if (document.readyState !== 'loading') {
@@ -12,7 +12,7 @@ define(["require", "exports", "./Controllers/GridController", "./Models/SubwayMa
         let mapModel = new SubwayMap_1.SubwayMap(sizeSettings);
         let geometry = new Geometry_1.Geometry(sizeSettings);
         let map = createMapCanvas(mapModel.sizeSettings.canvasSize);
-        let drawer = new MapDrawer_1.MapDrawer(map, geometry);
+        let drawer = new MapView_1.MapView(map, geometry);
         let gridController = new GridController_1.GridController(mapModel, drawer);
         let backgroundController = new BackgroundController_1.BackgroundController(drawer);
         let routesController = new RoutesController_1.RoutesController(mapModel, drawer);

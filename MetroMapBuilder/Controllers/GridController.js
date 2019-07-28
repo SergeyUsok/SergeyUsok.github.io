@@ -2,10 +2,10 @@ define(["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     class GridController {
-        constructor(subwayMap, drawer) {
-            this.drawer = drawer;
-            this.initialize(subwayMap, drawer.getCanvas());
-            drawer.redrawGrid();
+        constructor(subwayMap, mapView) {
+            this.mapView = mapView;
+            this.initialize(subwayMap, mapView.getCanvas());
+            mapView.redrawGrid();
         }
         initialize(subwayMap, canvas) {
             let textInput = document.getElementById("gridSize");
@@ -15,21 +15,12 @@ define(["require", "exports"], function (require, exports) {
             document.getElementById("update")
                 .addEventListener("click", () => this.updateGrid(subwayMap));
             document.getElementById("grid-switch")
-                .addEventListener("click", () => this.toggleGrid());
+                .addEventListener("click", () => this.mapView.toggleGrid());
             canvas.addEventListener("mousemove", event => this.highlightCell(event));
         }
         highlightCell(event) {
-            if (event.target instanceof SVGLineElement) {
-                // get coords relative to svg canvas rather than just line ones
-                let rect = (event.currentTarget).getBoundingClientRect();
-                this.drawer.highlightCell(event.clientX - rect.left, event.clientY - rect.top);
-            }
-            else if (event.target instanceof SVGCircleElement) {
-                this.drawer.highlightCell(event.target.cx.baseVal.value, event.target.cy.baseVal.value);
-            }
-            else {
-                this.drawer.highlightCell(event.offsetX, event.offsetY);
-            }
+            let rect = (event.currentTarget).getBoundingClientRect();
+            this.mapView.highlightCell(event.clientX - rect.left, event.clientY - rect.top);
         }
         updateGrid(metadata) {
             let input = document.getElementById("gridSize");
@@ -45,15 +36,9 @@ define(["require", "exports"], function (require, exports) {
                 metadata.sizeSettings.gridSize = size;
                 let label = document.getElementById("sizeLabel");
                 label.textContent = `${metadata.sizeSettings.gridSize}X${metadata.sizeSettings.gridSize}`;
-                this.drawer.redrawGrid();
-                this.drawer.redrawMap(metadata);
+                this.mapView.redrawGrid();
+                this.mapView.redrawMap(metadata);
             }
-        }
-        toggleGrid() {
-            let grid = document.getElementById("grid");
-            grid.getAttribute("visibility") == "visible" ?
-                grid.setAttribute("visibility", "hidden") :
-                grid.setAttribute("visibility", "visible");
         }
     }
     exports.GridController = GridController;

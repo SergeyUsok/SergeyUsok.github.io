@@ -1,11 +1,11 @@
 ﻿import { SubwayMap } from "../Models/SubwayMap";
 import { Route } from "../Models/Route";
 import { Station } from "../Models/StationModel";
-import { MapDrawer } from "../Utils/MapDrawer";
+import { MapView } from "../Utils/MapView";
 
 export class RemovalController {
-    public constructor(private subwayMap: SubwayMap, private drawer: MapDrawer) {
-        this.initialize(drawer.getCanvas());
+    public constructor(private subwayMap: SubwayMap, private mapView: MapView) {
+        this.initialize(mapView.getCanvas());
     }
 
     private initialize(canvas: SVGSVGElement) {
@@ -40,7 +40,7 @@ export class RemovalController {
     }
 
     private getStation(element: Element) {
-        let id = this.drawer.getId(element);
+        let id = this.mapView.getId(element);
         return this.subwayMap.getStation(id);
     }
 
@@ -56,7 +56,7 @@ export class RemovalController {
             `<button class='dropdown-item' type='button'>Remove station</button>` +
             `<div class='dropdown-divider'></div>` +
             `<button class='dropdown-item${disabled}' type='button'${color}>Remove from current route</button>` +
-            "</ul>";
+            "</div>";
 
         let temp = document.createElement('div');
         temp.innerHTML = menuTemplate;
@@ -70,7 +70,7 @@ export class RemovalController {
         // remove station menu item
         menu.children[0].addEventListener("click", () => {
             this.subwayMap.removeStation(targetStation);
-            this.drawer.redrawMap(this.subwayMap);
+            this.mapView.redrawMap(this.subwayMap);
         });
 
         // menu.children[1] -- is divider line
@@ -79,7 +79,7 @@ export class RemovalController {
         menu.children[2].addEventListener("click", () => {
             if (route != null) {
                 this.subwayMap.removeConnection(route, targetStation);
-                this.drawer.redrawMap(this.subwayMap);
+                this.mapView.redrawMap(this.subwayMap);
             }
         });
 

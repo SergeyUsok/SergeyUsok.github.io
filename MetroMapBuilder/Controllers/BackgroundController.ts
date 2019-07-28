@@ -1,9 +1,9 @@
-﻿import { MapDrawer } from "../Utils/MapDrawer";
+﻿import { MapView } from "../Utils/MapView";
 
 export class BackgroundController {
 
-    public constructor(drawer: MapDrawer) {
-        this.initialize(drawer.getCanvas());
+    public constructor(mapView: MapView) {
+        this.initialize(mapView.getCanvas());
     }
 
     private initialize(canvas: SVGSVGElement) {
@@ -39,7 +39,10 @@ export class BackgroundController {
             canvas.classList.add("bgd");
             canvas.classList.remove("bgd-color");
             backgroundUrl = `url(${url})`;
+
             canvas.style.backgroundImage = backgroundUrl;
+            canvas.style.backgroundSize = `${canvas.width.baseVal.value}px ${canvas.height.baseVal.value}px`;
+
             document.getElementById("load").setAttribute("disabled", "disabled");
             document.getElementById("clear").removeAttribute("disabled");
             backgroundCheckbox.removeAttribute("disabled");

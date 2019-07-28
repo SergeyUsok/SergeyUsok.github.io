@@ -2,8 +2,8 @@ define(["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     class BackgroundController {
-        constructor(drawer) {
-            this.initialize(drawer.getCanvas());
+        constructor(mapView) {
+            this.initialize(mapView.getCanvas());
         }
         initialize(canvas) {
             let backgroundUrl = '';
@@ -36,6 +36,7 @@ define(["require", "exports"], function (require, exports) {
                 canvas.classList.remove("bgd-color");
                 backgroundUrl = `url(${url})`;
                 canvas.style.backgroundImage = backgroundUrl;
+                canvas.style.backgroundSize = `${canvas.width.baseVal.value}px ${canvas.height.baseVal.value}px`;
                 document.getElementById("load").setAttribute("disabled", "disabled");
                 document.getElementById("clear").removeAttribute("disabled");
                 backgroundCheckbox.removeAttribute("disabled");

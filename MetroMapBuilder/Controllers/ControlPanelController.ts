@@ -1,6 +1,8 @@
 ﻿
 export class ControlPanelController {
 
+    // TODO save and read map fom cookies
+
     private handleExportJson(): void {
         //let map = {
         //    city: "",
