@@ -17,6 +17,9 @@ define(["require", "exports", "../Utils/Strings"], function (require, exports, S
         get last() {
             return this._stations.length > 0 ? this._stations[this._stations.length - 1] : null;
         }
+        getStations() {
+            return this._stations;
+        }
         *getConnections() {
             for (let i = 0; i < this._stations.length - 1; i++) {
                 let from = this._stations[i];

@@ -31,7 +31,8 @@
   </ItemGroup>
   <ItemGroup>
     <TypeScriptCompile Include="Controllers\BackgroundController.ts" />
-    <TypeScriptCompile Include="Controllers\ControlPanelController.ts" />
+    <TypeScriptCompile Include="Controllers\ErrorController.ts" />
+    <TypeScriptCompile Include="Controllers\IOController.ts" />
     <TypeScriptCompile Include="Controllers\RemovalController.ts" />
     <TypeScriptCompile Include="main.ts" />
     <TypeScriptCompile Include="Controllers\GridController.ts" />

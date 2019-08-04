@@ -94,3 +94,57 @@ svg text {
 #rename-station {
     z-index: 100;
 }
+
+#saveMap .modal-dialog {
+    overflow-y: initial !important
+}
+
+#saveMap .modal-body {
+    height: 250px;
+    overflow-y: auto;
+}
+
+/*#saveMap li:hover {
+    cursor: pointer;
+    border: 1px solid #17a2b8;
+    box-shadow: 0 0 10px rgba(23,162,184,0.8);
+    border-radius: 2px;
+}*/
+
+.list-unstyled li {
+    margin-top: -1px; /* Prevent double borders */
+    text-decoration: none;
+    display: block;
+    position: relative;
+}
+
+    .list-unstyled li:hover {
+        cursor: pointer;
+        border: 1px solid #17a2b8;
+        box-shadow: 0 0 10px rgba(23,162,184,0.8);
+        border-radius: 2px;
+    }
+
+.remove-map {
+    cursor: pointer;
+    position: absolute;
+    top: 50%;
+    right: 0%;
+    transform: translate(0%, -50%);
+}
+
+#error {
+    position: absolute;
+    z-index: 1;
+    width: 100%;
+}
+
+    #error.visible {
+        transition: opacity 1s linear;
+        opacity: 1;
+    }
+
+    #error.invisible {
+        transition: opacity 2s;
+        opacity: 0;
+    }

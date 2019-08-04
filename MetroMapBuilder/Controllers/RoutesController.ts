@@ -1,11 +1,14 @@
 ﻿import { SubwayMap } from "../Models/SubwayMap";
 import { Route } from "../Models/Route";
 import { MapView } from "../Utils/MapView";
+import { ErrorController } from "./ErrorController";
+import { Strings } from "../Utils/Strings";
 
-export class RoutesController {
-    private lineIdCounter: number = 0;
+export class RoutesController extends ErrorController {
+    private routeIdCounter: number = 0;
 
     public constructor(private subwayMap: SubwayMap, private mapView: MapView) {
+        super();
         this.initialize(mapView.getCanvas());
     }
 
@@ -44,25 +47,45 @@ export class RoutesController {
             });
 
         canvas.addEventListener("click", event => this.addConnection(event));
+
+        this.subwayMap.mapReloaded(() => this.onMapReloaded());
+    }
+
+    private onMapReloaded(): void {
+        this.routeIdCounter = this.subwayMap.routes.length;
+        let panels = document.getElementById("panels");
+        this.removeChildren(panels);
+        for (let i = 0; i < this.subwayMap.routes.length; i++) {
+            this.addControlPanel(this.subwayMap.routes[i]);
+        }
+        let lineWidths = <HTMLSelectElement>document.getElementById("lineWidth");
+        lineWidths.value = `${this.subwayMap.sizeSettings.lineWidthFactor}`;
+    }
+
+    private removeChildren(element: Element) {
+        // remove all except basis element
+        while (element.lastElementChild.id != "linePanel") {
+            element.lastElementChild.remove();
+        }
     }
 
     private addRoute(): void {
-        let id = this.lineIdCounter++;
+        let id = this.routeIdCounter++;
         let route = this.subwayMap.newRoute(id);        
-        this.createControlPanel(route);
+        this.addControlPanel(route);
         this.routeSelectionChanged(route);
     }
 
     private addConnection(event: MouseEvent): void {
-        if (this.subwayMap.currentRoute == null) {
-            // TODO show error about not selected route
-            return;
-        }
-
         if (event.target instanceof SVGSVGElement ||
             event.target instanceof SVGLineElement ||
             event.target instanceof SVGTextPositioningElement) {
             return; // nothing to do if canvas, any line (grid or route) or text label was clicked
+        }
+
+        if (this.subwayMap.currentRoute == null) {
+            this.showError(Strings.selectRouteMessage());
+            return;
         }
 
         let station = this.subwayMap.getStation(this.mapView.getId(event.target as Element));
@@ -72,11 +95,11 @@ export class RoutesController {
             this.mapView.redrawMap(this.subwayMap);
         }
         else {
-            // TODO show error from result object
+            this.showError(result.error);
         }     
     }
 
-    private createControlPanel(route: Route): HTMLDivElement {
+    private addControlPanel(route: Route): void {
         let clone = <HTMLDivElement>document.getElementById("linePanel").cloneNode(true);
         clone.setAttribute("id", `panel-${route.id}`); // save uniqueness of template element
         clone.classList.remove("d-none"); // make element visible
@@ -103,10 +126,7 @@ export class RoutesController {
             this.routeSelectionChanged(route);
         });
 
-        document.getElementById("panels")
-                .appendChild(clone);
-
-        return clone;
+        document.getElementById("panels").appendChild(clone);
     }
 
     private highlightPanel(route: Route) {

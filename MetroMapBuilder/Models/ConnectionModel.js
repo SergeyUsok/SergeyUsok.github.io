@@ -35,6 +35,9 @@ define(["require", "exports", "../Utils/Strings"], function (require, exports, S
                 this.connections.delete(key);
             }
         }
+        clear() {
+            this.connections.clear();
+        }
         getKey(from, to) {
             if (from.id > to.id) {
                 return `${to.id}-${from.id}`;

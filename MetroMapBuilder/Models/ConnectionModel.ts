@@ -3,6 +3,7 @@ import { Route } from "./Route";
 import { Strings } from "../Utils/Strings";
 
 export class ConnectionsManager {
+    
     private connections: Map<string, Connection> = new Map<string, Connection>();
 
     public get(from: Station, to: Station): Connection {
@@ -42,6 +43,10 @@ export class ConnectionsManager {
         if (connection.routesCount == 0) {
             this.connections.delete(key);
         }
+    }
+
+    public clear(): void {
+        this.connections.clear();
     }
 
     private getKey(from: Station, to: Station): string {

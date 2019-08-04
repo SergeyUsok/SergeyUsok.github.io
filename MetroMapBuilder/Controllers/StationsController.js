@@ -1,16 +1,21 @@
-define(["require", "exports"], function (require, exports) {
+define(["require", "exports", "./ErrorController"], function (require, exports, ErrorController_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    class StationsController {
+    class StationsController extends ErrorController_1.ErrorController {
         constructor(subwayMap, mapView, geometry) {
+            super();
             this.subwayMap = subwayMap;
             this.mapView = mapView;
             this.geometry = geometry;
             this.stationsCounter = 0;
-            this.initialize(mapView.getCanvas());
+            this.initialize(mapView.getCanvas(), subwayMap);
         }
-        initialize(canvas) {
+        initialize(canvas, subwayMap) {
             canvas.addEventListener("click", event => this.handleClick(event));
+            subwayMap.mapReloaded(() => this.onMapReloaded());
+        }
+        onMapReloaded() {
+            this.stationsCounter = this.subwayMap.stations.length;
         }
         handleClick(event) {
             this.hideEditPopup();
@@ -90,8 +95,11 @@ define(["require", "exports"], function (require, exports) {
                 this.subwayMap.newStation(id, cell.x, cell.y);
                 this.mapView.redrawMap(this.subwayMap);
             }
-            else {
-                // TODO show error about not available cell
+            // if cell does not contain another station but still occupied show error
+            else if (event.target instanceof SVGSVGElement ||
+                event.target instanceof SVGLineElement ||
+                event.target instanceof SVGTextPositioningElement) {
+                this.showError("Clicked cell is not available for station set up because it is occupied by line, label or it is placed too much close to another station");
             }
         }
     }

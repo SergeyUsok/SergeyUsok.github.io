@@ -1,11 +1,12 @@
-define(["require", "exports"], function (require, exports) {
+define(["require", "exports", "./ErrorController", "../Utils/Strings"], function (require, exports, ErrorController_1, Strings_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    class RoutesController {
+    class RoutesController extends ErrorController_1.ErrorController {
         constructor(subwayMap, mapView) {
+            super();
             this.subwayMap = subwayMap;
             this.mapView = mapView;
-            this.lineIdCounter = 0;
+            this.routeIdCounter = 0;
             this.initialize(mapView.getCanvas());
         }
         removeRoute(route) {
@@ -35,22 +36,39 @@ define(["require", "exports"], function (require, exports) {
                 this.mapView.redrawMap(this.subwayMap);
             });
             canvas.addEventListener("click", event => this.addConnection(event));
+            this.subwayMap.mapReloaded(() => this.onMapReloaded());
+        }
+        onMapReloaded() {
+            this.routeIdCounter = this.subwayMap.routes.length;
+            let panels = document.getElementById("panels");
+            this.removeChildren(panels);
+            for (let i = 0; i < this.subwayMap.routes.length; i++) {
+                this.addControlPanel(this.subwayMap.routes[i]);
+            }
+            let lineWidths = document.getElementById("lineWidth");
+            lineWidths.value = `${this.subwayMap.sizeSettings.lineWidthFactor}`;
+        }
+        removeChildren(element) {
+            // remove all except basis element
+            while (element.lastElementChild.id != "linePanel") {
+                element.lastElementChild.remove();
+            }
         }
         addRoute() {
-            let id = this.lineIdCounter++;
+            let id = this.routeIdCounter++;
             let route = this.subwayMap.newRoute(id);
-            this.createControlPanel(route);
+            this.addControlPanel(route);
             this.routeSelectionChanged(route);
         }
         addConnection(event) {
-            if (this.subwayMap.currentRoute == null) {
-                // TODO show error about not selected route
-                return;
-            }
             if (event.target instanceof SVGSVGElement ||
                 event.target instanceof SVGLineElement ||
                 event.target instanceof SVGTextPositioningElement) {
                 return; // nothing to do if canvas, any line (grid or route) or text label was clicked
+            }
+            if (this.subwayMap.currentRoute == null) {
+                this.showError(Strings_1.Strings.selectRouteMessage());
+                return;
             }
             let station = this.subwayMap.getStation(this.mapView.getId(event.target));
             let result = this.subwayMap.newConnection(this.subwayMap.currentRoute, station);
@@ -58,10 +76,10 @@ define(["require", "exports"], function (require, exports) {
                 this.mapView.redrawMap(this.subwayMap);
             }
             else {
-                // TODO show error from result object
+                this.showError(result.error);
             }
         }
-        createControlPanel(route) {
+        addControlPanel(route) {
             let clone = document.getElementById("linePanel").cloneNode(true);
             clone.setAttribute("id", `panel-${route.id}`); // save uniqueness of template element
             clone.classList.remove("d-none"); // make element visible
@@ -83,9 +101,7 @@ define(["require", "exports"], function (require, exports) {
                     return;
                 this.routeSelectionChanged(route);
             });
-            document.getElementById("panels")
-                .appendChild(clone);
-            return clone;
+            document.getElementById("panels").appendChild(clone);
         }
         highlightPanel(route) {
             let panels = document.getElementById("panels").children;

@@ -22,6 +22,10 @@ export class Route {
         return this._stations.length > 0 ? this._stations[this._stations.length - 1] : null;
     }
 
+    public getStations(): Station[] {
+        return this._stations;
+    }
+
     public *getConnections(): IterableIterator<Connection> {
         for (let i = 0; i < this._stations.length - 1; i++) {
             let from = this._stations[i];

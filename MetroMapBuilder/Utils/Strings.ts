@@ -25,7 +25,27 @@ export class Strings {
         return `Connection between ${label1} (id: ${id1}) and ${label2} (id: ${id2}) already exist for selected route`;
     }
 
-    public static get selectRouteMessage() {
-        return "In order to draw connection select the route you want to plot";
+    public static selectRouteMessage(): string {
+        return "No route has been selected. Select route first on routes panel in order to draw them";
+    }
+
+    public static nullOrUndefinedStation(): string {
+        return "Provded station object is null or undefined";
+    }
+
+    public static missingPropertyOn(property: string, obj: string): string {
+        return `Invalid object structure. Missing '${property}' property on ${obj}`
+    }
+
+    public static errorOnFileRead(msg: string): string {
+        return `Error occured while reading file: ${msg}`;
+    }
+
+    public static errorOnJsonParse(msg: string): string {
+        return `Error occurred while trying to parse JSON: ${msg}`;
+    }
+
+    public static errorOnMapParse(msg: string): string {
+        return `Error occurred while trying to load map from parsed JSON: ${msg}`;
     }
 }

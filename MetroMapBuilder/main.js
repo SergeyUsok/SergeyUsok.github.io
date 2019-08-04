@@ -1,4 +1,4 @@
-define(["require", "exports", "./Controllers/GridController", "./Models/SubwayMap", "./Controllers/BackgroundController", "./Controllers/RoutesController", "./Controllers/StationsController", "./Utils/MapView", "./Utils/Geometry", "./Controllers/RemovalController"], function (require, exports, GridController_1, SubwayMap_1, BackgroundController_1, RoutesController_1, StationsController_1, MapView_1, Geometry_1, RemovalController_1) {
+define(["require", "exports", "./Controllers/GridController", "./Models/SubwayMap", "./Controllers/BackgroundController", "./Controllers/RoutesController", "./Controllers/StationsController", "./Utils/MapView", "./Utils/Geometry", "./Controllers/RemovalController", "./Controllers/IOController"], function (require, exports, GridController_1, SubwayMap_1, BackgroundController_1, RoutesController_1, StationsController_1, MapView_1, Geometry_1, RemovalController_1, IOController_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     if (document.readyState !== 'loading') {
@@ -12,13 +12,13 @@ define(["require", "exports", "./Controllers/GridController", "./Models/SubwayMa
         let mapModel = new SubwayMap_1.SubwayMap(sizeSettings);
         let geometry = new Geometry_1.Geometry(sizeSettings);
         let map = createMapCanvas(mapModel.sizeSettings.canvasSize);
-        let drawer = new MapView_1.MapView(map, geometry);
-        let gridController = new GridController_1.GridController(mapModel, drawer);
-        let backgroundController = new BackgroundController_1.BackgroundController(drawer);
-        let routesController = new RoutesController_1.RoutesController(mapModel, drawer);
-        let stationsController = new StationsController_1.StationsController(mapModel, drawer, geometry);
-        let removalController = new RemovalController_1.RemovalController(mapModel, drawer);
-        // add ControlPanelController
+        let view = new MapView_1.MapView(map, geometry);
+        let gridController = new GridController_1.GridController(mapModel, view);
+        let backgroundController = new BackgroundController_1.BackgroundController(view);
+        let routesController = new RoutesController_1.RoutesController(mapModel, view);
+        let stationsController = new StationsController_1.StationsController(mapModel, view, geometry);
+        let removalController = new RemovalController_1.RemovalController(mapModel, view);
+        let ioController = new IOController_1.IOController(mapModel, view);
         function getSizeSettings() {
             let gridSize = 80;
             let canvasSize = 1000;

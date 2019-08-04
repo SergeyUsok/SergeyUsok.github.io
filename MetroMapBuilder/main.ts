@@ -6,6 +6,7 @@ import { StationsController } from "./Controllers/StationsController";
 import { MapView } from "./Utils/MapView";
 import { Geometry } from "./Utils/Geometry";
 import { RemovalController } from "./Controllers/RemovalController";
+import { IOController } from "./Controllers/IOController";
 
 if (document.readyState !== 'loading') {
     initApp();
@@ -20,14 +21,14 @@ function initApp() {
     let geometry = new Geometry(sizeSettings);
 
     let map = createMapCanvas(mapModel.sizeSettings.canvasSize);
-    let drawer = new MapView(map, geometry);
+    let view = new MapView(map, geometry);
     
-    let gridController = new GridController(mapModel, drawer);
-    let backgroundController = new BackgroundController(drawer);
-    let routesController = new RoutesController(mapModel, drawer);
-    let stationsController = new StationsController(mapModel, drawer, geometry);
-    let removalController = new RemovalController(mapModel, drawer);
-    // add ControlPanelController
+    let gridController = new GridController(mapModel, view);
+    let backgroundController = new BackgroundController(view);
+    let routesController = new RoutesController(mapModel, view);
+    let stationsController = new StationsController(mapModel, view, geometry);
+    let removalController = new RemovalController(mapModel, view);
+    let ioController = new IOController(mapModel, view);
 
     function getSizeSettings() {
         let gridSize = 80;

@@ -25,7 +25,6 @@ define(["require", "exports", "../Utils/Strings"], function (require, exports, S
     exports.Station = Station;
     class Label {
         constructor(...names) {
-            this._width = 0;
             this.setName(...names);
         }
         get name() {

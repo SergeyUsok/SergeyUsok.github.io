@@ -16,6 +16,12 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="main"></script>
 </head>
 <body>
+    <div class="alert alert-danger alert-dismissible invisible" role="alert" id="error">
+        <strong></strong>
+        <button type="button" class="close" aria-label="Close" id="close-alert">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
     <div class="container">
         <div class="row">
             <div class="col-9">
@@ -92,8 +98,23 @@
                             </div>
                         </div>
                     </div>
-                    <button type="button" class="btn btn-primary mt-2 mr-2">Export</button>
-                    <button type="button" class="btn btn-secondary mt-2">Import</button>
+
+                    <div class="card">
+                        <button class="btn btn-info" type="button" data-toggle="collapse" data-target="#showIOSettings" aria-expanded="true" aria-controls="showIOSettings">
+                            File settings
+                        </button>
+                        <div class="collapse show" id="showIOSettings">
+                            <div class="card-body">
+                                <h6 class="card-subtitle mb-2 text-muted">Save/Load map in local storage</h6>
+                                <button type="button" data-toggle="modal" data-target="#saveMap" id="openSave" class="btn btn-primary mt-2 mr-2">Save</button>
+                                <button type="button" data-toggle="modal" data-target="#loadMap" id="openLoad" class="btn btn-secondary mt-2">Load</button>
+                                <h6 class="card-subtitle mt-2 mb-2 text-muted">Import/Export map as json file</h6>
+                                <button type="button" class="btn btn-primary mt-2 mr-2" id="export">Export</button>
+                                <input type="file" id="importedMap" style="display: none;" />
+                                <button type="button" class="btn btn-secondary mt-2" id="import">Import</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
 
@@ -124,12 +145,54 @@
                 </div>
             </div>
         </div>
-        <div class="d-none" id="rename-station">
-            <!--<textarea class="form-control" id="label-value" rows="3"></textarea>
-            <button type="button" class="btn btn-secondary" id="cancelLabel">Cancel</button>
-            <button type="button" class="btn btn-primary" id="saveLabel">Save</button>-->
-            <span>Hello</span>
+
+        <div class="modal fade" id="saveMap" tabindex="1" role="dialog" aria-labelledby="saveTitle" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="saveTitle">Save map</h5>
+                    </div>
+                    <div class="modal-body">
+                        <h6 class="text-muted">Last saved maps</h6>
+                        <ul class="list-unstyled text-info text-truncate font-weight-normal" id="maps-list"></ul>
+                    </div>
+                    <div class="modal-footer">
+                        <div class="input-group mb-3">
+                            <input type="text" class="form-control" placeholder="Map name" id="map-name">
+                            <div class="input-group-append">
+                                <button type="button" class="btn btn-primary" data-dismiss="modal" id="save">Save</button>
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="alert alert-warning d-none" id="confirmation">
+                        <p>Map with name <strong></strong> already exists. Overwrite it?</p>
+                        <button type="button" class="btn btn-outline-info" data-dismiss="modal" id="yes">Yes</button>
+                        <button type="button" class="btn btn-outline-info" id="no">No</button>
+                    </div>
+                </div>
+            </div>
         </div>
+
+        <div class="modal fade" id="loadMap" tabindex="1" role="dialog" aria-labelledby="loadTitle" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="loadTitle">Load map</h5>
+                    </div>
+                    <div class="modal-body">
+                        <h6 class="text-muted" id="maps-msg"></h6>
+                        <ul class="list-unstyled text-info text-truncate font-weight-normal" id="maps-list-load"></ul>
+                    </div>
+                    <div class="modal-footer">
+                        <div class="input-group mb-3">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 </body>
 </html>

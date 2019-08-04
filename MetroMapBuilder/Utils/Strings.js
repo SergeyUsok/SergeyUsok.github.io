@@ -20,8 +20,23 @@ define(["require", "exports"], function (require, exports) {
         static connectionExistsError(label1, id1, label2, id2) {
             return `Connection between ${label1} (id: ${id1}) and ${label2} (id: ${id2}) already exist for selected route`;
         }
-        static get selectRouteMessage() {
-            return "In order to draw connection select the route you want to plot";
+        static selectRouteMessage() {
+            return "No route has been selected. Select route first on routes panel in order to draw them";
+        }
+        static nullOrUndefinedStation() {
+            return "Provded station object is null or undefined";
+        }
+        static missingPropertyOn(property, obj) {
+            return `Invalid object structure. Missing '${property}' property on ${obj}`;
+        }
+        static errorOnFileRead(msg) {
+            return `Error occured while reading file: ${msg}`;
+        }
+        static errorOnJsonParse(msg) {
+            return `Error occurred while trying to parse JSON: ${msg}`;
+        }
+        static errorOnMapParse(msg) {
+            return `Error occurred while trying to load map from parsed JSON: ${msg}`;
         }
     }
     exports.Strings = Strings;

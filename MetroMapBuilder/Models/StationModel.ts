@@ -24,7 +24,7 @@ export class Label {
     private _names: string[];
     private _x: number;
     private _y: number;
-    private _width: number = 0;
+    private _width: number;
 
     public constructor(...names: string[]) {
         this.setName(...names);

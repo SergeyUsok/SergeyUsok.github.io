@@ -2,16 +2,24 @@
 import { MapView } from "../Utils/MapView";
 import { SubwayMap } from "../Models/SubwayMap";
 import { Label } from "../Models/StationModel";
+import { ErrorController } from "./ErrorController";
 
-export class StationsController {
+export class StationsController extends ErrorController {
     private stationsCounter: number = 0;
 
     public constructor(private subwayMap: SubwayMap, private mapView: MapView, private geometry: Geometry) {
-        this.initialize(mapView.getCanvas());
+        super();
+        this.initialize(mapView.getCanvas(), subwayMap);
     }    
 
-    private initialize(canvas: SVGSVGElement) {
-        canvas.addEventListener("click", event => this.handleClick(event));        
+    private initialize(canvas: SVGSVGElement, subwayMap: SubwayMap) {
+        canvas.addEventListener("click", event => this.handleClick(event));
+
+        subwayMap.mapReloaded(() => this.onMapReloaded());
+    }
+
+    private onMapReloaded(): void {
+        this.stationsCounter = this.subwayMap.stations.length;
     }
 
     private handleClick(event: MouseEvent): any {
@@ -108,8 +116,11 @@ export class StationsController {
             this.subwayMap.newStation(id, cell.x, cell.y);
             this.mapView.redrawMap(this.subwayMap);
         }
-        else {
-            // TODO show error about not available cell
+        // if cell does not contain another station but still occupied show error
+        else if (event.target instanceof SVGSVGElement ||
+                event.target instanceof SVGLineElement ||
+                event.target instanceof SVGTextPositioningElement) {
+            this.showError("Clicked cell is not available for station set up because it is occupied by line, label or it is placed too much close to another station");
         }
     }
 }
