@@ -4,7 +4,6 @@ import { Connection } from "../Models/ConnectionModel";
 import { Route } from "../Models/Route";
 import { Station, Label } from "../Models/StationModel";
 import { Geometry, Segment, Point } from "./Geometry";
-import { Strings } from "./Strings";
 
 export class MapView {
     private occupiedCells: Set<string> = new Set<string>();
@@ -146,27 +145,12 @@ export class MapView {
         }
     }
 
-    public trySetColor(routeId: number, color: string): boolean {
-        let lowerCaseColor = color.toLowerCase();
-        if (!this.isValidColor(lowerCaseColor))
-            return false;
-
+    public trySetColor(routeId: number, color: string): void {
         let route = document.getElementById(`route-${routeId}`);
 
         if (route != null) {            
-            route.setAttribute('stroke', lowerCaseColor);
+            route.setAttribute('stroke', color);
         }
-
-        return true;
-    }
-
-    private isValidColor(maybeColor: string): boolean {
-        if (Strings.isNullOrWhitespace(maybeColor))
-            return false;
-
-        let s = new Option().style;
-        s.color = maybeColor;
-        return s.color != ""; // valid color will be set otherwise it remains empty
     }
 
     private drawRoute(route: Route) {

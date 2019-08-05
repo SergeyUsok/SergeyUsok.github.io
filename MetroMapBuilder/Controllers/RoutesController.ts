@@ -114,9 +114,11 @@ export class RoutesController extends ErrorController {
         let colorsControl = <HTMLInputElement>clone.querySelector("input[type=text]");
         colorsControl.value = route.color;
         colorsControl.addEventListener("input", () => {
-            let color = colorsControl.value;
-            route.color = color;
-            if (this.mapView.trySetColor(route.id, color)) {
+            let color = colorsControl.value.toLowerCase();
+
+            if (this.isValidColor(color)) {
+                route.color = color;
+                this.mapView.trySetColor(route.id, color);
                 colorsControl.classList.remove("is-invalid");
             }
             else {
@@ -132,6 +134,15 @@ export class RoutesController extends ErrorController {
         });
 
         document.getElementById("panels").appendChild(clone);
+    }
+
+    private isValidColor(maybeColor: string): boolean {
+        if (Strings.isNullOrWhitespace(maybeColor))
+            return false;
+
+        let s = new Option().style;
+        s.color = maybeColor;
+        return s.color != ""; // valid color will be set otherwise it remains empty
     }
 
     private highlightPanel(route: Route) {

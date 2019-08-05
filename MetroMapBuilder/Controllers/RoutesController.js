@@ -92,9 +92,10 @@ define(["require", "exports", "./ErrorController", "../Utils/Strings"], function
             let colorsControl = clone.querySelector("input[type=text]");
             colorsControl.value = route.color;
             colorsControl.addEventListener("input", () => {
-                let color = colorsControl.value;
-                route.color = color;
-                if (this.mapView.trySetColor(route.id, color)) {
+                let color = colorsControl.value.toLowerCase();
+                if (this.isValidColor(color)) {
+                    route.color = color;
+                    this.mapView.trySetColor(route.id, color);
                     colorsControl.classList.remove("is-invalid");
                 }
                 else {
@@ -107,6 +108,13 @@ define(["require", "exports", "./ErrorController", "../Utils/Strings"], function
                 this.routeSelectionChanged(route);
             });
             document.getElementById("panels").appendChild(clone);
+        }
+        isValidColor(maybeColor) {
+            if (Strings_1.Strings.isNullOrWhitespace(maybeColor))
+                return false;
+            let s = new Option().style;
+            s.color = maybeColor;
+            return s.color != ""; // valid color will be set otherwise it remains empty
         }
         highlightPanel(route) {
             let panels = document.getElementById("panels").children;
