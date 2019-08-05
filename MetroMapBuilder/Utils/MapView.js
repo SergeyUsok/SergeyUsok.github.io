@@ -1,4 +1,4 @@
-define(["require", "exports", "./SVG"], function (require, exports, SVG_1) {
+define(["require", "exports", "./SVG", "./Strings"], function (require, exports, SVG_1, Strings_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     class MapView {
@@ -117,13 +117,22 @@ define(["require", "exports", "./SVG"], function (require, exports, SVG_1) {
                     stationElement.classList.remove("selected");
             }
         }
-        changeRouteColor(routeId, color) {
+        trySetColor(routeId, color) {
+            let lowerCaseColor = color.toLowerCase();
+            if (!this.isValidColor(lowerCaseColor))
+                return false;
             let route = document.getElementById(`route-${routeId}`);
-            if (route == null) {
-                console.error(`Cannot find route ${routeId} to change its color`);
-                return;
+            if (route != null) {
+                route.setAttribute('stroke', lowerCaseColor);
             }
-            route.setAttribute('stroke', color);
+            return true;
+        }
+        isValidColor(maybeColor) {
+            if (Strings_1.Strings.isNullOrWhitespace(maybeColor))
+                return false;
+            let s = new Option().style;
+            s.color = maybeColor;
+            return s.color != ""; // valid color will be set otherwise it remains empty
         }
         drawRoute(route) {
             let routeParent = SVG_1.SVG.routeGroup(`route-${route.id}`, this.geometry.lineWidth, route.color);

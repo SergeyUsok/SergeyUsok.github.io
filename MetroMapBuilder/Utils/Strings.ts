@@ -48,4 +48,11 @@ export class Strings {
     public static errorOnMapParse(msg: string): string {
         return `Error occurred while trying to load map from parsed JSON: ${msg}`;
     }
+
+    public static isNullOrWhitespace(input) {
+        if (typeof input === 'undefined' || input == null)
+            return true;
+
+        return input.replace(/\s/g, '').length < 1;
+    }
 }

@@ -38,6 +38,11 @@ define(["require", "exports"], function (require, exports) {
         static errorOnMapParse(msg) {
             return `Error occurred while trying to load map from parsed JSON: ${msg}`;
         }
+        static isNullOrWhitespace(input) {
+            if (typeof input === 'undefined' || input == null)
+                return true;
+            return input.replace(/\s/g, '').length < 1;
+        }
     }
     exports.Strings = Strings;
 });

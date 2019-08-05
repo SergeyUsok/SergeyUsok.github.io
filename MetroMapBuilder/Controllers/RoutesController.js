@@ -94,7 +94,12 @@ define(["require", "exports", "./ErrorController", "../Utils/Strings"], function
             colorsControl.addEventListener("input", () => {
                 let color = colorsControl.value;
                 route.color = color;
-                this.mapView.changeRouteColor(route.id, color);
+                if (this.mapView.trySetColor(route.id, color)) {
+                    colorsControl.classList.remove("is-invalid");
+                }
+                else {
+                    colorsControl.classList.add("is-invalid");
+                }
             });
             clone.addEventListener("click", () => {
                 if (this.subwayMap.currentRoute == route)

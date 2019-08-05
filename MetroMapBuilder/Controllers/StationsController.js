@@ -1,4 +1,4 @@
-define(["require", "exports", "./ErrorController"], function (require, exports, ErrorController_1) {
+define(["require", "exports", "./ErrorController", "../Utils/Strings"], function (require, exports, ErrorController_1, Strings_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     class StationsController extends ErrorController_1.ErrorController {
@@ -58,7 +58,7 @@ define(["require", "exports", "./ErrorController"], function (require, exports, 
             // textarea
             let text = editForm.children[0];
             text.addEventListener("input", () => {
-                if (this.isNullOrWhitespace(text.value)) {
+                if (Strings_1.Strings.isNullOrWhitespace(text.value)) {
                     editForm.children[2].classList.add('disabled'); // do not allow save empty value
                     return;
                 }
@@ -74,18 +74,13 @@ define(["require", "exports", "./ErrorController"], function (require, exports, 
             });
             // save button
             editForm.children[2].addEventListener("click", () => {
-                if (!this.isNullOrWhitespace(text.value)) {
+                if (!Strings_1.Strings.isNullOrWhitespace(text.value)) {
                     label.setName(...text.value.split(/\r\n|\r|\n/).map(s => s.trim()));
                     editForm.remove();
                     this.mapView.redrawMap(this.subwayMap);
                 }
             });
             return editForm;
-        }
-        isNullOrWhitespace(input) {
-            if (typeof input === 'undefined' || input == null)
-                return true;
-            return input.replace(/\s/g, '').length < 1;
         }
         tryAddStation(event) {
             let rect = (event.currentTarget).getBoundingClientRect();

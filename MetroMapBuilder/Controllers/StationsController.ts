@@ -3,6 +3,7 @@ import { MapView } from "../Utils/MapView";
 import { SubwayMap } from "../Models/SubwayMap";
 import { Label } from "../Models/StationModel";
 import { ErrorController } from "./ErrorController";
+import { Strings } from "../Utils/Strings";
 
 export class StationsController extends ErrorController {
     private stationsCounter: number = 0;
@@ -72,7 +73,7 @@ export class StationsController extends ErrorController {
         // textarea
         let text = <HTMLTextAreaElement>editForm.children[0];
         text.addEventListener("input", () => {
-            if (this.isNullOrWhitespace(text.value)) {
+            if (Strings.isNullOrWhitespace(text.value)) {
                 (<any>editForm.children[2]).classList.add('disabled');// do not allow save empty value
                 return;
             }
@@ -90,7 +91,7 @@ export class StationsController extends ErrorController {
 
         // save button
         editForm.children[2].addEventListener("click", () => {
-            if (!this.isNullOrWhitespace(text.value)) {
+            if (!Strings.isNullOrWhitespace(text.value)) {
                 label.setName(...text.value.split(/\r\n|\r|\n/).map(s => s.trim()));
                 editForm.remove();
                 this.mapView.redrawMap(this.subwayMap);
@@ -98,13 +99,6 @@ export class StationsController extends ErrorController {
         });
 
         return <HTMLElement>editForm;
-    }
-
-    private isNullOrWhitespace(input) {
-        if (typeof input === 'undefined' || input == null)
-            return true;
-
-        return input.replace(/\s/g, '').length < 1;
     }
 
     private tryAddStation(event: MouseEvent): void {
