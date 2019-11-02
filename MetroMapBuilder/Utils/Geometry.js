@@ -11,6 +11,9 @@ define(["require", "exports", "../Models/ConnectionModel"], function (require, e
         get radius() {
             return this.cellSize / 2;
         }
+        get cornerRadius() {
+            return this.cellSize / 5;
+        }
         get lineWidth() {
             return this.cellSize * this.sizeSettings.lineWidthFactor;
         }

@@ -103,7 +103,7 @@ export class StationsManager {
         let rotation = metadataWithMaxCount.angle - 90;
 
         let corners = this.geometry.rectCorners(center, width, height);
-        let rect = SVG.rectStation(corners[0], width, height, rotation, center, `station-${station.id}`, station.id);
+        let rect = SVG.rectStation(corners[0], width, height, rotation, this.geometry.cornerRadius, center, `station-${station.id}`, station.id);
         
         return { shape: rect, cells: this.cellsOccupiedByRect(station.id, corners, center, rotation) };
     }

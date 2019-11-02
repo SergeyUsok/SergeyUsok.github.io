@@ -68,7 +68,7 @@ define(["require", "exports", "./SVG"], function (require, exports, SVG_1) {
             // station rect should be ortogonal to the angle of passing connection
             let rotation = metadataWithMaxCount.angle - 90;
             let corners = this.geometry.rectCorners(center, width, height);
-            let rect = SVG_1.SVG.rectStation(corners[0], width, height, rotation, center, `station-${station.id}`, station.id);
+            let rect = SVG_1.SVG.rectStation(corners[0], width, height, rotation, this.geometry.cornerRadius, center, `station-${station.id}`, station.id);
             return { shape: rect, cells: this.cellsOccupiedByRect(station.id, corners, center, rotation) };
         }
         // walking through current and neighboring cells and mark them as unavailable for 

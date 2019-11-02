@@ -40,7 +40,7 @@ define(["require", "exports"], function (require, exports) {
             let route = this.subwayMap.currentRoute;
             let hasConnections = route != null && route.passesThrough(station);
             let disabled = hasConnections ? "" : " disabled";
-            let color = hasConnections ? ` style='color: ${route.color}'` : "";
+            let color = hasConnections ? ` style='color: ${route.color[0]}'` : "";
             let menuTemplate = `<div class='dropdown-menu show' id='stationMenu'>` +
                 `<button class='dropdown-item' type='button'>Remove station</button>` +
                 `<div class='dropdown-divider'></div>` +

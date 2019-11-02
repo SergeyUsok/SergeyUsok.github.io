@@ -59,24 +59,28 @@ export class SVG {
         return group;
     }
 
-    public static routeGroup(id: string, lineWidth: number, color: string) {
+    public static createGroup(attrs: object) {
         let group = document.createElementNS("http://www.w3.org/2000/svg", 'g');
-        group.setAttribute('id', id);
-        group.setAttribute('stroke', color);
-        group.setAttribute('stroke-width', <any>lineWidth);
+        
+        Object.keys(attrs).forEach(prop => group.setAttribute(`${prop}`, `${attrs[prop]}`));
+
+        //id: string, lineWidth: number, color: string
+        //group.setAttribute('id', id);
+        //group.setAttribute('stroke', color);
+        //group.setAttribute('stroke-width', <any>lineWidth);
         return group;
     }
 
-    public static rectStation(topLeft: Point, width: number, height: number, angle: number, rotationPoint: Point, id: string, dataId: number): SVGRectElement {
+    public static rectStation(topLeft: Point, width: number, height: number, angle: number, cornerRadius: number,
+                              fulcrum: Point, id: string, dataId: number): SVGRectElement {
         let rect = document.createElementNS("http://www.w3.org/2000/svg", 'rect');
         rect.setAttribute('x', `${topLeft.x}`);
         rect.setAttribute('y', `${topLeft.y}`);
-        let roundedCorner = width / 5;
-        rect.setAttribute('rx', `${roundedCorner}`);
-        rect.setAttribute('ry', `${roundedCorner}`);
+        rect.setAttribute('rx', `${cornerRadius}`);
+        rect.setAttribute('ry', `${cornerRadius}`);
         rect.setAttribute('width', `${width}`);
         rect.setAttribute('height', `${height}`);
-        rect.setAttribute('transform', `rotate(${angle} ${rotationPoint.x} ${rotationPoint.y})`);
+        rect.setAttribute('transform', `rotate(${angle} ${fulcrum.x} ${fulcrum.y})`);
         rect.setAttribute('id', id);
         rect.setAttribute('data-id', `${dataId}`);
         return rect;

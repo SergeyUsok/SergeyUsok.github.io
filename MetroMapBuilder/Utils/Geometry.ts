@@ -28,6 +28,9 @@ export class Geometry {
     public get radius(): number {
         return this.cellSize / 2;
     }
+    public get cornerRadius(): number {
+        return this.cellSize / 5;
+    }
     public get lineWidth(): number {
         return this.cellSize * this.sizeSettings.lineWidthFactor;
     }

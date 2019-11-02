@@ -6,7 +6,7 @@ define(["require", "exports", "../Utils/Strings"], function (require, exports, S
             this._id = _id;
             this.connectionCache = connectionCache;
             this._stations = [];
-            this.color = Strings_1.Strings.defaultColor;
+            this.color = [Strings_1.Strings.defaultColor];
         }
         get id() {
             return this._id;

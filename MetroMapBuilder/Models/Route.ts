@@ -8,7 +8,7 @@ export class Route {
     public constructor(private _id: number, private connectionCache: ConnectionsManager) {
     }
 
-    public color: string = Strings.defaultColor;
+    public color: string[] = [Strings.defaultColor];
 
     public get id(): number {
         return this._id;

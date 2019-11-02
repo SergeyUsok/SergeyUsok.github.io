@@ -112,13 +112,13 @@ export class RoutesController extends ErrorController {
         });
 
         let colorsControl = <HTMLInputElement>clone.querySelector("input[type=text]");
-        colorsControl.value = route.color;
+        colorsControl.value = route.color[0];
         colorsControl.addEventListener("input", () => {
-            let color = colorsControl.value.toLowerCase();
-
-            if (this.isValidColor(color)) {
-                route.color = color;
-                this.mapView.trySetColor(route.id, color);
+            let enteredColor = colorsControl.value.toLowerCase();
+            let colors = (enteredColor || "").split("/");
+            if (this.isValidColors(colors)) {
+                route.color = colors;
+                this.mapView.trySetColor(route.id, colors);
                 colorsControl.classList.remove("is-invalid");
             }
             else {
@@ -136,13 +136,22 @@ export class RoutesController extends ErrorController {
         document.getElementById("panels").appendChild(clone);
     }
 
-    private isValidColor(maybeColor: string): boolean {
-        if (Strings.isNullOrWhitespace(maybeColor))
+    private isValidColors(maybeColors: string[]): boolean {
+        if (maybeColors.length > 2)
             return false;
 
-        let s = new Option().style;
-        s.color = maybeColor;
-        return s.color != ""; // valid color will be set otherwise it remains empty
+        for (let i = 0; i < maybeColors.length; i++) {
+            if (Strings.isNullOrWhitespace(maybeColors[i]))
+                return false;
+
+            let temp = new Option().style;
+            temp.color = maybeColors[i];
+
+            // valid color will be set otherwise it remains empty
+            if (temp.color == "")
+                return false;
+        }
+        return true;
     }
 
     private highlightPanel(route: Route) {

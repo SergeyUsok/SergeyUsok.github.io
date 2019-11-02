@@ -90,12 +90,13 @@ define(["require", "exports", "./ErrorController", "../Utils/Strings"], function
                 e.stopPropagation();
             });
             let colorsControl = clone.querySelector("input[type=text]");
-            colorsControl.value = route.color;
+            colorsControl.value = route.color[0];
             colorsControl.addEventListener("input", () => {
-                let color = colorsControl.value.toLowerCase();
-                if (this.isValidColor(color)) {
-                    route.color = color;
-                    this.mapView.trySetColor(route.id, color);
+                let enteredColor = colorsControl.value.toLowerCase();
+                let colors = (enteredColor || "").split("/");
+                if (this.isValidColors(colors)) {
+                    route.color = colors;
+                    this.mapView.trySetColor(route.id, colors);
                     colorsControl.classList.remove("is-invalid");
                 }
                 else {
@@ -109,12 +110,19 @@ define(["require", "exports", "./ErrorController", "../Utils/Strings"], function
             });
             document.getElementById("panels").appendChild(clone);
         }
-        isValidColor(maybeColor) {
-            if (Strings_1.Strings.isNullOrWhitespace(maybeColor))
+        isValidColors(maybeColors) {
+            if (maybeColors.length > 2)
                 return false;
-            let s = new Option().style;
-            s.color = maybeColor;
-            return s.color != ""; // valid color will be set otherwise it remains empty
+            for (let i = 0; i < maybeColors.length; i++) {
+                if (Strings_1.Strings.isNullOrWhitespace(maybeColors[i]))
+                    return false;
+                let temp = new Option().style;
+                temp.color = maybeColors[i];
+                // valid color will be set otherwise it remains empty
+                if (temp.color == "")
+                    return false;
+            }
+            return true;
         }
         highlightPanel(route) {
             let panels = document.getElementById("panels").children;

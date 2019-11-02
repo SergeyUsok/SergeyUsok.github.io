@@ -114,26 +114,52 @@ define(["require", "exports", "./SVG", "./StationsManager", "./LabelsManager"], 
         }
         trySetColor(routeId, color) {
             let route = document.getElementById(`route-${routeId}`);
-            if (route != null) {
-                route.setAttribute('stroke', color);
+            if (route == null)
+                return;
+            let groups = [...route.querySelectorAll("g")];
+            if (groups.length > color.length) {
+                groups[1].remove();
+            }
+            else if (groups.length < color.length) {
+                let newGroup = groups[0].cloneNode(true);
+                groups.push(newGroup);
+                route.appendChild(newGroup);
+            }
+            groups[0].setAttribute("stroke", color[0]);
+            // case for 2-colored lines
+            if (color.length == 2) {
+                groups[1].setAttribute("stroke", color[1]);
+                groups[1].setAttribute("stroke-dasharray", `${this.geometry.cellSize / 2}`);
             }
         }
         drawRoute(route) {
-            let routeParent = SVG_1.SVG.routeGroup(`route-${route.id}`, this.geometry.lineWidth, route.color);
+            let routeParent = SVG_1.SVG.createGroup({ id: `route-${route.id}`, "stroke-width": this.geometry.lineWidth });
+            let colorGroupes = [SVG_1.SVG.createGroup({ stroke: route.color[0] })];
+            // case for 2-colored lines
+            if (route.color.length == 2) {
+                let group = SVG_1.SVG.createGroup({ stroke: route.color[1], "stroke-dasharray": `${this.geometry.cellSize / 2}` });
+                colorGroupes.push(group);
+            }
             for (let connection of route.getConnections()) {
                 let from = this.geometry.centrify(connection.from);
                 let to = this.geometry.centrify(connection.to);
                 this.stationsManager.addMetadata(connection);
                 let offset = this.calculateOffset(connection, route);
                 let segment = this.geometry.offsetConnection(from, to, offset);
-                this.drawConnection(routeParent, segment);
+                for (let i = 0; i < colorGroupes.length; i++) {
+                    let parent = colorGroupes[i];
+                    this.drawConnection(parent, segment);
+                }
                 this.storeCellsOccupiedByLine(segment, connection.direction);
+            }
+            for (let i = 0; i < colorGroupes.length; i++) {
+                let colorGroup = colorGroupes[i];
+                routeParent.appendChild(colorGroup);
             }
             // insert routes after Grid BUT before stations
             this.canvas.firstChild.after(routeParent);
         }
         storeCellsOccupiedByLine(segment, direction) {
-            // TODO take into account line width (lineWidthFactor)
             for (let point of this.geometry.digitalDiffAnalyzer(segment, direction)) {
                 let key = `${point.x}-${point.y}`;
                 this.occupiedCells.add(key);
