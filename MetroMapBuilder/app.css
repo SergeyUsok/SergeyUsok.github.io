@@ -33,20 +33,20 @@
     padding-bottom: 20px;
 }
 
-circle[id^="station"].selected {
+circle[id^="station"].selected, rect[id^="station"].selected {
     cursor: pointer;
     fill: gold;
     stroke: dodgerblue;
-    stroke-width: 3px;
-}
-
-circle[id^="station"] {
-    fill: white;
-    stroke: blue;
     stroke-width: 2px;
 }
 
-    circle[id^="station"]:hover {
+circle[id^="station"], rect[id^="station"] {
+    fill: white;
+    stroke: blue;
+    stroke-width: 1px;
+}
+
+    circle[id^="station"]:hover, rect[id^="station"]:hover {
         cursor: pointer;
         stroke: dodgerblue;
         stroke-width: 3px;
@@ -80,11 +80,6 @@ circle[id^="station"] {
 
 .list-group-item {
     cursor: pointer;
-}
-
-.availability-mark {
-    opacity: 0.3;
-    fill: #FFCD28;
 }
 
 svg text {

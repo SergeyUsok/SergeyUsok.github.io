@@ -21,11 +21,11 @@ export class SVG {
         return text;
     }
 
-    public static circleStation(x: number, y: number, radius: number, id: string, dataId: number): SVGCircleElement {
+    public static circleStation(center: Point, radius: number, id: string, dataId: number): SVGCircleElement {
         let circle = document.createElementNS("http://www.w3.org/2000/svg", 'circle');
-        circle.setAttribute('cx', x.toString());
-        circle.setAttribute('cy', y.toString());
-        circle.setAttribute('r', radius.toString());
+        circle.setAttribute('cx', `${center.x}`);
+        circle.setAttribute('cy', `${center.y}`);
+        circle.setAttribute('r', `${radius}`);
         circle.setAttribute('id', id);
         circle.setAttribute('data-id', `${dataId}`);
         return circle;
@@ -65,5 +65,20 @@ export class SVG {
         group.setAttribute('stroke', color);
         group.setAttribute('stroke-width', <any>lineWidth);
         return group;
+    }
+
+    public static rectStation(topLeft: Point, width: number, height: number, angle: number, rotationPoint: Point, id: string, dataId: number): SVGRectElement {
+        let rect = document.createElementNS("http://www.w3.org/2000/svg", 'rect');
+        rect.setAttribute('x', `${topLeft.x}`);
+        rect.setAttribute('y', `${topLeft.y}`);
+        let roundedCorner = width / 5;
+        rect.setAttribute('rx', `${roundedCorner}`);
+        rect.setAttribute('ry', `${roundedCorner}`);
+        rect.setAttribute('width', `${width}`);
+        rect.setAttribute('height', `${height}`);
+        rect.setAttribute('transform', `rotate(${angle} ${rotationPoint.x} ${rotationPoint.y})`);
+        rect.setAttribute('id', id);
+        rect.setAttribute('data-id', `${dataId}`);
+        return rect;
     }
 }

@@ -4,7 +4,7 @@ export class Station {
     private _label: Label = null;
 
     public constructor(private _id: number, private _x: number, private _y: number) {
-        this._label = new Label(Strings.defaultLabel(_id));
+        this._label = new Label(_id, Strings.defaultLabel(_id));
     }
     public get id(): number {
         return this._id;
@@ -26,8 +26,12 @@ export class Label {
     private _y: number;
     private _width: number;
 
-    public constructor(...names: string[]) {
+    public constructor(private _id: number, ...names: string[]) {
         this.setName(...names);
+    }
+
+    public get id(): number {
+        return this._id;
     }
 
     public get name(): string[] {

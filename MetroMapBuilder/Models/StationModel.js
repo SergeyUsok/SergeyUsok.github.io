@@ -7,7 +7,7 @@ define(["require", "exports", "../Utils/Strings"], function (require, exports, S
             this._x = _x;
             this._y = _y;
             this._label = null;
-            this._label = new Label(Strings_1.Strings.defaultLabel(_id));
+            this._label = new Label(_id, Strings_1.Strings.defaultLabel(_id));
         }
         get id() {
             return this._id;
@@ -24,8 +24,12 @@ define(["require", "exports", "../Utils/Strings"], function (require, exports, S
     }
     exports.Station = Station;
     class Label {
-        constructor(...names) {
+        constructor(_id, ...names) {
+            this._id = _id;
             this.setName(...names);
+        }
+        get id() {
+            return this._id;
         }
         get name() {
             return this._names;

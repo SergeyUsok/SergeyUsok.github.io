@@ -1,4 +1,5 @@
 ﻿import { SizeSettings } from "../Models/SubwayMap";
+import { Direction } from "../Models/ConnectionModel";
 
 export type Segment = {
     from: {
@@ -24,7 +25,6 @@ export class Geometry {
     public get cellSize(): number {
         return this.sizeSettings.canvasSize / this.sizeSettings.gridSize;
     }
-    // TODO make radius dependent on lineWidthFactor
     public get radius(): number {
         return this.cellSize / 2;
     }
@@ -32,7 +32,7 @@ export class Geometry {
         return this.cellSize * this.sizeSettings.lineWidthFactor;
     }
     // SVG draws thin line and then calculates its width by making it wider proportionally from both sides from the center
-    public get lineCenter(): number {
+    public get halfOfLineWidth(): number {
         return this.lineWidth / 2;
     }
     public get fontSize(): number {
@@ -41,7 +41,7 @@ export class Geometry {
     }
     // let distance be half of line width
     public get distanceBetweenLines(): number {
-        return this.lineWidth / 2;
+        return this.halfOfLineWidth;
     }
 
     public get gridSize(): number {
@@ -53,9 +53,14 @@ export class Geometry {
     }
 
     public normalizeToGridCell(x: number, y: number): Point {
+        // check if x or y is located on border between cells
+        // if yes then we always take the smaller coordinate by subtracting 1
+        let isBorderX = x % this.cellSize == 0; 
+        let isBorderY = y % this.cellSize == 0;
+
         return {
-            x: Math.floor(x / this.cellSize),
-            y: Math.floor(y / this.cellSize)
+            x: isBorderX ? (x / this.cellSize) - 1 : Math.floor(x / this.cellSize),
+            y: isBorderY ? (y / this.cellSize) - 1 : Math.floor(y / this.cellSize)
         };
     }
 
@@ -67,12 +72,68 @@ export class Geometry {
         };
     }
 
-    public topLeftCorner(point: Point): Point {
-        let center = this.centrify(point);
-        return {
-            x: center.x - this.cellSize / 2,
-            y: center.y - this.cellSize / 2
+    public distanceOfParallelLines(linesCount: number) {
+        let linesWidthsSum = linesCount * this.lineWidth;
+        let distancesBetweenLinesSum = (linesCount - 1) * this.distanceBetweenLines;
+        return linesWidthsSum + distancesBetweenLinesSum;
+    }
+
+    public rectTopLeftCorner(center: Point, width: number, height: number) {
+        const cellBorder = 0.5;
+        return { // top left
+            x: center.x - width / 2 + cellBorder,
+            y: center.y - height / 2 + cellBorder
+        };
+    }
+
+    public rectCorners(center: Point, width: number, height: number): Point[] {        
+        const cellBorder = 0.5;
+        return [
+            { // top left
+                x: center.x - width / 2 + cellBorder,
+                y: center.y - height / 2 + cellBorder
+            },
+            { // bottom left
+                x: center.x - width / 2 + cellBorder,
+                y: center.y + height / 2 - cellBorder
+            },
+            { // top right
+                x: center.x + width / 2 - cellBorder,
+                y: center.y - height / 2 + cellBorder
+            },
+            { // bottom right
+                x: center.x + width / 2 - cellBorder,
+                y: center.y + height / 2 - cellBorder
+            }
+        ];
+    }
+
+    // https://gamedev.stackexchange.com/questions/86755/how-to-calculate-corner-positions-marks-of-a-rotated-tilted-rectangle
+    public rotate(points: Point[], fulcrum: Point, angle: number): Point[] {
+        let result = [];
+        let theta = angle * Math.PI / 180;
+
+        for (let i = 0; i < points.length; i++) {
+            let origin = points[i];
+            let rotated = {
+                x: ((origin.x - fulcrum.x) * Math.cos(theta) - (origin.y - fulcrum.y) * Math.sin(theta)) + fulcrum.x,
+                y: ((origin.x - fulcrum.x) * Math.sin(theta) + (origin.y - fulcrum.y) * Math.cos(theta)) + fulcrum.y
+            };
+            result.push(rotated);
         }
+
+        return result;
+    }
+
+    public angle(a: Point, b: Point): number {
+        let dy = b.y - a.y;
+        let dx = b.x - a.x;
+        let theta = Math.atan(dy / dx);
+        theta *= 180 / Math.PI; // range [-90, 90]
+        return theta;        
+        //let theta = Math.atan2(dy, dx); // range (-PI, PI]
+        //theta *= 180 / Math.PI; // rads to degs, range (-180, 180]        
+        //return theta < 0 ? 360 + theta : theta;
     }
 
     public centrify(point: Point): Point {
@@ -172,29 +233,107 @@ export class Geometry {
     //}
 
     // https://en.wikipedia.org/wiki/Digital_differential_analyzer_(graphics_algorithm)
+    // algorithm it returns grid cells' coordinates that are being crossed by segment
+    // taking into account line width. Here we have main (center) segment as argument and then
+    // we calculate 2 boundaries of this segment knowing its direction and line width
+    // Visualization:
+    // ----------  first boundary calculated segment
+    // ----------  center segment which comes as argument
+    // ----------  second boundary calculated segment
+    public * digitalDiffAnalyzer(segment: Segment, direction: Direction): IterableIterator<Point> {        
+        for (let pair of this.getNormalizedPointPairs(segment, direction)) {
+            let dx = pair.from.x - pair.to.x;
+            let dy = pair.from.y - pair.to.y;
 
-    public * digitalDiffAnalyzer(segment: Segment): IterableIterator<Point> {
-        let point1 = this.normalizeToGridCell(segment.from.x, segment.from.y);
-        let point2 = this.normalizeToGridCell(segment.to.x, segment.to.y);
+            let bound = Math.abs(dx) >= Math.abs(dy) ? Math.abs(dx) : Math.abs(dy);
+            dx = dx / bound;
+            dy = dy / bound;
 
-        let dx = point1.x - point2.x;
-        let dy = point1.y - point2.y;
+            let x = pair.from.x;
+            let y = pair.from.y;
+            for (let step = 1; step <= bound; step++) {
+                yield { x: Math.round(x), y: Math.round(y) };
+                x = x - dx;
+                y = y - dy;
+            }
+        }
+    }
 
-        let bound = 0;
-        if (Math.abs(dx) >= Math.abs(dy))
-            bound = Math.abs(dx);
-        else
-            bound = Math.abs(dy);
+    private * getNormalizedPointPairs(center: Segment, direction: Direction): IterableIterator<Segment> {
+        let first = firstBoundary(this.lineWidth);
+        let second = secondBoundary(this.lineWidth);
 
-        dx = dx / bound;
-        dy = dy / bound;
+        let first1 = this.normalizeToGridCell(first.from.x, first.from.y);
+        let first2 = this.normalizeToGridCell(first.to.x, first.to.y);
 
-        let x = point1.x;
-        let y = point1.y;
-        for (var step = 1; step <= bound; step++) {
-            yield { x: Math.round(x), y: Math.round(y) };
-            x = x - dx;
-            y = y - dy;
+        let center1 = this.normalizeToGridCell(center.from.x, center.from.y);
+        let center2 = this.normalizeToGridCell(center.to.x, center.to.y);
+
+        let second1 = this.normalizeToGridCell(second.from.x, second.from.y);
+        let second2 = this.normalizeToGridCell(second.to.x, second.to.y);
+
+        if (center1.x != first1.x || center1.y != first1.y ||
+            center2.x != first2.x || center2.y != first2.y) {
+            yield { from: first1, to: first2 };
+        }
+
+        yield { from: center1, to: center2 };
+
+        if (center1.x != second1.x || center1.y != second1.y ||
+            center2.x != second2.x || center2.y != second2.y) {
+            yield { from: second1, to: second2 };
+        }
+
+        // local helper functions
+        function firstBoundary(lineWidth: number): Segment {
+            let halfOfLineWidth = lineWidth / 2;
+            switch (direction) {
+                case Direction.horizontal:
+                    return {
+                        from: { x: center.from.x, y: center.from.y - halfOfLineWidth },
+                        to: { x: center.to.x, y: center.to.y - halfOfLineWidth }
+                    };
+                case Direction.vertical:
+                    return {
+                        from: { x: center.from.x - halfOfLineWidth, y: center.from.y },
+                        to: { x: center.to.x - halfOfLineWidth, y: center.to.y }
+                    };
+                case Direction.leftDiagonal:
+                    return {
+                        from: { x: center.from.x + halfOfLineWidth, y: center.from.y - halfOfLineWidth },
+                        to: { x: center.from.x + halfOfLineWidth, y: center.from.y - halfOfLineWidth }
+                    };
+                case Direction.rightDiagonal:
+                    return {
+                        from: { x: center.from.x - halfOfLineWidth, y: center.from.y - halfOfLineWidth },
+                        to: { x: center.from.x - halfOfLineWidth, y: center.from.y - halfOfLineWidth }
+                    };
+            }
+        }
+        function secondBoundary(lineWidth: number): Segment {
+            let halfOfLineWidth = lineWidth / 2;
+            switch (direction) {
+                case Direction.horizontal:
+                    return {
+                        from: { x: center.from.x, y: center.from.y + halfOfLineWidth },
+                        to: { x: center.to.x, y: center.to.y + halfOfLineWidth }
+                    };
+                case Direction.vertical:
+                    return {
+                        from: { x: center.from.x + halfOfLineWidth, y: center.from.y },
+                        to: { x: center.to.x + halfOfLineWidth, y: center.to.y }
+                    };
+                case Direction.leftDiagonal:
+                    return {
+                        from: { x: center.from.x - halfOfLineWidth, y: center.from.y + halfOfLineWidth },
+                        to: { x: center.from.x - halfOfLineWidth, y: center.from.y + halfOfLineWidth }
+                    };
+                case Direction.rightDiagonal:
+                    return {
+                        from: { x: center.from.x + halfOfLineWidth, y: center.from.y + halfOfLineWidth },
+                        to: { x: center.from.x + halfOfLineWidth, y: center.from.y + halfOfLineWidth }
+                    };
+            }
         }
     }
 }

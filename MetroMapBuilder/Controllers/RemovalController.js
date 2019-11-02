@@ -19,7 +19,8 @@ define(["require", "exports"], function (require, exports) {
         }
         showMenu(event) {
             this.hideMenu();
-            if (!(event.target instanceof SVGCircleElement)) { // context menu should appear only at circle click
+            // context menu should appear only at circle or rect click
+            if (!(event.target instanceof SVGCircleElement) && !(event.target instanceof SVGRectElement)) {
                 return;
             }
             event.preventDefault();

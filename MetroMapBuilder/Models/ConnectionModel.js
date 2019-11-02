@@ -51,6 +51,10 @@ define(["require", "exports", "../Utils/Strings"], function (require, exports, S
             this._from = _from;
             this._to = _to;
             this.passingRoutes = [];
+            this._direction = this.determineDirection(_from, _to);
+        }
+        get direction() {
+            return this._direction;
         }
         get from() {
             return this._from;
@@ -78,7 +82,36 @@ define(["require", "exports", "../Utils/Strings"], function (require, exports, S
             return this.passingRoutes.sort(function (a, b) { return a.id - b.id; })
                 .indexOf(route);
         }
+        determineDirection(stationA, stationB) {
+            if (stationA.x == stationB.x && stationA.y != stationB.y)
+                return Direction.vertical;
+            if (stationA.x != stationB.x && stationA.y == stationB.y)
+                return Direction.horizontal;
+            // first check if diagonal drawing direction (moves from top to bottom or from bottom to top)
+            // from top to Bottom case
+            if (stationA.y < stationB.y) {
+                if (stationA.x > stationB.x)
+                    return Direction.rightDiagonal;
+                if (stationA.x < stationB.x)
+                    return Direction.leftDiagonal;
+            }
+            // from Bottom to top case
+            else if (stationA.y > stationB.y) {
+                if (stationA.x > stationB.x)
+                    return Direction.leftDiagonal;
+                if (stationA.x < stationB.x)
+                    return Direction.rightDiagonal;
+            }
+            return Direction.horizontal;
+        }
     }
     exports.Connection = Connection;
+    var Direction;
+    (function (Direction) {
+        Direction[Direction["horizontal"] = 0] = "horizontal";
+        Direction[Direction["vertical"] = 1] = "vertical";
+        Direction[Direction["leftDiagonal"] = 2] = "leftDiagonal";
+        Direction[Direction["rightDiagonal"] = 3] = "rightDiagonal";
+    })(Direction = exports.Direction || (exports.Direction = {}));
 });
 //# sourceMappingURL=ConnectionModel.js.map

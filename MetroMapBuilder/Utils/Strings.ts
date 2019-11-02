@@ -1,6 +1,5 @@
 ﻿
 export class Strings {
-
     public static get defaultColor(): string {
         return "red";
     }
@@ -47,6 +46,10 @@ export class Strings {
 
     public static errorOnMapParse(msg: string): string {
         return `Error occurred while trying to load map from parsed JSON: ${msg}`;
+    }
+
+    public static occupiedCellError(): string {
+        return "Clicked cell is not available for station set up because it is occupied by line, label or it is placed too much close to another station"
     }
 
     public static isNullOrWhitespace(input) {

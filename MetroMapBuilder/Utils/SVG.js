@@ -19,11 +19,11 @@ define(["require", "exports"], function (require, exports) {
             }
             return text;
         }
-        static circleStation(x, y, radius, id, dataId) {
+        static circleStation(center, radius, id, dataId) {
             let circle = document.createElementNS("http://www.w3.org/2000/svg", 'circle');
-            circle.setAttribute('cx', x.toString());
-            circle.setAttribute('cy', y.toString());
-            circle.setAttribute('r', radius.toString());
+            circle.setAttribute('cx', `${center.x}`);
+            circle.setAttribute('cy', `${center.y}`);
+            circle.setAttribute('r', `${radius}`);
             circle.setAttribute('id', id);
             circle.setAttribute('data-id', `${dataId}`);
             return circle;
@@ -59,6 +59,20 @@ define(["require", "exports"], function (require, exports) {
             group.setAttribute('stroke', color);
             group.setAttribute('stroke-width', lineWidth);
             return group;
+        }
+        static rectStation(topLeft, width, height, angle, rotationPoint, id, dataId) {
+            let rect = document.createElementNS("http://www.w3.org/2000/svg", 'rect');
+            rect.setAttribute('x', `${topLeft.x}`);
+            rect.setAttribute('y', `${topLeft.y}`);
+            let roundedCorner = width / 5;
+            rect.setAttribute('rx', `${roundedCorner}`);
+            rect.setAttribute('ry', `${roundedCorner}`);
+            rect.setAttribute('width', `${width}`);
+            rect.setAttribute('height', `${height}`);
+            rect.setAttribute('transform', `rotate(${angle} ${rotationPoint.x} ${rotationPoint.y})`);
+            rect.setAttribute('id', id);
+            rect.setAttribute('data-id', `${dataId}`);
+            return rect;
         }
     }
     exports.SVG = SVG;

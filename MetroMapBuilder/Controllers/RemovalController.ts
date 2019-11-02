@@ -24,7 +24,8 @@ export class RemovalController {
     private showMenu(event: MouseEvent): boolean {
         this.hideMenu();
 
-        if (!(event.target instanceof SVGCircleElement)) { // context menu should appear only at circle click
+        // context menu should appear only at circle or rect click
+        if (!(event.target instanceof SVGCircleElement) && !(event.target instanceof SVGRectElement)) {
             return;
         }
 

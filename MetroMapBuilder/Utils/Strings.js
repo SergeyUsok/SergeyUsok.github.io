@@ -38,6 +38,9 @@ define(["require", "exports"], function (require, exports) {
         static errorOnMapParse(msg) {
             return `Error occurred while trying to load map from parsed JSON: ${msg}`;
         }
+        static occupiedCellError() {
+            return "Clicked cell is not available for station set up because it is occupied by line, label or it is placed too much close to another station";
+        }
         static isNullOrWhitespace(input) {
             if (typeof input === 'undefined' || input == null)
                 return true;

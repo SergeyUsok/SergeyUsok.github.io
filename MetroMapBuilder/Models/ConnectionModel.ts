@@ -60,7 +60,13 @@ export class ConnectionsManager {
 
 export class Connection {
     private passingRoutes: Route[] = [];
+    private _direction: Direction;
     public constructor(private _from: Station, private _to: Station) {
+        this._direction = this.determineDirection(_from, _to);
+    }
+
+    public get direction(): Direction {
+        return this._direction;
     }
 
     public get from(): Station {
@@ -80,7 +86,6 @@ export class Connection {
             this.passingRoutes.push(route);
             return true;
         }
-
         return false;
     }
 
@@ -95,4 +100,39 @@ export class Connection {
         return this.passingRoutes.sort(function(a, b) { return a.id - b.id; })
                    .indexOf(route);
     }
+
+    private determineDirection(stationA: Station, stationB: Station): Direction {
+        if (stationA.x == stationB.x && stationA.y != stationB.y)
+            return Direction.vertical;
+
+        if (stationA.x != stationB.x && stationA.y == stationB.y)
+            return Direction.horizontal;
+
+        // first check if diagonal drawing direction (moves from top to bottom or from bottom to top)
+        // from top to Bottom case
+        if (stationA.y < stationB.y) {
+            if (stationA.x > stationB.x)
+                return Direction.rightDiagonal;
+
+            if (stationA.x < stationB.x)
+                return Direction.leftDiagonal;
+        }
+        // from Bottom to top case
+        else if (stationA.y > stationB.y) {
+            if (stationA.x > stationB.x)
+                return Direction.leftDiagonal;
+
+            if (stationA.x < stationB.x)
+                return Direction.rightDiagonal;
+        }
+
+        return Direction.horizontal;
+    }
+}
+
+export enum Direction {
+    horizontal,
+    vertical,
+    leftDiagonal,
+    rightDiagonal
 }

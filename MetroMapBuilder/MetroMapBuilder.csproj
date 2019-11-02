@@ -40,10 +40,12 @@
     <TypeScriptCompile Include="Models\ConnectionModel.ts" />
     <TypeScriptCompile Include="Models\Route.ts" />
     <TypeScriptCompile Include="Models\StationModel.ts" />
+    <TypeScriptCompile Include="Utils\LabelsManager.ts" />
     <TypeScriptCompile Include="Utils\MapView.ts" />
     <TypeScriptCompile Include="Models\SubwayMap.ts" />
     <TypeScriptCompile Include="Utils\Geometry.ts" />
     <TypeScriptCompile Include="Controllers\StationsController.ts" />
+    <TypeScriptCompile Include="Utils\StationsManager.ts" />
     <TypeScriptCompile Include="Utils\Strings.ts" />
     <TypeScriptCompile Include="Utils\SVG.ts" />
   </ItemGroup>

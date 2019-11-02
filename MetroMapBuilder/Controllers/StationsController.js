@@ -35,7 +35,8 @@ define(["require", "exports", "./ErrorController", "../Utils/Strings"], function
         renameStation(event) {
             let target = event.target instanceof SVGTextElement ? event.target : event.target.parentElement;
             let label = this.subwayMap.getStation(this.mapView.getId(target)).label;
-            let topLeft = this.geometry.topLeftCorner(label);
+            let center = this.geometry.centrify(label);
+            let topLeft = this.geometry.rectTopLeftCorner(center, this.geometry.cellSize, this.geometry.cellSize);
             let editForm = this.prepareEditPopup(label);
             editForm.style.display = "block";
             editForm.style.left = `${topLeft.x}px`;
@@ -90,11 +91,11 @@ define(["require", "exports", "./ErrorController", "../Utils/Strings"], function
                 this.subwayMap.newStation(id, cell.x, cell.y);
                 this.mapView.redrawMap(this.subwayMap);
             }
-            // if cell does not contain another station but still occupied show error
+            // if cell does not contain another station but still occupied by something else show error
             else if (event.target instanceof SVGSVGElement ||
                 event.target instanceof SVGLineElement ||
                 event.target instanceof SVGTextPositioningElement) {
-                this.showError("Clicked cell is not available for station set up because it is occupied by line, label or it is placed too much close to another station");
+                this.showError(Strings_1.Strings.occupiedCellError());
             }
         }
     }
