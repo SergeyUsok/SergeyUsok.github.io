@@ -74,6 +74,11 @@ define(["require", "exports", "./StationModel", "./Route", "./ConnectionModel", 
             // 2. remove from any route referenced to this station and from connection cache under the hood
             this.routes.forEach(route => route.removeConnection(station));
         }
+        updateStationPosition(id, x, y) {
+            let station = this.getStation(id);
+            station.x = x;
+            station.y = y;
+        }
         // Connection API
         newConnection(route, station) {
             if (station == null || station == undefined) {

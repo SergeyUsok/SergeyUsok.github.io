@@ -92,6 +92,12 @@ export class SubwayMap {
         this.routes.forEach(route => route.removeConnection(station));
     }
 
+    public updateStationPosition(id: number, x: number, y: number): void {
+        let station = this.getStation(id);
+        station.x = x;
+        station.y = y;
+    }
+
     // Connection API
     public newConnection(route: Route, station: Station): { error: string, ok: boolean } {
         if (station == null || station == undefined) {

@@ -9,11 +9,6 @@ type StationMetadata = {
     angle: number
 }
 
-export type ShapeInfo = {
-    shape: SVGGraphicsElement,
-    cells: string[]
-}
-
 export class StationBounds {
     public constructor(initalMax?: number, initialMin?: number) {
         this.maxBorderX = initalMax;
@@ -40,6 +35,7 @@ export class StationBounds {
 export class StationsManager {
     private metadataMap: Map<number, StationMetadata[]> = new Map<number, StationMetadata[]>();
     private shapeMap: Map<number, StationBounds> = new Map<number, StationBounds>();
+    private occupiedCells: Map<number, Set<string>> = new Map < number, Set<string>>();
 
     public constructor(private geometry: Geometry) {
 
@@ -48,6 +44,7 @@ export class StationsManager {
     public clear(): void {
         this.metadataMap.clear();
         this.shapeMap.clear();
+        this.occupiedCells.clear();
     }
 
     public getBounds(id: number): StationBounds {
@@ -66,14 +63,15 @@ export class StationsManager {
         this.pushIfMissing(data, metadata);
     }
 
-    public process(station: Station): ShapeInfo {
+    public process(station: Station): SVGGraphicsElement {
         let metadata = this.metadataMap.get(station.id);
         let center = this.geometry.centrify(station);
 
         // draw station without lines as cicrle
         if (metadata == undefined) {
             let circle = SVG.circleStation(center, this.geometry.radius, `station-${station.id}`, station.id);            
-            return { shape: circle, cells: this.cellsOccupiedByCircle(station.id, station) };
+            this.saveCellsOccupiedByCircle(station.id, station);
+            return circle;
         }
 
         // order by lines count descending
@@ -89,7 +87,8 @@ export class StationsManager {
         // draw station with single passing line as cicrle as well
         if (metadata[0].count == 1) {
             let circle = SVG.circleStation(center, this.geometry.radius, `station-${station.id}`, station.id);
-            return { shape: circle, cells: this.cellsOccupiedByCircle(station.id, station) };
+            this.saveCellsOccupiedByCircle(station.id, station);
+            return circle;
         }
 
         // otherwise draw station as rectangle
@@ -104,23 +103,40 @@ export class StationsManager {
 
         let corners = this.geometry.rectCorners(center, width, height);
         let rect = SVG.rectStation(corners[0], width, height, rotation, this.geometry.cornerRadius, center, `station-${station.id}`, station.id);
-        
-        return { shape: rect, cells: this.cellsOccupiedByRect(station.id, corners, center, rotation) };
+        this.saveCellsOccupiedByRect(station.id, corners, center, rotation);
+        return rect;
     }
 
     // walking through current and neighboring cells and mark them as unavailable for 
     // further station set up - stations must not be placed in neighboring cells
-    public * getOccupiedCellsIncludingSurrounding(): IterableIterator<string> {
-        for (let bounds of this.shapeMap.values()) {
+    public completeProcessing(): void {
+        for (let id_bounds of this.shapeMap) {
+            let id = id_bounds[0];
+            let bounds = id_bounds[1];
+
             if (bounds.isInclined)
-                continue; // do not process surrounding cells fo inclined stations
+                continue; // do not process surrounding cells for inclined stations
 
             for (let x = bounds.surroundingMinX; x <= bounds.surroundingMaxX; x++) {
                 for (let y = bounds.surroundingMinY; y <= bounds.surroundingMaxY; y++) {
-                    yield `${x}-${y}`;
+                    this.occupiedCells.get(id).add(`${x}-${y}`);
                 }
             }
         }
+    }
+
+    public noStationSet(cell: Point, exceptId?: number): boolean {
+        let key = `${cell.x}-${cell.y}`;
+        for (let keyValue of this.occupiedCells) {
+            let id = keyValue[0];
+            let cells = keyValue[1];
+            // skip check current if id is equal to provided exceptId
+            if (id == exceptId)
+                continue;
+            if (cells.has(key))
+                return false;
+        }
+        return true;
     }
 
     private createMetadata(connection: Connection): StationMetadata {
@@ -168,7 +184,7 @@ export class StationsManager {
         stored.push(newData);
     }
 
-    private cellsOccupiedByCircle(id: number, center: Point): string[] {
+    private saveCellsOccupiedByCircle(id: number, center: Point): void {
         let bounds = new StationBounds();
         bounds.maxBorderX = center.x;
         bounds.minBorderX = center.x;
@@ -180,10 +196,10 @@ export class StationsManager {
         bounds.surroundingMinY = center.y - 1;
 
         this.shapeMap.set(id, bounds);
-        return [`${center.x}-${center.y}`];
+        this.occupiedCells.set(id, new Set([`${center.x}-${center.y}`]));
     }
 
-    private cellsOccupiedByRect(id: number, corners: Point[], center: Point, rotationAngle: number): string[] {
+    private saveCellsOccupiedByRect(id: number, corners: Point[], center: Point, rotationAngle: number): void {
         let bounds = new StationBounds(0, this.geometry.gridSize);
 
         let rotated = this.geometry.rotate(corners, center, rotationAngle);       
@@ -219,13 +235,12 @@ export class StationsManager {
         bounds.isInclined = rotationAngle % 90 != 0;
         this.shapeMap.set(id, bounds);
 
-        let result = [];
-
+        let result = new Set();
         for (let x = bounds.minBorderX; x <= bounds.maxBorderX; x++) {
             for (let y = bounds.minBorderY; y <= bounds.maxBorderY; y++) {
-                result.push(`${x}-${y}`);
+                result.add(`${x}-${y}`);
             }
         }
-        return result;
+        this.occupiedCells.set(id, result);
     }
 }

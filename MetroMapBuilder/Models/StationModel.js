@@ -2,21 +2,15 @@ define(["require", "exports", "../Utils/Strings"], function (require, exports, S
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     class Station {
-        constructor(_id, _x, _y) {
+        constructor(_id, x, y) {
             this._id = _id;
-            this._x = _x;
-            this._y = _y;
+            this.x = x;
+            this.y = y;
             this._label = null;
             this._label = new Label(_id, Strings_1.Strings.defaultLabel(_id));
         }
         get id() {
             return this._id;
-        }
-        get x() {
-            return this._x;
-        }
-        get y() {
-            return this._y;
         }
         get label() {
             return this._label;

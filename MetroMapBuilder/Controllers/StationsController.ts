@@ -10,13 +10,56 @@ export class StationsController extends ErrorController {
 
     public constructor(private subwayMap: SubwayMap, private mapView: MapView, private geometry: Geometry) {
         super();
-        this.initialize(mapView.getCanvas(), subwayMap);
+        this.initialize(mapView, subwayMap);
     }    
 
-    private initialize(canvas: SVGSVGElement, subwayMap: SubwayMap) {
-        canvas.addEventListener("click", event => this.handleClick(event));
+    private initialize(mapView: MapView, subwayMap: SubwayMap) {
+        this.setupDrugNDrop(mapView, subwayMap);
+
+        mapView.getCanvas()
+               .addEventListener("click", event => this.handleClick(event));
 
         subwayMap.mapReloaded(() => this.onMapReloaded());
+    }
+
+    private setupDrugNDrop(mapView: MapView, subwayMap: SubwayMap): void {
+        let previous: Point = null;
+        let stationId = -1;
+        mapView.getCanvas().addEventListener("mousedown", ev => {
+            if (ev.target instanceof SVGCircleElement ||
+                ev.target instanceof SVGRectElement) {
+                stationId = mapView.getId(ev.target);
+                previous = this.getCell(ev);
+                mapView.dragMode = true;
+                mapView.getCanvas().style.cursor = "move";
+            }
+        });
+
+        mapView.getCanvas().addEventListener("mousemove", ev => {
+            if (stationId == -1)
+                return;
+            let cell = this.getCell(ev);
+            if (previous.x == cell.x && previous.y == cell.y)
+                return;
+            
+            if (mapView.isCellFreeForDrop(cell, stationId)) {
+                mapView.getCanvas().style.cursor = "move";
+                subwayMap.updateStationPosition(stationId, cell.x, cell.y);
+                mapView.redrawMap(subwayMap);
+            }
+            else {
+                mapView.getCanvas().style.cursor = "not-allowed";
+            }
+        });
+
+        mapView.getCanvas().addEventListener("mouseup", ev => {
+            stationId = -1;
+            previous = null;
+            mapView.dragMode = false;
+        });
+
+        // cancel browser's native Drag'n'Drop behavior
+        mapView.getCanvas().ondragstart = () => false;
     }
 
     private onMapReloaded(): void {
@@ -103,19 +146,23 @@ export class StationsController extends ErrorController {
     }
 
     private tryAddStation(event: MouseEvent): void {
-        let rect = (<Element>(event.currentTarget)).getBoundingClientRect();
-        let cell = this.geometry.normalizeToGridCell(event.clientX - rect.left, event.clientY - rect.top);
+        let cell = this.getCell(event);
 
-        if (this.mapView.isCellAvailable(cell)) {
+        if (this.mapView.isCellFullyAvailable(cell)) {
             let id = this.stationsCounter++;
             this.subwayMap.newStation(id, cell.x, cell.y);
             this.mapView.redrawMap(this.subwayMap);
         }
-        // if cell does not contain another station but still occupied by something else show error
+        // if the cell does not contain another station but still occupied by something else show an error
         else if (event.target instanceof SVGSVGElement ||
                 event.target instanceof SVGLineElement ||
                 event.target instanceof SVGTextPositioningElement) {
             this.showError(Strings.occupiedCellError());
         }
+    }
+
+    private getCell(event: MouseEvent): Point {
+        let rect = (<Element>(event.currentTarget)).getBoundingClientRect();
+        return this.geometry.normalizeToGridCell(event.clientX - rect.left, event.clientY - rect.top);
     }
 }

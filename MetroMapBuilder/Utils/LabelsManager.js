@@ -5,14 +5,22 @@ define(["require", "exports", "./SVG"], function (require, exports, SVG_1) {
         constructor(geometry, isCellAvailable) {
             this.geometry = geometry;
             this.isCellAvailable = isCellAvailable;
+            this.occupiedCells = new Set();
+        }
+        clear() {
+            this.occupiedCells.clear();
         }
         process(label, station) {
             let position = this.calculateLabelPosition(label, station);
             label.setCoordinates(position.x, position.y);
             let labelStart = this.geometry.baselinePoint(position);
             let labelText = SVG_1.SVG.labelText(labelStart, this.geometry.fontSize, this.geometry.cellSize, label.name, label.id);
-            let cells = this.getCellsOccupiedByLabel(label);
-            return { labelText, cells };
+            this.saveCellsOccupiedByLabel(label);
+            return labelText;
+        }
+        noLabelSet(cell) {
+            let key = `${cell.x}-${cell.y}`;
+            return !this.occupiedCells.has(key);
         }
         calculateLabelPosition(label, station) {
             return this.tryPutOnRight(label, station) ||
@@ -174,17 +182,15 @@ define(["require", "exports", "./SVG"], function (require, exports, SVG_1) {
             }
             return true;
         }
-        getCellsOccupiedByLabel(label) {
-            let result = [];
+        saveCellsOccupiedByLabel(label) {
             let labelWidth = this.geometry.labelWidthInCells(label.width);
             for (let dx = 0; dx < labelWidth; dx++) {
                 for (let dy = 0; dy < label.height; dy++) {
                     let x = label.x + dx;
                     let y = label.y + dy;
-                    result.push(`${x}-${y}`);
+                    this.occupiedCells.add(`${x}-${y}`);
                 }
             }
-            return result;
         }
     }
     exports.LabelsManager = LabelsManager;

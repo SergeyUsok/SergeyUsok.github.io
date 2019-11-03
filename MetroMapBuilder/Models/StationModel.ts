@@ -3,17 +3,11 @@
 export class Station {
     private _label: Label = null;
 
-    public constructor(private _id: number, private _x: number, private _y: number) {
+    public constructor(private _id: number, public x: number, public y: number) {
         this._label = new Label(_id, Strings.defaultLabel(_id));
     }
     public get id(): number {
         return this._id;
-    }
-    public get x(): number {
-        return this._x;
-    }
-    public get y(): number {
-        return this._y;
     }
     public get label(): Label {
         return this._label;

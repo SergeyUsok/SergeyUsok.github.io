@@ -5,10 +5,11 @@ define(["require", "exports", "./SVG", "./StationsManager", "./LabelsManager"], 
         constructor(canvas, geometry) {
             this.canvas = canvas;
             this.geometry = geometry;
-            this.occupiedCells = new Set();
+            this.cellsOccupiedByLines = new Set();
             this.gridElementId = "grid";
+            this.dragMode = false;
             this.stationsManager = new StationsManager_1.StationsManager(geometry);
-            this.labelsManager = new LabelsManager_1.LabelsManager(geometry, p => this.isCellAvailable(p));
+            this.labelsManager = new LabelsManager_1.LabelsManager(geometry, p => this.isCellFullyAvailable(p));
         }
         getCanvas() {
             return this.canvas;
@@ -16,8 +17,16 @@ define(["require", "exports", "./SVG", "./StationsManager", "./LabelsManager"], 
         getId(target) {
             return parseInt(target.getAttribute("data-id"));
         }
-        isCellAvailable(cell) {
-            return this.withinBounds(cell.x, cell.y) && !this.occupiedCells.has(`${cell.x}-${cell.y}`);
+        isCellFullyAvailable(cell) {
+            return this.withinBounds(cell.x, cell.y) &&
+                !this.cellsOccupiedByLines.has(`${cell.x}-${cell.y}`) &&
+                this.stationsManager.noStationSet(cell) &&
+                this.labelsManager.noLabelSet(cell);
+        }
+        isCellFreeForDrop(cell, exceptStationId) {
+            return this.withinBounds(cell.x, cell.y) &&
+                !this.cellsOccupiedByLines.has(`${cell.x}-${cell.y}`) &&
+                this.stationsManager.noStationSet(cell, exceptStationId);
         }
         redrawGrid() {
             let oldGrid = document.getElementById(this.gridElementId);
@@ -72,11 +81,13 @@ define(["require", "exports", "./SVG", "./StationsManager", "./LabelsManager"], 
                 lineY2.classList.add("highlightCell");
             }
             // let user know if he can put station to the current cell
-            if (this.isCellAvailable(cell)) {
-                this.canvas.style.cursor = "cell";
-            }
-            else {
-                this.canvas.style.cursor = "not-allowed";
+            if (!this.dragMode) {
+                if (this.isCellFullyAvailable(cell)) {
+                    this.canvas.style.cursor = "cell";
+                }
+                else {
+                    this.canvas.style.cursor = "not-allowed";
+                }
             }
         }
         redrawMap(subwayMap) {
@@ -84,7 +95,7 @@ define(["require", "exports", "./SVG", "./StationsManager", "./LabelsManager"], 
             this.drawRoutes(subwayMap);
             this.drawStations(subwayMap);
             this.drawLabels(subwayMap);
-            this.storeOccupiedCells(this.stationsManager.getOccupiedCellsIncludingSurrounding());
+            this.stationsManager.completeProcessing();
             if (subwayMap.currentRoute != null)
                 this.selectRoute(subwayMap.currentRoute);
         }
@@ -162,7 +173,7 @@ define(["require", "exports", "./SVG", "./StationsManager", "./LabelsManager"], 
         storeCellsOccupiedByLine(segment, direction) {
             for (let point of this.geometry.digitalDiffAnalyzer(segment, direction)) {
                 let key = `${point.x}-${point.y}`;
-                this.occupiedCells.add(key);
+                this.cellsOccupiedByLines.add(key);
             }
         }
         drawConnection(routeParent, segment) {
@@ -176,8 +187,9 @@ define(["require", "exports", "./SVG", "./StationsManager", "./LabelsManager"], 
             return (-radius + this.geometry.halfOfLineWidth) + (offsetFactor * (this.geometry.lineWidth + this.geometry.distanceBetweenLines));
         }
         eraseMap() {
-            this.occupiedCells.clear();
+            this.cellsOccupiedByLines.clear();
             this.stationsManager.clear();
+            this.labelsManager.clear();
             let node = this.canvas;
             while (node.lastElementChild.id != this.gridElementId) {
                 node.lastElementChild.remove();
@@ -190,28 +202,17 @@ define(["require", "exports", "./SVG", "./StationsManager", "./LabelsManager"], 
         }
         drawStations(subwayMap) {
             for (let i = 0; i < subwayMap.stations.length; i++) {
-                this.drawStation(subwayMap.stations[i]);
+                let station = subwayMap.stations[i];
+                let shape = this.stationsManager.process(station);
+                this.canvas.appendChild(shape);
             }
         }
         drawLabels(subwayMap) {
             for (let i = 0; i < subwayMap.stations.length; i++) {
-                this.drawLabel(subwayMap.stations[i]);
-            }
-        }
-        drawStation(station) {
-            let shapeInfo = this.stationsManager.process(station);
-            this.storeOccupiedCells(shapeInfo.cells.values());
-            this.canvas.appendChild(shapeInfo.shape);
-        }
-        drawLabel(station) {
-            let stationBounds = this.stationsManager.getBounds(station.id);
-            let labelInfo = this.labelsManager.process(station.label, stationBounds);
-            this.storeOccupiedCells(labelInfo.cells.values());
-            this.canvas.appendChild(labelInfo.labelText);
-        }
-        storeOccupiedCells(cells) {
-            for (let cell of cells) {
-                this.occupiedCells.add(cell);
+                let station = subwayMap.stations[i];
+                let stationBounds = this.stationsManager.getBounds(station.id);
+                let label = this.labelsManager.process(station.label, stationBounds);
+                this.canvas.appendChild(label);
             }
         }
         withinBounds(x, y) {

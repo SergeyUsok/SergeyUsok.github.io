@@ -2,21 +2,23 @@
 import { SubwayMap } from "../Models/SubwayMap";
 import { Connection, Direction } from "../Models/ConnectionModel";
 import { Route } from "../Models/Route";
-import { Station } from "../Models/StationModel";
 import { Geometry, Segment, Point } from "./Geometry";
 import { StationsManager } from "./StationsManager";
 import { LabelsManager } from "./LabelsManager";
 
 export class MapView {
-    private occupiedCells: Set<string> = new Set<string>();
+    private cellsOccupiedByLines: Set<string> = new Set<string>();
+
     private stationsManager: StationsManager;
     private labelsManager: LabelsManager;
     private gridElementId: string = "grid";
 
     public constructor(private canvas: SVGSVGElement, private geometry: Geometry) {
         this.stationsManager = new StationsManager(geometry);
-        this.labelsManager = new LabelsManager(geometry, p => this.isCellAvailable(p));
+        this.labelsManager = new LabelsManager(geometry, p => this.isCellFullyAvailable(p));
     }
+
+    public dragMode: boolean = false;
 
     public getCanvas(): SVGSVGElement {
         return this.canvas;
@@ -26,8 +28,17 @@ export class MapView {
         return parseInt(target.getAttribute("data-id"));
     }
 
-    public isCellAvailable(cell: Point): boolean {
-        return this.withinBounds(cell.x, cell.y) && !this.occupiedCells.has(`${cell.x}-${cell.y}`);
+    public isCellFullyAvailable(cell: Point): boolean {
+        return this.withinBounds(cell.x, cell.y) &&
+            !this.cellsOccupiedByLines.has(`${cell.x}-${cell.y}`) &&
+            this.stationsManager.noStationSet(cell) &&
+            this.labelsManager.noLabelSet(cell);
+    }
+
+    public isCellFreeForDrop(cell: Point, exceptStationId: number): boolean {
+        return this.withinBounds(cell.x, cell.y) &&
+            !this.cellsOccupiedByLines.has(`${cell.x}-${cell.y}`) &&
+            this.stationsManager.noStationSet(cell, exceptStationId);
     }
 
     public redrawGrid() {
@@ -95,11 +106,13 @@ export class MapView {
         }
 
         // let user know if he can put station to the current cell
-        if (this.isCellAvailable(cell)) {
-            this.canvas.style.cursor = "cell";
-        }
-        else {
-            this.canvas.style.cursor = "not-allowed";
+        if (!this.dragMode) {
+            if (this.isCellFullyAvailable(cell)) {
+                this.canvas.style.cursor = "cell";
+            }
+            else {
+                this.canvas.style.cursor = "not-allowed";
+            }
         }
     }
 
@@ -108,7 +121,7 @@ export class MapView {
         this.drawRoutes(subwayMap);
         this.drawStations(subwayMap);
         this.drawLabels(subwayMap);
-        this.storeOccupiedCells(this.stationsManager.getOccupiedCellsIncludingSurrounding());
+        this.stationsManager.completeProcessing();
         if (subwayMap.currentRoute != null)
             this.selectRoute(subwayMap.currentRoute);
     }
@@ -207,7 +220,7 @@ export class MapView {
     private storeCellsOccupiedByLine(segment: Segment, direction: Direction) {
         for (let point of this.geometry.digitalDiffAnalyzer(segment, direction)) {
             let key = `${point.x}-${point.y}`;
-            this.occupiedCells.add(key);
+            this.cellsOccupiedByLines.add(key);
         }
     }
 
@@ -226,8 +239,9 @@ export class MapView {
     }
 
     private eraseMap(): void {
-        this.occupiedCells.clear();
+        this.cellsOccupiedByLines.clear();
         this.stationsManager.clear();
+        this.labelsManager.clear();
 
         let node = this.canvas;
         while (node.lastElementChild.id != this.gridElementId) {
@@ -243,33 +257,18 @@ export class MapView {
 
     private drawStations(subwayMap: SubwayMap): void {
         for (let i = 0; i < subwayMap.stations.length; i++) {
-            this.drawStation(subwayMap.stations[i]);
+            let station = subwayMap.stations[i];
+            let shape = this.stationsManager.process(station);
+            this.canvas.appendChild(shape);
         }
     }
 
     private drawLabels(subwayMap: SubwayMap): void {
         for (let i = 0; i < subwayMap.stations.length; i++) {
-            this.drawLabel(subwayMap.stations[i]);
-        }
-    }
-
-    private drawStation(station: Station): void {
-        let shapeInfo = this.stationsManager.process(station);
-        this.storeOccupiedCells(shapeInfo.cells.values())
-        this.canvas.appendChild(shapeInfo.shape);
-    }
-
-    private drawLabel(station: Station): void {
-        let stationBounds = this.stationsManager.getBounds(station.id);
-        let labelInfo = this.labelsManager.process(station.label, stationBounds);
-
-        this.storeOccupiedCells(labelInfo.cells.values());
-        this.canvas.appendChild(labelInfo.labelText);
-    }
-
-    private storeOccupiedCells(cells: IterableIterator<string>): void {
-        for (let cell of cells) {
-            this.occupiedCells.add(cell);
+            let station = subwayMap.stations[i];
+            let stationBounds = this.stationsManager.getBounds(station.id);
+            let label = this.labelsManager.process(station.label, stationBounds);
+            this.canvas.appendChild(label);
         }
     }
 

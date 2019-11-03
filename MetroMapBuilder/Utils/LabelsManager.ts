@@ -3,26 +3,32 @@ import { StationBounds } from "./StationsManager";
 import { Label } from "../Models/StationModel";
 import { SVG } from "./SVG";
 
-export type LabelInfo = {
-    labelText: SVGTextElement,
-    cells: string[]
-}
-
 export class LabelsManager {
+    private occupiedCells: Set<string> = new Set<string>();
+
     public constructor(private geometry: Geometry, private isCellAvailable: (point: Point) => boolean) {
 
     }
 
-    public process(label: Label, station: StationBounds): LabelInfo {
+    public clear() {
+        this.occupiedCells.clear();
+    }
+
+    public process(label: Label, station: StationBounds): SVGTextElement {
 
         let position = this.calculateLabelPosition(label, station);
         label.setCoordinates(position.x, position.y);
         let labelStart = this.geometry.baselinePoint(position);
 
         let labelText = SVG.labelText(labelStart, this.geometry.fontSize, this.geometry.cellSize, label.name, label.id);
-        let cells = this.getCellsOccupiedByLabel(label);
+        this.saveCellsOccupiedByLabel(label);
 
-        return { labelText, cells };
+        return labelText;
+    }
+
+    public noLabelSet(cell: Point): boolean {
+        let key = `${cell.x}-${cell.y}`;
+        return !this.occupiedCells.has(key);
     }
 
     private calculateLabelPosition(label: Label, station: StationBounds): Point {
@@ -219,16 +225,14 @@ export class LabelsManager {
         return true;
     }
 
-    private getCellsOccupiedByLabel(label: Label): string[] {
-        let result = [];
+    private saveCellsOccupiedByLabel(label: Label): void {
         let labelWidth = this.geometry.labelWidthInCells(label.width);
         for (let dx = 0; dx < labelWidth; dx++) {
             for (let dy = 0; dy < label.height; dy++) {
                 let x = label.x + dx;
                 let y = label.y + dy;
-                result.push(`${x}-${y}`);
+                this.occupiedCells.add(`${x}-${y}`);
             }
         }
-        return result;
     }
 }
