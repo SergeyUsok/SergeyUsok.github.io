@@ -156,6 +156,7 @@ export class StationsController extends ErrorController {
         // if the cell does not contain another station but still occupied by something else show an error
         else if (event.target instanceof SVGSVGElement ||
                 event.target instanceof SVGLineElement ||
+                event.target instanceof SVGPathElement ||
                 event.target instanceof SVGTextPositioningElement) {
             this.showError(Strings.occupiedCellError());
         }

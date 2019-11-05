@@ -79,6 +79,7 @@ export class RoutesController extends ErrorController {
     private addConnection(event: MouseEvent): void {
         if (event.target instanceof SVGSVGElement ||
             event.target instanceof SVGLineElement ||
+            event.target instanceof SVGPathElement ||
             event.target instanceof SVGTextPositioningElement) {
             return; // nothing to do if canvas, any line (grid or route) or text label was clicked
         }

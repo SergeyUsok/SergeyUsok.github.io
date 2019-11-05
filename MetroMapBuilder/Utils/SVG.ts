@@ -41,7 +41,7 @@ export class SVG {
         return line;
     }
 
-    public static routeConnection(start: Point, finish: Point): SVGLineElement {
+    public static straightConnection(start: Point, finish: Point): SVGLineElement {
         let line = document.createElementNS("http://www.w3.org/2000/svg", 'line');
         line.setAttribute('x1', start.x.toString());
         line.setAttribute('y1', start.y.toString());
@@ -50,24 +50,17 @@ export class SVG {
         return line;
     }
 
-    public static gridGroup(id: string) {
-        let group = document.createElementNS("http://www.w3.org/2000/svg", 'g');
-        group.setAttribute('id', id);
-        group.setAttribute('stroke', '#4e4e4e');
-        group.setAttribute('stroke-width', '0.5');
-        group.setAttribute('visibility', 'visible');
-        return group;
+    public static curveConnection(start: Point, finish: Point, controlPoint: Point): SVGPathElement {
+        let path = document.createElementNS("http://www.w3.org/2000/svg", 'path');
+        let d = `M${start.x},${start.y} Q${controlPoint.x},${controlPoint.y} ${finish.x},${finish.y}`;
+        path.setAttribute('d', d);
+        path.setAttribute('fill', 'none');
+        return path;
     }
 
-    public static createGroup(attrs: object) {
-        let group = document.createElementNS("http://www.w3.org/2000/svg", 'g');
-        
+    public static createGroup(attrs: object): SVGGElement {
+        let group = document.createElementNS("http://www.w3.org/2000/svg", 'g');        
         Object.keys(attrs).forEach(prop => group.setAttribute(`${prop}`, `${attrs[prop]}`));
-
-        //id: string, lineWidth: number, color: string
-        //group.setAttribute('id', id);
-        //group.setAttribute('stroke', color);
-        //group.setAttribute('stroke-width', <any>lineWidth);
         return group;
     }
 

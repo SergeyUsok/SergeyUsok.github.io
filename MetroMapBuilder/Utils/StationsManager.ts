@@ -3,7 +3,7 @@ import { Geometry, Point } from "./Geometry";
 import { Station } from "../Models/StationModel";
 import { SVG } from "./SVG";
 
-type StationMetadata = {
+type StationInfo = {
     count: number,
     direction: Direction,
     angle: number
@@ -33,7 +33,7 @@ export class StationBounds {
 }
 
 export class StationsManager {
-    private metadataMap: Map<number, StationMetadata[]> = new Map<number, StationMetadata[]>();
+    private stationInfoMap: Map<number, StationInfo[]> = new Map<number, StationInfo[]>();
     private shapeMap: Map<number, StationBounds> = new Map<number, StationBounds>();
     private occupiedCells: Map<number, Set<string>> = new Map < number, Set<string>>();
 
@@ -42,7 +42,7 @@ export class StationsManager {
     }
 
     public clear(): void {
-        this.metadataMap.clear();
+        this.stationInfoMap.clear();
         this.shapeMap.clear();
         this.occupiedCells.clear();
     }
@@ -51,8 +51,8 @@ export class StationsManager {
         return this.shapeMap.get(id);
     }
 
-    public addMetadata(connection: Connection) {        
-        let metadata = this.createMetadata(connection);
+    public processConnection(connection: Connection): void {        
+        let metadata = this.extractStationInfo(connection);
 
         // process 'from' station
         let data = this.getStationData(connection.from.id);
@@ -64,7 +64,7 @@ export class StationsManager {
     }
 
     public process(station: Station): SVGGraphicsElement {
-        let metadata = this.metadataMap.get(station.id);
+        let metadata = this.stationInfoMap.get(station.id);
         let center = this.geometry.centrify(station);
 
         // draw station without lines as cicrle
@@ -94,12 +94,12 @@ export class StationsManager {
         // otherwise draw station as rectangle
         // let maximum lines count passing through station be width of rect
         let metadataWithMaxCount = metadata[0];
-        let width = this.getWidth(metadataWithMaxCount);
+        let width = this.calculateWidth(metadataWithMaxCount);
         let secondAfterMaxMetadata = metadata[1];
-        let height = this.getHeight(secondAfterMaxMetadata);
+        let height = this.calculateHeight(secondAfterMaxMetadata);
 
         // station rect should be ortogonal to the angle of passing connection
-        let rotation = metadataWithMaxCount.angle - 90;
+        let rotation = 360 + metadataWithMaxCount.angle - 90;
 
         let corners = this.geometry.rectCorners(center, width, height);
         let rect = SVG.rectStation(corners[0], width, height, rotation, this.geometry.cornerRadius, center, `station-${station.id}`, station.id);
@@ -139,7 +139,7 @@ export class StationsManager {
         return true;
     }
 
-    private createMetadata(connection: Connection): StationMetadata {
+    private extractStationInfo(connection: Connection): StationInfo {
         return {
             count: connection.routesCount,
             direction: connection.direction,
@@ -147,32 +147,32 @@ export class StationsManager {
         };
     }
 
-    private getWidth(metadata: StationMetadata): number {
-        let calculatedWidth = this.geometry.distanceOfParallelLines(metadata.count) +
+    private calculateWidth(info: StationInfo): number {
+        let calculatedWidth = this.geometry.distanceOfParallelLines(info.count) +
             (this.geometry.distanceBetweenLines * 2); // add additional space equal to distanceBetweenLines from both sides of rect
         return calculatedWidth > this.geometry.cellSize ?
             calculatedWidth : this.geometry.cellSize; // minimum rect width shouldn't be less than cell size
     }
 
-    private getHeight(metadata: StationMetadata): number {
-        if (metadata == undefined)
+    private calculateHeight(info: StationInfo): number {
+        if (info == undefined)
             return this.geometry.cellSize;
 
-        let calculatedHeight = this.geometry.distanceOfParallelLines(metadata.count) +
+        let calculatedHeight = this.geometry.distanceOfParallelLines(info.count) +
             (this.geometry.distanceBetweenLines * 2); // add additional space equal to distanceBetweenLines from both sides of rect
         return calculatedHeight > this.geometry.cellSize ? calculatedHeight : this.geometry.cellSize;
     }
 
-    private getStationData(id: number): StationMetadata[] {
-        if (!this.metadataMap.has(id)) {
-            this.metadataMap.set(id, []);
+    private getStationData(id: number): StationInfo[] {
+        if (!this.stationInfoMap.has(id)) {
+            this.stationInfoMap.set(id, []);
         }
-        return this.metadataMap.get(id);
+        return this.stationInfoMap.get(id);
     }
 
-    private pushIfMissing(stored: StationMetadata[], newData: StationMetadata): void {
+    private pushIfMissing(stored: StationInfo[], newData: StationInfo): void {
         for (let i = 0; i < stored.length; i++) {
-            if (stored[i].direction == newData.direction) {
+            if (stored[i].direction == newData.direction && Math.abs(stored[i].angle - newData.angle) <= 45) {
                 if (stored[i].count < newData.count) {
                     stored[i] = newData;
                 }

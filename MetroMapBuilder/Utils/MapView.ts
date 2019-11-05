@@ -5,16 +5,17 @@ import { Route } from "../Models/Route";
 import { Geometry, Segment, Point } from "./Geometry";
 import { StationsManager } from "./StationsManager";
 import { LabelsManager } from "./LabelsManager";
+import { RoutesManager } from "./RoutesManager";
 
 export class MapView {
-    private cellsOccupiedByLines: Set<string> = new Set<string>();
-
+    private routesManager: RoutesManager;
     private stationsManager: StationsManager;
     private labelsManager: LabelsManager;
     private gridElementId: string = "grid";
 
     public constructor(private canvas: SVGSVGElement, private geometry: Geometry) {
         this.stationsManager = new StationsManager(geometry);
+        this.routesManager = new RoutesManager(geometry, (c) => this.stationsManager.processConnection(c));
         this.labelsManager = new LabelsManager(geometry, p => this.isCellFullyAvailable(p));
     }
 
@@ -30,14 +31,14 @@ export class MapView {
 
     public isCellFullyAvailable(cell: Point): boolean {
         return this.withinBounds(cell.x, cell.y) &&
-            !this.cellsOccupiedByLines.has(`${cell.x}-${cell.y}`) &&
+            this.routesManager.noRoutePassesThrough(cell) &&
             this.stationsManager.noStationSet(cell) &&
             this.labelsManager.noLabelSet(cell);
     }
 
     public isCellFreeForDrop(cell: Point, exceptStationId: number): boolean {
         return this.withinBounds(cell.x, cell.y) &&
-            !this.cellsOccupiedByLines.has(`${cell.x}-${cell.y}`) &&
+            this.routesManager.noRoutePassesThrough(cell, exceptStationId) &&
             this.stationsManager.noStationSet(cell, exceptStationId);
     }
 
@@ -45,8 +46,14 @@ export class MapView {
         let oldGrid = document.getElementById(this.gridElementId);
         if (oldGrid != null)
             oldGrid.remove();
-
-        let gridContainer = SVG.gridGroup(this.gridElementId);
+        
+        let attrs = {
+            'id': this.gridElementId,
+            'stroke': '#4e4e4e',
+            'stroke-width': '0.5',
+            'visibility': 'visible'
+        };
+        let gridContainer = SVG.createGroup(attrs);
         // draw vertical lines
         let index = 0;
         for (let x = 0; x <= this.canvas.width.baseVal.value; x += this.geometry.cellSize) {
@@ -182,64 +189,8 @@ export class MapView {
         }
     }
 
-    private drawRoute(route: Route) {
-        let routeParent = SVG.createGroup({ id: `route-${route.id}`, "stroke-width": this.geometry.lineWidth });
-        let colorGroupes = [SVG.createGroup({ stroke: route.color[0] })];
-
-        // case for 2-colored lines
-        if (route.color.length == 2) {
-            let group = SVG.createGroup({ stroke: route.color[1], "stroke-dasharray": `${this.geometry.cellSize/2}` });
-            colorGroupes.push(group);
-        }
-
-        for (let connection of route.getConnections()) {
-            let from = this.geometry.centrify(connection.from);
-            let to = this.geometry.centrify(connection.to);
-            this.stationsManager.addMetadata(connection);
-
-            let offset = this.calculateOffset(connection, route);
-            let segment = this.geometry.offsetConnection(from, to, offset);
-
-            for (let i = 0; i < colorGroupes.length; i++) {
-                let parent = colorGroupes[i];
-                this.drawConnection(parent, segment);
-            }
-
-            this.storeCellsOccupiedByLine(segment, connection.direction);
-        }
-
-        for (let i = 0; i < colorGroupes.length; i++) {
-            let colorGroup = colorGroupes[i];
-            routeParent.appendChild(colorGroup);
-        }
-
-        // insert routes after Grid BUT before stations
-        this.canvas.firstChild.after(routeParent);
-    }
-    
-    private storeCellsOccupiedByLine(segment: Segment, direction: Direction) {
-        for (let point of this.geometry.digitalDiffAnalyzer(segment, direction)) {
-            let key = `${point.x}-${point.y}`;
-            this.cellsOccupiedByLines.add(key);
-        }
-    }
-
-    private drawConnection(routeParent: SVGGElement, segment: Segment) {
-        let svgLine = SVG.routeConnection(segment.from, segment.to);
-        routeParent.appendChild(svgLine);
-    }
-
-    private calculateOffset(connection: Connection, route: Route) {
-        let fullDistance = this.geometry.distanceOfParallelLines(connection.routesCount);
-        let radius = fullDistance / 2; // we need the half of distance because we draw lines by offsetting them by BOTH sides of central point
-
-        let offsetFactor = connection.routeOrder(route);
-
-        return (-radius + this.geometry.halfOfLineWidth) + (offsetFactor * (this.geometry.lineWidth + this.geometry.distanceBetweenLines));
-    }
-
     private eraseMap(): void {
-        this.cellsOccupiedByLines.clear();
+        this.routesManager.clear();
         this.stationsManager.clear();
         this.labelsManager.clear();
 
@@ -251,7 +202,9 @@ export class MapView {
 
     private drawRoutes(subwayMap: SubwayMap): void {
         for (let i = 0; i < subwayMap.routes.length; i++) {
-            this.drawRoute(subwayMap.routes[i]);
+            let routeParent = this.routesManager.process(subwayMap.routes[i]);
+            // insert routes after Grid BUT before stations
+            this.canvas.firstChild.after(routeParent);
         }
     }
 

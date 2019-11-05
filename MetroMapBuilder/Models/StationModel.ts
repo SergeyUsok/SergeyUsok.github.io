@@ -1,9 +1,11 @@
 ﻿import { Strings } from "../Utils/Strings";
+import { Direction } from "./ConnectionModel";
 
 export class Station {
     private _label: Label = null;
-
-    public constructor(private _id: number, public x: number, public y: number) {
+    private subscribers: Map<string, () => void> = new Map<string, () => void>();
+    
+    public constructor(private _id: number, private _x: number, private _y: number) {
         this._label = new Label(_id, Strings.defaultLabel(_id));
     }
     public get id(): number {
@@ -11,7 +13,32 @@ export class Station {
     }
     public get label(): Label {
         return this._label;
-    }    
+    }
+    public get x(): number {
+        return this._x;
+    }
+    public set x(value: number) {
+        this._x = value;
+        this.notifyAll();
+    }
+    public get y(): number {
+        return this._y;
+    }
+    public set y(value: number) {
+        this._y = value;
+        this.notifyAll();
+    }
+    public onPositionChanged(connectionId: string, callback: () => void) {
+        this.subscribers.set(connectionId, callback);
+    }
+    public unsubscribe(connectionId: string): void {
+        this.subscribers.delete(connectionId);
+    }
+    private notifyAll(): void {
+        for (let callback of this.subscribers.values()) {
+            callback();
+        }
+    }
 }
 
 export class Label {

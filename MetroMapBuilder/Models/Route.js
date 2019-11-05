@@ -27,6 +27,14 @@ define(["require", "exports", "../Utils/Strings"], function (require, exports, S
                 yield this.connectionCache.get(from, to);
             }
         }
+        *getConnectionsInfo() {
+            let result = Array.from(this.getConnections());
+            for (let i = 0; i < result.length; i++) {
+                let prev = i - 1 >= 0 ? result[i - 1].direction : null;
+                let next = i + 1 < result.length ? result[i + 1].direction : null;
+                yield { data: result[i], next, prev };
+            }
+        }
         passesThrough(station) {
             return this._stations.indexOf(station) > -1;
         }

@@ -1,6 +1,12 @@
 ﻿import { Station } from "./StationModel";
-import { Connection, ConnectionsManager } from "./ConnectionModel";
+import { Connection, ConnectionsManager, Direction } from "./ConnectionModel";
 import { Strings } from "../Utils/Strings";
+
+export type ConnectionInfo = {
+    data: Connection,
+    next: Direction,
+    prev: Direction
+}
 
 export class Route {
     private _stations: Station[] = [];
@@ -26,11 +32,20 @@ export class Route {
         return this._stations;
     }
 
-    public *getConnections(): IterableIterator<Connection> {
+    public *getConnections(): IterableIterator<Connection> {        
         for (let i = 0; i < this._stations.length - 1; i++) {
             let from = this._stations[i];
             let to = this._stations[i + 1];
             yield this.connectionCache.get(from, to);
+        }
+    }
+
+    public * getConnectionsInfo(): IterableIterator<ConnectionInfo> {
+        let result = Array.from(this.getConnections());
+        for (let i = 0; i < result.length; i++) {
+            let prev = i - 1 >= 0 ? result[i - 1].direction : null;
+            let next = i + 1 < result.length ? result[i + 1].direction : null;
+            yield { data: result[i], next, prev };
         }
     }
 

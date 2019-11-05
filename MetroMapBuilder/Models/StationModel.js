@@ -2,11 +2,12 @@ define(["require", "exports", "../Utils/Strings"], function (require, exports, S
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     class Station {
-        constructor(_id, x, y) {
+        constructor(_id, _x, _y) {
             this._id = _id;
-            this.x = x;
-            this.y = y;
+            this._x = _x;
+            this._y = _y;
             this._label = null;
+            this.subscribers = new Map();
             this._label = new Label(_id, Strings_1.Strings.defaultLabel(_id));
         }
         get id() {
@@ -14,6 +15,31 @@ define(["require", "exports", "../Utils/Strings"], function (require, exports, S
         }
         get label() {
             return this._label;
+        }
+        get x() {
+            return this._x;
+        }
+        set x(value) {
+            this._x = value;
+            this.notifyAll();
+        }
+        get y() {
+            return this._y;
+        }
+        set y(value) {
+            this._y = value;
+            this.notifyAll();
+        }
+        onPositionChanged(connectionId, callback) {
+            this.subscribers.set(connectionId, callback);
+        }
+        unsubscribe(connectionId) {
+            this.subscribers.delete(connectionId);
+        }
+        notifyAll() {
+            for (let callback of this.subscribers.values()) {
+                callback();
+            }
         }
     }
     exports.Station = Station;

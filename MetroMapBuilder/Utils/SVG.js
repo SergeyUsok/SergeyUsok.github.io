@@ -37,7 +37,7 @@ define(["require", "exports"], function (require, exports) {
             line.setAttribute("id", id);
             return line;
         }
-        static routeConnection(start, finish) {
+        static straightConnection(start, finish) {
             let line = document.createElementNS("http://www.w3.org/2000/svg", 'line');
             line.setAttribute('x1', start.x.toString());
             line.setAttribute('y1', start.y.toString());
@@ -45,21 +45,16 @@ define(["require", "exports"], function (require, exports) {
             line.setAttribute('y2', finish.y.toString());
             return line;
         }
-        static gridGroup(id) {
-            let group = document.createElementNS("http://www.w3.org/2000/svg", 'g');
-            group.setAttribute('id', id);
-            group.setAttribute('stroke', '#4e4e4e');
-            group.setAttribute('stroke-width', '0.5');
-            group.setAttribute('visibility', 'visible');
-            return group;
+        static curveConnection(start, finish, controlPoint) {
+            let path = document.createElementNS("http://www.w3.org/2000/svg", 'path');
+            let d = `M${start.x},${start.y} Q${controlPoint.x},${controlPoint.y} ${finish.x},${finish.y}`;
+            path.setAttribute('d', d);
+            path.setAttribute('fill', 'none');
+            return path;
         }
         static createGroup(attrs) {
             let group = document.createElementNS("http://www.w3.org/2000/svg", 'g');
             Object.keys(attrs).forEach(prop => group.setAttribute(`${prop}`, `${attrs[prop]}`));
-            //id: string, lineWidth: number, color: string
-            //group.setAttribute('id', id);
-            //group.setAttribute('stroke', color);
-            //group.setAttribute('stroke-width', <any>lineWidth);
             return group;
         }
         static rectStation(topLeft, width, height, angle, cornerRadius, fulcrum, id, dataId) {

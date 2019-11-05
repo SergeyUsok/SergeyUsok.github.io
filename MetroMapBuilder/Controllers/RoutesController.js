@@ -63,6 +63,7 @@ define(["require", "exports", "./ErrorController", "../Utils/Strings"], function
         addConnection(event) {
             if (event.target instanceof SVGSVGElement ||
                 event.target instanceof SVGLineElement ||
+                event.target instanceof SVGPathElement ||
                 event.target instanceof SVGTextPositioningElement) {
                 return; // nothing to do if canvas, any line (grid or route) or text label was clicked
             }

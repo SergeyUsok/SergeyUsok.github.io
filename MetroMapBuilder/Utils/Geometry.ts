@@ -131,12 +131,12 @@ export class Geometry {
     public angle(a: Point, b: Point): number {
         let dy = b.y - a.y;
         let dx = b.x - a.x;
-        let theta = Math.atan(dy / dx);
-        theta *= 180 / Math.PI; // range [-90, 90]
-        return theta;        
-        //let theta = Math.atan2(dy, dx); // range (-PI, PI]
-        //theta *= 180 / Math.PI; // rads to degs, range (-180, 180]        
-        //return theta < 0 ? 360 + theta : theta;
+        //let theta = Math.atan(dy / dx);
+        //theta *= 180 / Math.PI;
+        //return theta;        
+        let theta = Math.atan2(dy, dx); // range (-PI, PI]
+        theta *= 180 / Math.PI; // rads to degs, range (-180, 180]        
+        return theta < 0 ? 360 + theta : theta;
     }
 
     public centrify(point: Point): Point {
