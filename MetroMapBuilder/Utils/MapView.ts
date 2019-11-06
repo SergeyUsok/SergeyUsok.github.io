@@ -1,8 +1,7 @@
 ﻿import { SVG } from "./SVG";
 import { SubwayMap } from "../Models/SubwayMap";
-import { Connection, Direction } from "../Models/ConnectionModel";
 import { Route } from "../Models/Route";
-import { Geometry, Segment, Point } from "./Geometry";
+import { Geometry, Point } from "./Geometry";
 import { StationsManager } from "./StationsManager";
 import { LabelsManager } from "./LabelsManager";
 import { RoutesManager } from "./RoutesManager";

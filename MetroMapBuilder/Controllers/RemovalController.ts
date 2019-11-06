@@ -47,26 +47,26 @@ export class RemovalController {
 
     private buildMenu(target: Element): HTMLElement {
         let station = this.getStation(target);
-        let route = this.subwayMap.currentRoute;
-
-        let hasConnections = route != null && route.passesThrough(station);
-        let disabled = hasConnections ? "" : " disabled";
-        let color = hasConnections ? ` style='color: ${route.color[0]}'` : "";
-
+        
         let menuTemplate = `<div class='dropdown-menu show' id='stationMenu'>` +
             `<button class='dropdown-item' type='button'>Remove station</button>` +
-            `<div class='dropdown-divider'></div>` +
-            `<button class='dropdown-item${disabled}' type='button'${color}>Remove from current route</button>` +
-            "</div>";
+            `<div class='dropdown-divider'></div>`;
+
+        for (let route of this.subwayMap.routes.filter(r => r.passesThrough(station))) {
+            menuTemplate += `<button class='dropdown-item' type='button' data-id='${route.id}' ` +
+                            `style='color: ${route.color[0]}'>Remove from route ${route.id}</button>`;
+        }
+
+        menuTemplate += "</div>";
 
         let temp = document.createElement('div');
         temp.innerHTML = menuTemplate;
         let menu = temp.firstElementChild;
 
-        return this.addEventHandlers(menu, station, route);
+        return this.addEventHandlers(menu, station);
     }
 
-    private addEventHandlers(menu: Element, targetStation: Station, route: Route): HTMLElement {
+    private addEventHandlers(menu: Element, targetStation: Station): HTMLElement {
 
         // remove station menu item
         menu.children[0].addEventListener("click", () => {
@@ -76,13 +76,15 @@ export class RemovalController {
 
         // menu.children[1] -- is divider line
 
-        // remove connection - item
-        menu.children[2].addEventListener("click", () => {
-            if (route != null) {
-                this.subwayMap.removeConnection(route, targetStation);
-                this.mapView.redrawMap(this.subwayMap);
+        if (menu.children.length > 2) {            
+            for (let i = 2; i < menu.children.length; i++) {
+                menu.children[i].addEventListener("click", e => {
+                    let route = this.subwayMap.getRoute(this.mapView.getId(e.target as Element));
+                    this.subwayMap.removeConnection(route, targetStation);
+                    this.mapView.redrawMap(this.subwayMap);
+                });
             }
-        });
+        }       
 
         return <HTMLElement>menu;
     }
