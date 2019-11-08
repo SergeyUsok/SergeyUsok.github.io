@@ -49,7 +49,7 @@ export class Strings {
     }
 
     public static occupiedCellError(): string {
-        return "Clicked cell is not available for station set up because it is occupied by line, label or it is placed too much close to another station"
+        return "Clicked cell is not available for station set up because it is occupied by line, label or it is placed too close to another station"
     }
 
     public static isNullOrWhitespace(input) {

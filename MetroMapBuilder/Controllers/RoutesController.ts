@@ -97,7 +97,7 @@ export class RoutesController extends ErrorController {
         }
         else {
             this.showError(result.error);
-        }     
+        }
     }
 
     private addControlPanel(route: Route): void {
@@ -113,7 +113,7 @@ export class RoutesController extends ErrorController {
         });
 
         let colorsControl = <HTMLInputElement>clone.querySelector("input[type=text]");
-        colorsControl.value = route.color[0];
+        colorsControl.value = route.color.join("/");
         colorsControl.addEventListener("input", () => {
             let enteredColor = colorsControl.value.toLowerCase();
             let colors = (enteredColor || "").split("/");

@@ -133,30 +133,16 @@ export class MapView {
     }
 
     public selectRoute(route: Route): void {
-        if (route.first == null)
-            return;
-
-        let stationElement = document.getElementById(`station-${route.first.id}`);
-        if (!stationElement.classList.contains("selected"))
-            stationElement.classList.add("selected");
-
-        for (let conn of route.getConnections()) {
-            let stationElement = document.getElementById(`station-${conn.to.id}`);
+        for (let station of route.getStations()) {
+            let stationElement = document.getElementById(`station-${station.id}`);
             if (!stationElement.classList.contains("selected"))
                 stationElement.classList.add("selected");
         }
     }
 
     public deselectRoute(route: Route): void {
-        if (route.first == null)
-            return;
-
-        let stationElement = document.getElementById(`station-${route.first.id}`);
-        if (stationElement.classList.contains("selected"))
-            stationElement.classList.remove("selected");
-
-        for (let conn of route.getConnections()) {
-            let stationElement = document.getElementById(`station-${conn.to.id}`);
+        for (let station of route.getStations()) {
+            let stationElement = document.getElementById(`station-${station.id}`);
             if (stationElement.classList.contains("selected"))
                 stationElement.classList.remove("selected");
         }

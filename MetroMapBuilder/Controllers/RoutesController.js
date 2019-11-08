@@ -91,7 +91,7 @@ define(["require", "exports", "./ErrorController", "../Utils/Strings"], function
                 e.stopPropagation();
             });
             let colorsControl = clone.querySelector("input[type=text]");
-            colorsControl.value = route.color[0];
+            colorsControl.value = route.color.join("/");
             colorsControl.addEventListener("input", () => {
                 let enteredColor = colorsControl.value.toLowerCase();
                 let colors = (enteredColor || "").split("/");
