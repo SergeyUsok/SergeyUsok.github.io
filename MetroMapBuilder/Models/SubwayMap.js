@@ -45,9 +45,7 @@ define(["require", "exports", "./StationModel", "./Route", "./ConnectionModel", 
             }
         }
         removeRoute(route) {
-            for (let connection of route.getConnections()) {
-                this.connectionsCache.remove(connection.from, connection.to, route);
-            }
+            this.connectionsCache.removeEntireRoute(route);
             let index = this.routes.indexOf(route);
             if (index > -1)
                 this.routes.splice(index, 1);

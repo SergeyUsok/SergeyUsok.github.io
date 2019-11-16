@@ -10,7 +10,7 @@
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <DebugType>full</DebugType>
     <DebugSymbols>true</DebugSymbols>
-    <TypeScriptToolsVersion>3.4</TypeScriptToolsVersion>
+    <TypeScriptToolsVersion>3.6</TypeScriptToolsVersion>
     <UseIISExpress>true</UseIISExpress>
     <IISExpressSSLPort />
     <IISExpressAnonymousAuthentication />
@@ -45,6 +45,7 @@
     <TypeScriptCompile Include="Models\SubwayMap.ts" />
     <TypeScriptCompile Include="Utils\Geometry.ts" />
     <TypeScriptCompile Include="Controllers\StationsController.ts" />
+    <TypeScriptCompile Include="Utils\RoutePrioritizer.ts" />
     <TypeScriptCompile Include="Utils\RoutesManager.ts" />
     <TypeScriptCompile Include="Utils\StationsManager.ts" />
     <TypeScriptCompile Include="Utils\Strings.ts" />

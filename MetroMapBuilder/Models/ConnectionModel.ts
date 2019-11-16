@@ -3,10 +3,10 @@ import { Route } from "./Route";
 import { Strings } from "../Utils/Strings";
 
 export class ConnectionsManager {
-    
-    private connections: Map<string, Connection> = new Map<string, Connection>();
+    // map of connection between 2 stations. i.e "1-2" to number of Route Ids passing through this connection
+    private connections: Map<string, Set<number>> = new Map<string, Set<number>>();
 
-    public get(from: Station, to: Station): Connection {
+    public get(from: Station, to: Station): Set<number> {
         let key = this.getKey(from, to);
 
         if (!this.connections.has(key)) {
@@ -20,16 +20,17 @@ export class ConnectionsManager {
         let key = this.getKey(from, to);
 
         if (this.connections.has(key)) {
-            let connection = this.connections.get(key);
-            return connection.addPassingRoute(route);
+            let connectionInfo = this.connections.get(key);
+            if (connectionInfo.has(route.id)) // connection already exists
+                return false;
+            connectionInfo.add(route.id);
         }
         else {
-            let connection = new Connection(from, to);
-            this.connections.set(key, connection);
-            from.onPositionChanged(key, () => connection.refresh());
-            to.onPositionChanged(key, () => connection.refresh());
-            return connection.addPassingRoute(route);
+            let connectionInfo = new Set<number>();
+            connectionInfo.add(route.id);
+            this.connections.set(key, connectionInfo);
         }
+        return true;
     }
 
     public remove(from: Station, to: Station, route: Route): void {
@@ -39,13 +40,19 @@ export class ConnectionsManager {
             return;
         }
 
-        let connection = this.connections.get(key);
-        connection.removePassingRoute(route);
+        let connectionInfo = this.connections.get(key);
+        connectionInfo.delete(route.id);
 
-        if (connection.routesCount == 0) {
-            from.unsubscribe(key);
-            to.unsubscribe(key);
+        if (connectionInfo.size == 0) {
             this.connections.delete(key);
+        }
+    }
+
+    public removeEntireRoute(route: Route): void {
+        for (let key of this.connections.keys()) {
+            let routes = this.connections.get(key);
+            if (routes.delete(route.id) && routes.size == 0)
+                this.connections.delete(key);
         }
     }
 
@@ -63,11 +70,16 @@ export class ConnectionsManager {
 }
 
 export class Connection {
-    private passingRoutes: Route[] = [];
     private _direction: Direction;
+    private _next: Connection = null;
+    private _prev: Connection = null;
 
-    public constructor(private _from: Station, private _to: Station) {
+    public constructor(private _from: Station, private _to: Station, private _passingRoutes: Set<number>, prev: Connection) {
         this._direction = this.determineDirection(_from, _to);
+        if (prev != null) {
+            this._prev = prev;
+            this._prev.addNext(this);
+        }
     }
 
     public get direction(): Direction {
@@ -82,34 +94,18 @@ export class Connection {
         return this._to;
     }
 
-    public get routesCount(): number {
-        return this.passingRoutes.length;
+    public get prev() {
+        return this._prev;
     }
 
-    public addPassingRoute(route: Route): boolean {
-        if (this.passingRoutes.indexOf(route) <= -1) {
-            this.passingRoutes.push(route);
-            return true;
-        }
-        return false;
+    public get next() {
+        return this._next;
     }
 
-    public removePassingRoute(route: Route): void {
-        let index = this.passingRoutes.indexOf(route);
-        if (index > -1) {
-            this.passingRoutes.splice(index, 1);
-        }
+    public get passingRoutes(): Set<number> {
+        return this._passingRoutes;
     }
-
-    public routeOrder(route: Route): number {
-        return this.passingRoutes.sort(function(a, b) { return a.id - b.id; })
-                   .indexOf(route);
-    }
-
-    public refresh(): void {
-        this._direction = this.determineDirection(this.from, this.to);
-    }
-
+    
     //private determineDirection(stationA: Station, stationB: Station): Direction {
     //    if (stationA.x == stationB.x && stationA.y < stationB.y)
     //        return Direction.south;
@@ -168,6 +164,10 @@ export class Connection {
         }
 
         return Direction.horizontal;
+    }
+
+    private addNext(next: Connection): void {
+        this._next = next;
     }
 }
 

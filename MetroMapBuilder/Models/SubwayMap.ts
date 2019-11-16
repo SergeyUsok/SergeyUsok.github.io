@@ -54,9 +54,7 @@ export class SubwayMap {
     }
 
     public removeRoute(route: Route): void {
-        for (let connection of route.getConnections()) {
-            this.connectionsCache.remove(connection.from, connection.to, route);
-        }
+        this.connectionsCache.removeEntireRoute(route);
 
         let index = this.routes.indexOf(route);
 

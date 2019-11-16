@@ -141,7 +141,7 @@ export class StationsManager {
 
     private extractStationInfo(connection: Connection): StationInfo {
         return {
-            count: connection.routesCount,
+            count: connection.passingRoutes.size,
             direction: connection.direction,
             angle: this.geometry.angle(connection.from, connection.to)
         };
@@ -235,7 +235,7 @@ export class StationsManager {
         bounds.isInclined = rotationAngle % 90 != 0;
         this.shapeMap.set(id, bounds);
 
-        let result = new Set();
+        let result = new Set<string>();
         for (let x = bounds.minBorderX; x <= bounds.maxBorderX; x++) {
             for (let y = bounds.minBorderY; y <= bounds.maxBorderY; y++) {
                 result.add(`${x}-${y}`);

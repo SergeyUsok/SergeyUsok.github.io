@@ -262,6 +262,7 @@ export class Geometry {
         }
     }
 
+    // Allows to take into account Line width
     private * getNormalizedPointPairs(center: Segment, direction: Direction): IterableIterator<Segment> {
         let first = firstBoundary(this.lineWidth);
         let second = secondBoundary(this.lineWidth);

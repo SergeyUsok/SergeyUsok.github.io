@@ -106,7 +106,7 @@ define(["require", "exports", "./SVG"], function (require, exports, SVG_1) {
         }
         extractStationInfo(connection) {
             return {
-                count: connection.routesCount,
+                count: connection.passingRoutes.size,
                 direction: connection.direction,
                 angle: this.geometry.angle(connection.from, connection.to)
             };

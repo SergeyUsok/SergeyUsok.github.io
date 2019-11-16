@@ -3,6 +3,7 @@ define(["require", "exports", "../Utils/Strings"], function (require, exports, S
     Object.defineProperty(exports, "__esModule", { value: true });
     class ConnectionsManager {
         constructor() {
+            // map of connection between 2 stations. i.e "1-2" to number of Route Ids passing through this connection
             this.connections = new Map();
         }
         get(from, to) {
@@ -15,28 +16,34 @@ define(["require", "exports", "../Utils/Strings"], function (require, exports, S
         add(from, to, route) {
             let key = this.getKey(from, to);
             if (this.connections.has(key)) {
-                let connection = this.connections.get(key);
-                return connection.addPassingRoute(route);
+                let connectionInfo = this.connections.get(key);
+                if (connectionInfo.has(route.id)) // connection already exists
+                    return false;
+                connectionInfo.add(route.id);
             }
             else {
-                let connection = new Connection(from, to);
-                this.connections.set(key, connection);
-                from.onPositionChanged(key, () => connection.refresh());
-                to.onPositionChanged(key, () => connection.refresh());
-                return connection.addPassingRoute(route);
+                let connectionInfo = new Set();
+                connectionInfo.add(route.id);
+                this.connections.set(key, connectionInfo);
             }
+            return true;
         }
         remove(from, to, route) {
             let key = this.getKey(from, to);
             if (!this.connections.has(key)) {
                 return;
             }
-            let connection = this.connections.get(key);
-            connection.removePassingRoute(route);
-            if (connection.routesCount == 0) {
-                from.unsubscribe(key);
-                to.unsubscribe(key);
+            let connectionInfo = this.connections.get(key);
+            connectionInfo.delete(route.id);
+            if (connectionInfo.size == 0) {
                 this.connections.delete(key);
+            }
+        }
+        removeEntireRoute(route) {
+            for (let key of this.connections.keys()) {
+                let routes = this.connections.get(key);
+                if (routes.delete(route.id) && routes.size == 0)
+                    this.connections.delete(key);
             }
         }
         clear() {
@@ -51,11 +58,17 @@ define(["require", "exports", "../Utils/Strings"], function (require, exports, S
     }
     exports.ConnectionsManager = ConnectionsManager;
     class Connection {
-        constructor(_from, _to) {
+        constructor(_from, _to, _passingRoutes, prev) {
             this._from = _from;
             this._to = _to;
-            this.passingRoutes = [];
+            this._passingRoutes = _passingRoutes;
+            this._next = null;
+            this._prev = null;
             this._direction = this.determineDirection(_from, _to);
+            if (prev != null) {
+                this._prev = prev;
+                this._prev.addNext(this);
+            }
         }
         get direction() {
             return this._direction;
@@ -66,28 +79,14 @@ define(["require", "exports", "../Utils/Strings"], function (require, exports, S
         get to() {
             return this._to;
         }
-        get routesCount() {
-            return this.passingRoutes.length;
+        get prev() {
+            return this._prev;
         }
-        addPassingRoute(route) {
-            if (this.passingRoutes.indexOf(route) <= -1) {
-                this.passingRoutes.push(route);
-                return true;
-            }
-            return false;
+        get next() {
+            return this._next;
         }
-        removePassingRoute(route) {
-            let index = this.passingRoutes.indexOf(route);
-            if (index > -1) {
-                this.passingRoutes.splice(index, 1);
-            }
-        }
-        routeOrder(route) {
-            return this.passingRoutes.sort(function (a, b) { return a.id - b.id; })
-                .indexOf(route);
-        }
-        refresh() {
-            this._direction = this.determineDirection(this.from, this.to);
+        get passingRoutes() {
+            return this._passingRoutes;
         }
         //private determineDirection(stationA: Station, stationB: Station): Direction {
         //    if (stationA.x == stationB.x && stationA.y < stationB.y)
@@ -135,6 +134,9 @@ define(["require", "exports", "../Utils/Strings"], function (require, exports, S
                     return Direction.rightDiagonal;
             }
             return Direction.horizontal;
+        }
+        addNext(next) {
+            this._next = next;
         }
     }
     exports.Connection = Connection;

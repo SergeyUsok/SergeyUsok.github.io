@@ -218,6 +218,7 @@ define(["require", "exports", "../Models/ConnectionModel"], function (require, e
                 }
             }
         }
+        // Allows to take into account Line width
         *getNormalizedPointPairs(center, direction) {
             let first = firstBoundary(this.lineWidth);
             let second = secondBoundary(this.lineWidth);

@@ -2,12 +2,6 @@
 import { Connection, ConnectionsManager, Direction } from "./ConnectionModel";
 import { Strings } from "../Utils/Strings";
 
-export type ConnectionInfo = {
-    data: Connection,
-    next: Direction,
-    prev: Direction
-}
-
 export class Route {
     private _stations: Station[] = [];
 
@@ -32,20 +26,25 @@ export class Route {
         return this._stations;
     }
 
-    public *getConnections(): IterableIterator<Connection> {        
-        for (let i = 0; i < this._stations.length - 1; i++) {
-            let from = this._stations[i];
-            let to = this._stations[i + 1];
-            yield this.connectionCache.get(from, to);
-        }
+    // todo check ring lines
+    public isReversedRelativeTo(connection: Connection): boolean {
+        return this._stations.indexOf(connection.from) > this._stations.indexOf(connection.to);
     }
 
-    public * getConnectionsInfo(): IterableIterator<ConnectionInfo> {
-        let result = Array.from(this.getConnections());
-        for (let i = 0; i < result.length; i++) {
-            let prev = i - 1 >= 0 ? result[i - 1].direction : null;
-            let next = i + 1 < result.length ? result[i + 1].direction : null;
-            yield { data: result[i], next, prev };
+    public *getConnections(reverse: boolean): IterableIterator<Connection> {        
+        let start = reverse ? this._stations.length - 1 : 0;
+        let end = reverse ? 0 : this._stations.length - 1;
+        let getNext = reverse ? n => n - 1 : n => n + 1;
+
+        let prev = null;
+        while (start != end) {
+            let from = this._stations[start];
+            let to = this._stations[getNext(start)];
+            let routes = this.connectionCache.get(from, to);
+            let current = new Connection(from, to, routes, prev);
+            yield current;
+            prev = current;
+            start = getNext(start);
         }
     }
 
@@ -80,7 +79,7 @@ export class Route {
 
         this._stations.splice(index, 1);
         this.reconnect();
-        this.removeConnection(station); // recurcive removal for ring lines
+        this.removeConnection(station); // recurcive removal for ring routes
     }
 
     private reconnect() {
