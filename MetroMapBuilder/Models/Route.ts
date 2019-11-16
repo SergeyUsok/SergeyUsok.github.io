@@ -31,7 +31,10 @@ export class Route {
         return this._stations.indexOf(connection.from) > this._stations.indexOf(connection.to);
     }
 
-    public *getConnections(reverse: boolean): IterableIterator<Connection> {        
+    public *getConnections(reverse: boolean): IterableIterator<Connection> {
+        if (this._stations.length < 2)
+            return;
+
         let start = reverse ? this._stations.length - 1 : 0;
         let end = reverse ? 0 : this._stations.length - 1;
         let getNext = reverse ? n => n - 1 : n => n + 1;
