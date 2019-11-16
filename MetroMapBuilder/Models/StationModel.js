@@ -8,7 +8,7 @@ define(["require", "exports", "../Utils/Strings"], function (require, exports, S
             this._y = _y;
             this._label = null;
             this.subscribers = new Map();
-            this._label = new Label(_id, Strings_1.Strings.defaultLabel(_id));
+            this._label = new Label(_id);
         }
         get id() {
             return this._id;
@@ -44,9 +44,9 @@ define(["require", "exports", "../Utils/Strings"], function (require, exports, S
     }
     exports.Station = Station;
     class Label {
-        constructor(_id, ...names) {
+        constructor(_id) {
             this._id = _id;
-            this.setName(...names);
+            this.setName([Strings_1.Strings.defaultLabel(_id)]);
         }
         get id() {
             return this._id;
@@ -66,7 +66,7 @@ define(["require", "exports", "../Utils/Strings"], function (require, exports, S
         get height() {
             return this._names.length;
         }
-        setName(...names) {
+        setName(names) {
             let max = 0;
             for (let i = 0; i < names.length; i++) {
                 if (max < names[i].length)

@@ -113,7 +113,7 @@ define(["require", "exports", "./ErrorController", "../Utils/Strings"], function
             // save button
             editForm.children[2].addEventListener("click", () => {
                 if (!Strings_1.Strings.isNullOrWhitespace(text.value)) {
-                    label.setName(...text.value.split(/\r\n|\r|\n/).map(s => s.trim()));
+                    label.setName(text.value.split(/\r\n|\r|\n/).map(s => s.trim()));
                     editForm.remove();
                     this.mapView.redrawMap(this.subwayMap);
                 }

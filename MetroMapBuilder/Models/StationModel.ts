@@ -6,7 +6,7 @@ export class Station {
     private subscribers: Map<string, () => void> = new Map<string, () => void>();
     
     public constructor(private _id: number, private _x: number, private _y: number) {
-        this._label = new Label(_id, Strings.defaultLabel(_id));
+        this._label = new Label(_id);
     }
     public get id(): number {
         return this._id;
@@ -47,8 +47,8 @@ export class Label {
     private _y: number;
     private _width: number;
 
-    public constructor(private _id: number, ...names: string[]) {
-        this.setName(...names);
+    public constructor(private _id: number) {
+        this.setName([Strings.defaultLabel(_id)]);
     }
 
     public get id(): number {
@@ -75,7 +75,7 @@ export class Label {
         return this._names.length;
     }
 
-    public setName(...names: string[]): void {
+    public setName(names: string[]): void {
         let max = 0;
         for (let i = 0; i < names.length; i++) {
             if (max < names[i].length)

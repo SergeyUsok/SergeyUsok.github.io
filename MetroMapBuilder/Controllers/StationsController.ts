@@ -136,7 +136,7 @@ export class StationsController extends ErrorController {
         // save button
         editForm.children[2].addEventListener("click", () => {
             if (!Strings.isNullOrWhitespace(text.value)) {
-                label.setName(...text.value.split(/\r\n|\r|\n/).map(s => s.trim()));
+                label.setName(text.value.split(/\r\n|\r|\n/).map(s => s.trim()));
                 editForm.remove();
                 this.mapView.redrawMap(this.subwayMap);
             }
