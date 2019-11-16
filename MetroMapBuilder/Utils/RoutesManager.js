@@ -45,7 +45,7 @@ define(["require", "exports", "./SVG"], function (require, exports, SVG_1) {
         }
         processOne(route, parents, routeInfoMap) {
             let reverseFlag = routeInfoMap.get(route.id).reverse;
-            for (let connection of route.getConnections(reverseFlag)) {
+            for (let connection of route.getConnections(reverseFlag).values()) {
                 let from = this.geometry.centrify(connection.from);
                 let to = this.geometry.centrify(connection.to);
                 let offset = this.calculateOffset(connection, route);

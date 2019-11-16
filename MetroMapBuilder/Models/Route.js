@@ -20,26 +20,28 @@ define(["require", "exports", "./ConnectionModel", "../Utils/Strings"], function
         getStations() {
             return this._stations;
         }
-        // todo check ring lines
+        // todo check ringed lines
         isReversedRelativeTo(connection) {
             return this._stations.indexOf(connection.from) > this._stations.indexOf(connection.to);
         }
-        *getConnections(reverse) {
+        getConnections(reverse) {
             if (this._stations.length < 2)
-                return;
+                return [];
             let start = reverse ? this._stations.length - 1 : 0;
             let end = reverse ? 0 : this._stations.length - 1;
             let getNext = reverse ? n => n - 1 : n => n + 1;
+            let result = [];
             let prev = null;
             while (start != end) {
                 let from = this._stations[start];
                 let to = this._stations[getNext(start)];
                 let routes = this.connectionCache.get(from, to);
                 let current = new ConnectionModel_1.Connection(from, to, routes, prev);
-                yield current;
+                result.push(current);
                 prev = current;
                 start = getNext(start);
             }
+            return result;
         }
         passesThrough(station) {
             return this._stations.indexOf(station) > -1;

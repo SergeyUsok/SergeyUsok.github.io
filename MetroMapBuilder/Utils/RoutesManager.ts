@@ -65,7 +65,7 @@ export class RoutesManager {
 
     private processOne(route: Route, parents: SVGElement[], routeInfoMap: Map<number, RouteInfo>) {
         let reverseFlag = routeInfoMap.get(route.id).reverse;
-        for (let connection of route.getConnections(reverseFlag)) {
+        for (let connection of route.getConnections(reverseFlag).values()) {
             let from = this.geometry.centrify(connection.from);
             let to = this.geometry.centrify(connection.to);
 

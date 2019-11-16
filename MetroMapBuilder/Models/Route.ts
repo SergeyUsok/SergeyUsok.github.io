@@ -26,18 +26,20 @@ export class Route {
         return this._stations;
     }
 
-    // todo check ring lines
+    // todo check ringed lines
     public isReversedRelativeTo(connection: Connection): boolean {
         return this._stations.indexOf(connection.from) > this._stations.indexOf(connection.to);
     }
 
-    public *getConnections(reverse: boolean): IterableIterator<Connection> {
+    public getConnections(reverse: boolean): Connection[] {
         if (this._stations.length < 2)
-            return;
+            return [];
 
         let start = reverse ? this._stations.length - 1 : 0;
         let end = reverse ? 0 : this._stations.length - 1;
         let getNext = reverse ? n => n - 1 : n => n + 1;
+
+        let result = [];
 
         let prev = null;
         while (start != end) {
@@ -45,10 +47,11 @@ export class Route {
             let to = this._stations[getNext(start)];
             let routes = this.connectionCache.get(from, to);
             let current = new Connection(from, to, routes, prev);
-            yield current;
+            result.push(current);
             prev = current;
             start = getNext(start);
         }
+        return result;
     }
 
     public passesThrough(station: Station): boolean {
