@@ -27,13 +27,13 @@ define(["require", "exports", "./SVG"], function (require, exports, SVG_1) {
             return this.shapeMap.get(id);
         }
         processConnection(connection) {
-            let metadata = this.extractStationInfo(connection);
+            let newData = this.extractStationInfo(connection);
             // process 'from' station
-            let data = this.getStationData(connection.from.id);
-            this.pushIfMissing(data, metadata);
+            let storedData = this.getStoredDataForStation(connection.from.id);
+            this.saveIfMissing(storedData, newData);
             // process 'to' station
-            data = this.getStationData(connection.to.id);
-            this.pushIfMissing(data, metadata);
+            storedData = this.getStoredDataForStation(connection.to.id);
+            this.saveIfMissing(storedData, newData);
         }
         process(station) {
             let metadata = this.stationInfoMap.get(station.id);
@@ -124,21 +124,19 @@ define(["require", "exports", "./SVG"], function (require, exports, SVG_1) {
                 (this.geometry.distanceBetweenLines * 2); // add additional space equal to distanceBetweenLines from both sides of rect
             return calculatedHeight > this.geometry.cellSize ? calculatedHeight : this.geometry.cellSize;
         }
-        getStationData(id) {
+        getStoredDataForStation(id) {
             if (!this.stationInfoMap.has(id)) {
                 this.stationInfoMap.set(id, []);
             }
             return this.stationInfoMap.get(id);
         }
-        pushIfMissing(stored, newData) {
+        saveIfMissing(stored, newData) {
             for (let i = 0; i < stored.length; i++) {
                 if (stored[i].direction == newData.direction && Math.abs(stored[i].angle - newData.angle) <= 45) {
                     if (stored[i].count < newData.count) {
                         stored[i] = newData;
                     }
-                    else {
-                        return;
-                    }
+                    return;
                 }
             }
             stored.push(newData);

@@ -52,15 +52,15 @@ export class StationsManager {
     }
 
     public processConnection(connection: Connection): void {        
-        let metadata = this.extractStationInfo(connection);
+        let newData = this.extractStationInfo(connection);
 
         // process 'from' station
-        let data = this.getStationData(connection.from.id);
-        this.pushIfMissing(data, metadata);
+        let storedData = this.getStoredDataForStation(connection.from.id);
+        this.saveIfMissing(storedData, newData);
 
         // process 'to' station
-        data = this.getStationData(connection.to.id);
-        this.pushIfMissing(data, metadata);
+        storedData = this.getStoredDataForStation(connection.to.id);
+        this.saveIfMissing(storedData, newData);
     }
 
     public process(station: Station): SVGGraphicsElement {
@@ -163,22 +163,20 @@ export class StationsManager {
         return calculatedHeight > this.geometry.cellSize ? calculatedHeight : this.geometry.cellSize;
     }
 
-    private getStationData(id: number): StationInfo[] {
+    private getStoredDataForStation(id: number): StationInfo[] {
         if (!this.stationInfoMap.has(id)) {
             this.stationInfoMap.set(id, []);
         }
         return this.stationInfoMap.get(id);
     }
 
-    private pushIfMissing(stored: StationInfo[], newData: StationInfo): void {
+    private saveIfMissing(stored: StationInfo[], newData: StationInfo): void {
         for (let i = 0; i < stored.length; i++) {
             if (stored[i].direction == newData.direction && Math.abs(stored[i].angle - newData.angle) <= 45) {
                 if (stored[i].count < newData.count) {
                     stored[i] = newData;
                 }
-                else {
-                    return;
-                }
+                return;
             }
         }
         stored.push(newData);
