@@ -12,7 +12,7 @@ export class SizeSettings {
 export class SubwayMap {
     private _stations: Station[] = [];
     private _routes: Route[] = [];
-    private connectionsCache: ConnectionsManager = new ConnectionsManager();
+    private connectionsManager: ConnectionsManager = new ConnectionsManager();
     private subscribers: (() => void)[] = [];
 
     public constructor(private _sizeSettings: SizeSettings) {
@@ -41,7 +41,7 @@ export class SubwayMap {
 
     // Route API
     public newRoute(id: number): Route {
-        let newRoute = new Route(id, this.connectionsCache);
+        let newRoute = new Route(id, this.connectionsManager);
         this.routes.push(newRoute);
         return newRoute;
     }
@@ -54,7 +54,7 @@ export class SubwayMap {
     }
 
     public removeRoute(route: Route): void {
-        this.connectionsCache.removeEntireRoute(route);
+        this.connectionsManager.removeEntireRoute(route);
 
         let index = this.routes.indexOf(route);
 
@@ -63,6 +63,19 @@ export class SubwayMap {
 
         if (this.currentRoute == route)
             this.currentRoute = null;
+    }
+
+    public getOrderedRoutes(): Route[] {
+        let adjacentsCountMap = this.connectionsManager.getRouteAdjacentsMap();
+
+        // copy array in order to avoid in-place sort
+        return Array.from(this._routes).sort((a, b) => {
+            let res = adjacentsCountMap.get(a.id) - adjacentsCountMap.get(b.id);
+            if (res == 0) {
+                return a.getStations().length - b.getStations().length;
+            }
+            return res;
+        }).reverse(); // order by descending
     }
 
     // Station API
@@ -119,7 +132,7 @@ export class SubwayMap {
             };
         }
 
-        let added = this.connectionsCache.add(route.last, station, route);
+        let added = this.connectionsManager.add(route.last, station, route);
 
         if (added) {
             return {
@@ -307,6 +320,6 @@ export class SubwayMap {
         this._stations = [];
         this._routes = [];
         this.currentRoute = null;
-        this.connectionsCache.clear();
+        this.connectionsManager.clear();
     }
 }

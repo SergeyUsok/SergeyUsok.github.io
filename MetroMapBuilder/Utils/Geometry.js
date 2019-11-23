@@ -241,22 +241,30 @@ define(["require", "exports", "../Models/ConnectionModel"], function (require, e
             function firstBoundary(lineWidth) {
                 let halfOfLineWidth = lineWidth / 2;
                 switch (direction) {
-                    case ConnectionModel_1.Direction.horizontal:
+                    //case Direction.horizontal:
+                    case ConnectionModel_1.Direction.west:
+                    case ConnectionModel_1.Direction.east:
                         return {
                             from: { x: center.from.x, y: center.from.y - halfOfLineWidth },
                             to: { x: center.to.x, y: center.to.y - halfOfLineWidth }
                         };
-                    case ConnectionModel_1.Direction.vertical:
+                    //case Direction.vertical:
+                    case ConnectionModel_1.Direction.south:
+                    case ConnectionModel_1.Direction.north:
                         return {
                             from: { x: center.from.x - halfOfLineWidth, y: center.from.y },
                             to: { x: center.to.x - halfOfLineWidth, y: center.to.y }
                         };
-                    case ConnectionModel_1.Direction.leftDiagonal:
+                    //case Direction.leftDiagonal:
+                    case ConnectionModel_1.Direction.northWest:
+                    case ConnectionModel_1.Direction.southEast:
                         return {
                             from: { x: center.from.x + halfOfLineWidth, y: center.from.y - halfOfLineWidth },
                             to: { x: center.from.x + halfOfLineWidth, y: center.from.y - halfOfLineWidth }
                         };
-                    case ConnectionModel_1.Direction.rightDiagonal:
+                    //case Direction.rightDiagonal:
+                    case ConnectionModel_1.Direction.northEast:
+                    case ConnectionModel_1.Direction.southWest:
                         return {
                             from: { x: center.from.x - halfOfLineWidth, y: center.from.y - halfOfLineWidth },
                             to: { x: center.from.x - halfOfLineWidth, y: center.from.y - halfOfLineWidth }
@@ -266,22 +274,30 @@ define(["require", "exports", "../Models/ConnectionModel"], function (require, e
             function secondBoundary(lineWidth) {
                 let halfOfLineWidth = lineWidth / 2;
                 switch (direction) {
-                    case ConnectionModel_1.Direction.horizontal:
+                    //case Direction.horizontal:
+                    case ConnectionModel_1.Direction.west:
+                    case ConnectionModel_1.Direction.east:
                         return {
                             from: { x: center.from.x, y: center.from.y + halfOfLineWidth },
                             to: { x: center.to.x, y: center.to.y + halfOfLineWidth }
                         };
-                    case ConnectionModel_1.Direction.vertical:
+                    //case Direction.vertical:
+                    case ConnectionModel_1.Direction.south:
+                    case ConnectionModel_1.Direction.north:
                         return {
                             from: { x: center.from.x + halfOfLineWidth, y: center.from.y },
                             to: { x: center.to.x + halfOfLineWidth, y: center.to.y }
                         };
-                    case ConnectionModel_1.Direction.leftDiagonal:
+                    //case Direction.leftDiagonal:
+                    case ConnectionModel_1.Direction.northWest:
+                    case ConnectionModel_1.Direction.southEast:
                         return {
                             from: { x: center.from.x - halfOfLineWidth, y: center.from.y + halfOfLineWidth },
                             to: { x: center.from.x - halfOfLineWidth, y: center.from.y + halfOfLineWidth }
                         };
-                    case ConnectionModel_1.Direction.rightDiagonal:
+                    //case Direction.rightDiagonal:
+                    case ConnectionModel_1.Direction.northEast:
+                    case ConnectionModel_1.Direction.southWest:
                         return {
                             from: { x: center.from.x + halfOfLineWidth, y: center.from.y + halfOfLineWidth },
                             to: { x: center.from.x + halfOfLineWidth, y: center.from.y + halfOfLineWidth }

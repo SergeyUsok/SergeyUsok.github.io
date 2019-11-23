@@ -24,6 +24,10 @@ define(["require", "exports", "./ConnectionModel", "../Utils/Strings"], function
         isReversedRelativeTo(connection) {
             return this._stations.indexOf(connection.from) > this._stations.indexOf(connection.to);
         }
+        findConnection(connection, reverse) {
+            let connections = this.getConnections(reverse);
+            return connections.find(c => c.from == connection.from && c.to == connection.to);
+        }
         getConnections(reverse) {
             if (this._stations.length < 2)
                 return [];
@@ -36,7 +40,7 @@ define(["require", "exports", "./ConnectionModel", "../Utils/Strings"], function
                 let from = this._stations[start];
                 let to = this._stations[getNext(start)];
                 let routes = this.connectionCache.get(from, to);
-                let current = new ConnectionModel_1.Connection(from, to, routes, prev);
+                let current = new ConnectionModel_1.Connection(from, to, Array.from(routes), prev);
                 result.push(current);
                 prev = current;
                 start = getNext(start);

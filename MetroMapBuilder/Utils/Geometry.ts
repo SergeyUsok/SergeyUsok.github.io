@@ -292,22 +292,26 @@ export class Geometry {
         function firstBoundary(lineWidth: number): Segment {
             let halfOfLineWidth = lineWidth / 2;
             switch (direction) {
-                case Direction.horizontal:
+                //case Direction.horizontal:
+                case Direction.west: case Direction.east:
                     return {
                         from: { x: center.from.x, y: center.from.y - halfOfLineWidth },
                         to: { x: center.to.x, y: center.to.y - halfOfLineWidth }
                     };
-                case Direction.vertical:
+                //case Direction.vertical:
+                case Direction.south: case Direction.north:
                     return {
                         from: { x: center.from.x - halfOfLineWidth, y: center.from.y },
                         to: { x: center.to.x - halfOfLineWidth, y: center.to.y }
                     };
-                case Direction.leftDiagonal:
+                //case Direction.leftDiagonal:
+                case Direction.northWest: case Direction.southEast:
                     return {
                         from: { x: center.from.x + halfOfLineWidth, y: center.from.y - halfOfLineWidth },
                         to: { x: center.from.x + halfOfLineWidth, y: center.from.y - halfOfLineWidth }
                     };
-                case Direction.rightDiagonal:
+                //case Direction.rightDiagonal:
+                case Direction.northEast: case Direction.southWest:
                     return {
                         from: { x: center.from.x - halfOfLineWidth, y: center.from.y - halfOfLineWidth },
                         to: { x: center.from.x - halfOfLineWidth, y: center.from.y - halfOfLineWidth }
@@ -317,22 +321,26 @@ export class Geometry {
         function secondBoundary(lineWidth: number): Segment {
             let halfOfLineWidth = lineWidth / 2;
             switch (direction) {
-                case Direction.horizontal:
+                //case Direction.horizontal:
+                case Direction.west: case Direction.east:
                     return {
                         from: { x: center.from.x, y: center.from.y + halfOfLineWidth },
                         to: { x: center.to.x, y: center.to.y + halfOfLineWidth }
                     };
-                case Direction.vertical:
+                //case Direction.vertical:
+                case Direction.south: case Direction.north:
                     return {
                         from: { x: center.from.x + halfOfLineWidth, y: center.from.y },
                         to: { x: center.to.x + halfOfLineWidth, y: center.to.y }
                     };
-                case Direction.leftDiagonal:
+                //case Direction.leftDiagonal:
+                case Direction.northWest: case Direction.southEast:
                     return {
                         from: { x: center.from.x - halfOfLineWidth, y: center.from.y + halfOfLineWidth },
                         to: { x: center.from.x - halfOfLineWidth, y: center.from.y + halfOfLineWidth }
                     };
-                case Direction.rightDiagonal:
+                //case Direction.rightDiagonal:
+                case Direction.northEast: case Direction.southWest:
                     return {
                         from: { x: center.from.x + halfOfLineWidth, y: center.from.y + halfOfLineWidth },
                         to: { x: center.from.x + halfOfLineWidth, y: center.from.y + halfOfLineWidth }

@@ -141,7 +141,7 @@ export class StationsManager {
 
     private extractStationInfo(connection: Connection): StationInfo {
         return {
-            count: connection.passingRoutes.size,
+            count: connection.passingRoutes.length,
             direction: connection.direction,
             angle: this.geometry.angle(connection.from, connection.to)
         };
@@ -172,7 +172,9 @@ export class StationsManager {
 
     private saveIfMissing(stored: StationInfo[], newData: StationInfo): void {
         for (let i = 0; i < stored.length; i++) {
-            if (stored[i].direction == newData.direction && Math.abs(stored[i].angle - newData.angle) <= 45) {
+            //stored[i].direction == newData.direction
+            let isOnSameLine = Math.abs(stored[i].direction - newData.direction) <= 1; // check comment in ConnectionModel file for details
+            if (isOnSameLine && Math.abs(stored[i].angle - newData.angle) <= 45) {
                 if (stored[i].count < newData.count) {
                     stored[i] = newData;
                 }

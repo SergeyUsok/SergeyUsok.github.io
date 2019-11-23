@@ -56,6 +56,23 @@ export class ConnectionsManager {
         }
     }
 
+    public getRouteAdjacentsMap(): Map<number, number> {
+        let routeAdjacents = new Map<number, Set<number>>();
+        for (let ids of this.connections.values()) {
+            for (let id of ids) {
+                if (!routeAdjacents.has(id)) {
+                    routeAdjacents.set(id, new Set<number>());
+                }
+                ids.forEach(i => routeAdjacents.get(id).add(i));
+            }
+        }
+        let result = new Map<number, number>();
+        for (let keyValue of routeAdjacents) {
+            result.set(keyValue[0], keyValue[1].size);
+        }
+        return result;
+    }
+
     public clear(): void {
         this.connections.clear();
     }
@@ -74,7 +91,7 @@ export class Connection {
     private _next: Connection = null;
     private _prev: Connection = null;
 
-    public constructor(private _from: Station, private _to: Station, private _passingRoutes: Set<number>, prev: Connection) {
+    public constructor(private _from: Station, private _to: Station, private _passingRoutes: number[], prev: Connection) {
         this._direction = this.determineDirection(_from, _to);
         if (prev != null) {
             this._prev = prev;
@@ -102,95 +119,95 @@ export class Connection {
         return this._next;
     }
 
-    public get passingRoutes(): Set<number> {
+    public get passingRoutes(): number[] {
         return this._passingRoutes;
     }
     
-    //private determineDirection(stationA: Station, stationB: Station): Direction {
-    //    if (stationA.x == stationB.x && stationA.y < stationB.y)
-    //        return Direction.south;
-
-    //    if (stationA.x == stationB.x && stationA.y > stationB.y)
-    //        return Direction.north;
-
-    //    if (stationA.x < stationB.x && stationA.y == stationB.y)
-    //        return Direction.east;
-
-    //    if (stationA.x > stationB.x && stationA.y == stationB.y)
-    //        return Direction.west;
-
-    //    // first check diagonal drawing direction (moves from top to bottom or from bottom to top)
-    //    // from top to Bottom case
-    //    if (stationA.y < stationB.y) {
-    //        if (stationA.x > stationB.x)
-    //            return Direction.southWest;
-
-    //        if (stationA.x < stationB.x)
-    //            return Direction.southEast;
-    //    }
-    //    // from Bottom to top case
-    //    else if (stationA.y > stationB.y) {
-    //        if (stationA.x > stationB.x)
-    //            return Direction.northWest;
-
-    //        if (stationA.x < stationB.x)
-    //            return Direction.northEast;
-    //    }
-    //}
-
     private determineDirection(stationA: Station, stationB: Station): Direction {
-        if (stationA.x == stationB.x && stationA.y != stationB.y)
-            return Direction.vertical;
+        if (stationA.x == stationB.x && stationA.y < stationB.y)
+            return Direction.south;
 
-        if (stationA.x != stationB.x && stationA.y == stationB.y)
-            return Direction.horizontal;
+        if (stationA.x == stationB.x && stationA.y > stationB.y)
+            return Direction.north;
 
-        // first check if diagonal drawing direction (moves from top to bottom or from bottom to top)
+        if (stationA.x < stationB.x && stationA.y == stationB.y)
+            return Direction.east;
+
+        if (stationA.x > stationB.x && stationA.y == stationB.y)
+            return Direction.west;
+
+        // first check diagonal drawing direction (moves from top to bottom or from bottom to top)
         // from top to Bottom case
         if (stationA.y < stationB.y) {
             if (stationA.x > stationB.x)
-                return Direction.rightDiagonal;
+                return Direction.southWest;
 
             if (stationA.x < stationB.x)
-                return Direction.leftDiagonal;
+                return Direction.southEast;
         }
         // from Bottom to top case
         else if (stationA.y > stationB.y) {
             if (stationA.x > stationB.x)
-                return Direction.leftDiagonal;
+                return Direction.northWest;
 
             if (stationA.x < stationB.x)
-                return Direction.rightDiagonal;
+                return Direction.northEast;
         }
-
-        return Direction.horizontal;
     }
+
+    //private determineDirection(stationA: Station, stationB: Station): Direction {
+    //    if (stationA.x == stationB.x && stationA.y != stationB.y)
+    //        return Direction.vertical;
+
+    //    if (stationA.x != stationB.x && stationA.y == stationB.y)
+    //        return Direction.horizontal;
+
+    //    // first check if diagonal drawing direction (moves from top to bottom or from bottom to top)
+    //    // from top to Bottom case
+    //    if (stationA.y < stationB.y) {
+    //        if (stationA.x > stationB.x)
+    //            return Direction.rightDiagonal;
+
+    //        if (stationA.x < stationB.x)
+    //            return Direction.leftDiagonal;
+    //    }
+    //    // from Bottom to top case
+    //    else if (stationA.y > stationB.y) {
+    //        if (stationA.x > stationB.x)
+    //            return Direction.leftDiagonal;
+
+    //        if (stationA.x < stationB.x)
+    //            return Direction.rightDiagonal;
+    //    }
+
+    //    return Direction.horizontal;
+    //}
 
     private addNext(next: Connection): void {
         this._next = next;
     }
 }
 
-export enum Direction {
-    horizontal,
-    vertical,
-    leftDiagonal,
-    rightDiagonal
-}
-
-// the idea here is that directions laying on the same line
-// have absolute difference equal to 1, i.e. south and north both lay on vertical line
-// and have diffrence Math.abs(0-1)=1 or Math.abs(1-0)=1 
 //export enum Direction {
-//    south = 0,
-//    north = 1,
-
-//    east = 3,
-//    west = 4,
-
-//    southEast = 6,
-//    northWest = 7,
-
-//    southWest = 9,
-//    northEast = 10
+//    horizontal,
+//    vertical,
+//    leftDiagonal,
+//    rightDiagonal
 //}
+
+ //the idea here is that directions laying on the same line
+ //have absolute difference equal to 1, i.e. south and north both lay on vertical line
+ //and have diffrence Math.abs(0-1)=1 or Math.abs(1-0)=1
+export enum Direction {
+    south = 0,
+    north = 1,
+
+    east = 3,
+    west = 4,
+
+    southEast = 6,
+    northWest = 7,
+
+    southWest = 9,
+    northEast = 10
+}

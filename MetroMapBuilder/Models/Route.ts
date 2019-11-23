@@ -1,5 +1,5 @@
 ﻿import { Station } from "./StationModel";
-import { Connection, ConnectionsManager, Direction } from "./ConnectionModel";
+import { Connection, ConnectionsManager } from "./ConnectionModel";
 import { Strings } from "../Utils/Strings";
 
 export class Route {
@@ -31,6 +31,11 @@ export class Route {
         return this._stations.indexOf(connection.from) > this._stations.indexOf(connection.to);
     }
 
+    public findConnection(connection: Connection, reverse: boolean): Connection {
+        let connections = this.getConnections(reverse);
+        return connections.find(c => c.from == connection.from && c.to == connection.to);
+    }
+
     public getConnections(reverse: boolean): Connection[] {
         if (this._stations.length < 2)
             return [];
@@ -46,7 +51,7 @@ export class Route {
             let from = this._stations[start];
             let to = this._stations[getNext(start)];
             let routes = this.connectionCache.get(from, to);
-            let current = new Connection(from, to, routes, prev);
+            let current = new Connection(from, to, Array.from(routes), prev);
             result.push(current);
             prev = current;
             start = getNext(start);
@@ -88,7 +93,7 @@ export class Route {
         this.removeConnection(station); // recurcive removal for ring routes
     }
 
-    private reconnect() {
+    private reconnect(): void {
         if (this._stations.length <= 1)
             return;
 

@@ -186,7 +186,7 @@ export class MapView {
     }
 
     private drawRoutes(subwayMap: SubwayMap): void {
-        for (let routeParent of this.routesManager.processAll(subwayMap.routes)) {
+        for (let routeParent of this.routesManager.processAll(subwayMap)) {
             // insert routes after Grid BUT before stations
             this.canvas.firstChild.after(routeParent);
         }

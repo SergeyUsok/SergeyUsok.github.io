@@ -14,7 +14,7 @@ define(["require", "exports", "./StationModel", "./Route", "./ConnectionModel", 
             this._sizeSettings = _sizeSettings;
             this._stations = [];
             this._routes = [];
-            this.connectionsCache = new ConnectionModel_1.ConnectionsManager();
+            this.connectionsManager = new ConnectionModel_1.ConnectionsManager();
             this.subscribers = [];
             // Getters API
             this.currentRoute = null;
@@ -34,7 +34,7 @@ define(["require", "exports", "./StationModel", "./Route", "./ConnectionModel", 
         }
         // Route API
         newRoute(id) {
-            let newRoute = new Route_1.Route(id, this.connectionsCache);
+            let newRoute = new Route_1.Route(id, this.connectionsManager);
             this.routes.push(newRoute);
             return newRoute;
         }
@@ -45,12 +45,23 @@ define(["require", "exports", "./StationModel", "./Route", "./ConnectionModel", 
             }
         }
         removeRoute(route) {
-            this.connectionsCache.removeEntireRoute(route);
+            this.connectionsManager.removeEntireRoute(route);
             let index = this.routes.indexOf(route);
             if (index > -1)
                 this.routes.splice(index, 1);
             if (this.currentRoute == route)
                 this.currentRoute = null;
+        }
+        getOrderedRoutes() {
+            let adjacentsCountMap = this.connectionsManager.getRouteAdjacentsMap();
+            // copy array in order to avoid in-place sort
+            return Array.from(this._routes).sort((a, b) => {
+                let res = adjacentsCountMap.get(a.id) - adjacentsCountMap.get(b.id);
+                if (res == 0) {
+                    return a.getStations().length - b.getStations().length;
+                }
+                return res;
+            }).reverse(); // order by descending
         }
         // Station API
         newStation(id, x, y) {
@@ -98,7 +109,7 @@ define(["require", "exports", "./StationModel", "./Route", "./ConnectionModel", 
                     ok: false
                 };
             }
-            let added = this.connectionsCache.add(route.last, station, route);
+            let added = this.connectionsManager.add(route.last, station, route);
             if (added) {
                 return {
                     error: Strings_1.Strings.empty,
@@ -259,7 +270,7 @@ define(["require", "exports", "./StationModel", "./Route", "./ConnectionModel", 
             this._stations = [];
             this._routes = [];
             this.currentRoute = null;
-            this.connectionsCache.clear();
+            this.connectionsManager.clear();
         }
     }
     exports.SubwayMap = SubwayMap;

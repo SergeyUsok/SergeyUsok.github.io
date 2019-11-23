@@ -149,7 +149,7 @@ define(["require", "exports", "./SVG", "./StationsManager", "./LabelsManager", "
             }
         }
         drawRoutes(subwayMap) {
-            for (let routeParent of this.routesManager.processAll(subwayMap.routes)) {
+            for (let routeParent of this.routesManager.processAll(subwayMap)) {
                 // insert routes after Grid BUT before stations
                 this.canvas.firstChild.after(routeParent);
             }
