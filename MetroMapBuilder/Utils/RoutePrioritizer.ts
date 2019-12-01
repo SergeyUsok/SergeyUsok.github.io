@@ -3,6 +3,7 @@ import { SubwayMap } from "../Models/SubwayMap";
 
 export class RoutePrioritizer {
 
+    // TODO: make map of already calculated routes pairs
     public calculatePriority(routeId: number, connection: Connection, subwayMap: SubwayMap): number {
 
         return connection.passingRoutes.sort((a, b) => {

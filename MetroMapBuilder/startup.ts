@@ -8,30 +8,33 @@ import { Geometry } from "./Utils/Geometry";
 import { RemovalController } from "./Controllers/RemovalController";
 import { IOController } from "./Controllers/IOController";
 
-declare var $;
+export class Startup {
 
-if (document.readyState !== 'loading') {
-    initApp();
-} else {
-    document.addEventListener("DOMContentLoaded", initApp);
-}
+    public run(): void {
+        if (document.readyState !== 'loading') {
+            this.initApp();
+        } else {
+            document.addEventListener("DOMContentLoaded", () => this.initApp());
+        }
+    }
 
-function initApp() {
-    let sizeSettings = getSizeSettings();
-    let mapModel = new SubwayMap(sizeSettings);
-    let geometry = new Geometry(sizeSettings);
+    private initApp(): void {
+        let sizeSettings = this.getSizeSettings();
+        let mapModel = new SubwayMap(sizeSettings);
+        let geometry = new Geometry(sizeSettings);
 
-    let map = createMapCanvas(mapModel.sizeSettings.canvasSize);
-    let view = new MapView(map, geometry);
+        let map = this.createMapCanvas(mapModel.sizeSettings.canvasSize);
+        let view = new MapView(map, geometry);
+
+        let gridController = new GridController(mapModel, view);
+        let backgroundController = new BackgroundController(view);
+        let routesController = new RoutesController(mapModel, view);
+        let stationsController = new StationsController(mapModel, view, geometry);
+        let removalController = new RemovalController(mapModel, view);
+        let ioController = new IOController(mapModel, view);
+    }
     
-    let gridController = new GridController(mapModel, view);
-    let backgroundController = new BackgroundController(view);
-    let routesController = new RoutesController(mapModel, view);
-    let stationsController = new StationsController(mapModel, view, geometry);
-    let removalController = new RemovalController(mapModel, view);
-    let ioController = new IOController(mapModel, view);
-
-    function getSizeSettings() {
+    private getSizeSettings(): SizeSettings {
         let width = document.getElementById("canvas").clientWidth;
 
         let gridSize = 100;
@@ -40,7 +43,7 @@ function initApp() {
         return new SizeSettings(gridSize, canvasSize, lineWidthFactor);
     }
 
-    function createMapCanvas(size: number) {
+    private createMapCanvas(size: number) {
         let parent = document.getElementById("canvas");
         let map = document.createElementNS("http://www.w3.org/2000/svg", "svg");
         map.setAttribute("width", <any>size);
@@ -51,6 +54,3 @@ function initApp() {
         return map;
     }
 }
-
-
-

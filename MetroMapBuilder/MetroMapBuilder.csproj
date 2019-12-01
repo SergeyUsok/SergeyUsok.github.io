@@ -26,6 +26,7 @@
     <Content Include="app.css" />
     <Content Include="app.js" />
     <Content Include="index.html" />
+    <Content Include="main.js" />
     <Content Include="web.config">
       <SubType>Designer</SubType>
     </Content>
@@ -35,7 +36,7 @@
     <TypeScriptCompile Include="Controllers\ErrorController.ts" />
     <TypeScriptCompile Include="Controllers\IOController.ts" />
     <TypeScriptCompile Include="Controllers\RemovalController.ts" />
-    <TypeScriptCompile Include="main.ts" />
+    <TypeScriptCompile Include="startup.ts" />
     <TypeScriptCompile Include="Controllers\GridController.ts" />
     <TypeScriptCompile Include="Controllers\RoutesController.ts" />
     <TypeScriptCompile Include="Models\ConnectionModel.ts" />
@@ -66,6 +67,9 @@
   <PropertyGroup>
     <RootNamespace>MetroMapBuilder</RootNamespace>
   </PropertyGroup>
+  <PropertyGroup>
+    <AssemblyName>MetroMapBuilder</AssemblyName>
+  </PropertyGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\WebApplications\Microsoft.WebApplication.targets" Condition="Exists('$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\WebApplications\Microsoft.WebApplication.targets')" />
   <ProjectExtensions>
@@ -94,7 +98,8 @@
     <TypeScriptCompileOnSaveEnabled>True</TypeScriptCompileOnSaveEnabled>
     <TypeScriptNoImplicitAny>False</TypeScriptNoImplicitAny>
     <TypeScriptModuleKind>AMD</TypeScriptModuleKind>
-    <TypeScriptOutFile>app.js</TypeScriptOutFile>
+    <TypeScriptOutFile>
+    </TypeScriptOutFile>
     <TypeScriptOutDir />
     <TypeScriptGeneratesDeclarations>False</TypeScriptGeneratesDeclarations>
     <TypeScriptNoEmitOnError>True</TypeScriptNoEmitOnError>
