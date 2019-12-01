@@ -64,28 +64,28 @@ export class StationsManager {
     }
 
     public process(station: Station): SVGGraphicsElement {
-        let metadata = this.stationInfoMap.get(station.id);
+        let info = this.stationInfoMap.get(station.id);
         let center = this.geometry.centrify(station);
 
         // draw station without lines as cicrle
-        if (metadata == undefined) {
+        if (info == undefined) {
             let circle = SVG.circleStation(center, this.geometry.radius, `station-${station.id}`, station.id);            
             this.saveCellsOccupiedByCircle(station.id, station);
             return circle;
         }
 
         // order by lines count descending
-        metadata.sort((a, b) => {
+        info.sort((a, b) => {
             if (b.count > a.count) return 1;
             if (b.count < a.count) return -1;
-            // if both count equal then check angle and prefer 0 or 90 over other
-            if (b.angle == 0 || Math.abs(b.angle) == 90) return 1
-            if (a.angle == 0 || Math.abs(a.angle) == 90) return -1
+            // if both count equal then check angle and prefer 90 degree and its multiples over other
+            if (b.angle % 90 == 0) return 1
+            if (a.angle % 90 == 0) return -1
             return 0;
         });
 
         // draw station with single passing line as cicrle as well
-        if (metadata[0].count == 1) {
+        if (info[0].count == 1) {
             let circle = SVG.circleStation(center, this.geometry.radius, `station-${station.id}`, station.id);
             this.saveCellsOccupiedByCircle(station.id, station);
             return circle;
@@ -93,13 +93,13 @@ export class StationsManager {
 
         // otherwise draw station as rectangle
         // let maximum lines count passing through station be width of rect
-        let metadataWithMaxCount = metadata[0];
-        let width = this.calculateWidth(metadataWithMaxCount);
-        let secondAfterMaxMetadata = metadata[1];
+        let infoWithMaxCount = info[0];
+        let width = this.calculateWidth(infoWithMaxCount);
+        let secondAfterMaxMetadata = info[1];
         let height = this.calculateHeight(secondAfterMaxMetadata);
 
         // station rect should be ortogonal to the angle of passing connection
-        let rotation = 360 + metadataWithMaxCount.angle - 90;
+        let rotation = 360 + infoWithMaxCount.angle - 90;
 
         let corners = this.geometry.rectCorners(center, width, height);
         let rect = SVG.rectStation(corners[0], width, height, rotation, this.geometry.cornerRadius, center, `station-${station.id}`, station.id);
