@@ -24,6 +24,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="app.css" />
+    <Content Include="app.js" />
     <Content Include="index.html" />
     <Content Include="web.config">
       <SubType>Designer</SubType>
@@ -93,8 +94,7 @@
     <TypeScriptCompileOnSaveEnabled>True</TypeScriptCompileOnSaveEnabled>
     <TypeScriptNoImplicitAny>False</TypeScriptNoImplicitAny>
     <TypeScriptModuleKind>AMD</TypeScriptModuleKind>
-    <TypeScriptOutFile>
-    </TypeScriptOutFile>
+    <TypeScriptOutFile>app.js</TypeScriptOutFile>
     <TypeScriptOutDir />
     <TypeScriptGeneratesDeclarations>False</TypeScriptGeneratesDeclarations>
     <TypeScriptNoEmitOnError>True</TypeScriptNoEmitOnError>
