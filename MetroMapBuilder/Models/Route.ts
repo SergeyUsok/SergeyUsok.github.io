@@ -4,6 +4,7 @@ import { Strings } from "../Utils/Strings";
 
 export class Route {
     private _stations: Station[] = [];
+    private _connections: Connection[] = null;
 
     public constructor(private _id: number, private connectionCache: ConnectionsManager) {
     }
@@ -22,41 +23,31 @@ export class Route {
         return this._stations.length > 0 ? this._stations[this._stations.length - 1] : null;
     }
 
-    public getStations(): Station[] {
+    public get isInitialized(): boolean {
+        return this._connections != null;
+    }
+
+    public get stations(): Station[] {
         return this._stations;
     }
 
-    // todo check ringed lines
-    public isReversedRelativeTo(connection: Connection): boolean {
-        return this._stations.indexOf(connection.from) > this._stations.indexOf(connection.to);
+    public reverse(): void {
+        this._stations = this._stations.reverse();
     }
 
-    public findConnection(connection: Connection, reverse: boolean): Connection {
-        let connections = this.getConnections(reverse);
-        return connections.find(c => c.from == connection.from && c.to == connection.to);
-    }
-
-    public getConnections(reverse: boolean): Connection[] {
-        if (this._stations.length < 2)
-            return [];
-
-        let start = reverse ? this._stations.length - 1 : 0;
-        let end = reverse ? 0 : this._stations.length - 1;
-        let getNext = reverse ? n => n - 1 : n => n + 1;
-
-        let result = [];
-
-        let prev = null;
-        while (start != end) {
-            let from = this._stations[start];
-            let to = this._stations[getNext(start)];
-            let routes = this.connectionCache.get(from, to);
-            let current = new Connection(from, to, Array.from(routes), prev);
-            result.push(current);
-            prev = current;
-            start = getNext(start);
+    public findConnection(connection: Connection): Connection {
+        if (this._connections == null) {
+            let reversed = this.isReversedRelativeTo(connection);
+            this._connections = this.generateConnections(reversed);
         }
-        return result;
+
+        return this._connections.find(c => c.from == connection.from && c.to == connection.to);
+    }
+
+    public getConnections(): Connection[] {
+        if (this._connections == null)
+            this._connections = this.generateConnections();
+        return this._connections;
     }
 
     public passesThrough(station: Station): boolean {
@@ -93,6 +84,33 @@ export class Route {
         this.removeConnection(station); // recurcive removal for ring routes
     }
 
+    public reset(): void {
+        this._connections = null;
+    }
+
+    private generateConnections(reverse?: boolean): Connection[] {
+        if (this._stations.length < 2)
+            return [];
+
+        let start = reverse ? this._stations.length - 1 : 0;
+        let end = reverse ? 0 : this._stations.length - 1;
+        let getNext = reverse ? n => n - 1 : n => n + 1;
+
+        let result = [];
+
+        let prev = null;
+        while (start != end) {
+            let from = this._stations[start];
+            let to = this._stations[getNext(start)];
+            let routes = this.connectionCache.get(from, to);
+            let current = new Connection(from, to, Array.from(routes), prev);
+            result.push(current);
+            prev = current;
+            start = getNext(start);
+        }
+        return result;
+    }
+
     private reconnect(): void {
         if (this._stations.length <= 1)
             return;
@@ -102,5 +120,10 @@ export class Route {
             let to = this._stations[i + 1];
             this.connectionCache.add(from, to, this);
         }
+    }
+
+    // todo check ringed lines
+    private isReversedRelativeTo(connection: Connection): boolean {
+        return this._stations.indexOf(connection.from) > this._stations.indexOf(connection.to);
     }
 }

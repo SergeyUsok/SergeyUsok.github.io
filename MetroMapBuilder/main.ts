@@ -8,6 +8,8 @@ import { Geometry } from "./Utils/Geometry";
 import { RemovalController } from "./Controllers/RemovalController";
 import { IOController } from "./Controllers/IOController";
 
+declare var $;
+
 if (document.readyState !== 'loading') {
     initApp();
 } else {
@@ -15,7 +17,6 @@ if (document.readyState !== 'loading') {
 }
 
 function initApp() {
-
     let sizeSettings = getSizeSettings();
     let mapModel = new SubwayMap(sizeSettings);
     let geometry = new Geometry(sizeSettings);
@@ -31,8 +32,10 @@ function initApp() {
     let ioController = new IOController(mapModel, view);
 
     function getSizeSettings() {
-        let gridSize = 80;
-        let canvasSize = 1000;
+        let width = document.getElementById("canvas").clientWidth;
+
+        let gridSize = 100;
+        let canvasSize = width;
         let lineWidthFactor = 0.2;
         return new SizeSettings(gridSize, canvasSize, lineWidthFactor);
     }

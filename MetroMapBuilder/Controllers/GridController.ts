@@ -10,10 +10,7 @@ export class GridController {
     private initialize(subwayMap: SubwayMap, canvas: SVGSVGElement): void {
         let textInput = <HTMLInputElement>document.getElementById("gridSize");
         textInput.value = `${subwayMap.sizeSettings.gridSize}`;
-
-        let label = document.getElementById("sizeLabel");
-        label.textContent = `${subwayMap.sizeSettings.gridSize}X${subwayMap.sizeSettings.gridSize}`;
-
+        
         document.getElementById("update")
             .addEventListener("click", () => this.updateGrid());
 
@@ -32,11 +29,7 @@ export class GridController {
 
     private onMapReloaded(): void {
         let input = <HTMLInputElement>document.getElementById("gridSize");
-        input.value = `${this.subwayMap.sizeSettings.gridSize}`;
-
-        let label = document.getElementById("sizeLabel");
-        label.textContent = `${this.subwayMap.sizeSettings.gridSize}X${this.subwayMap.sizeSettings.gridSize}`;
-
+        input.value = `${this.subwayMap.sizeSettings.gridSize}`;        
         this.mapView.redrawGrid();
     }
 
@@ -53,9 +46,6 @@ export class GridController {
         }
         else {
             this.subwayMap.sizeSettings.gridSize = size;
-
-            let label = document.getElementById("sizeLabel");
-            label.textContent = `${this.subwayMap.sizeSettings.gridSize}X${this.subwayMap.sizeSettings.gridSize}`;
 
             this.mapView.redrawGrid();
             this.mapView.redrawMap(this.subwayMap);

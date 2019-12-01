@@ -12,8 +12,8 @@ define(["require", "exports", "./StationModel", "./Route", "./ConnectionModel", 
     class SubwayMap {
         constructor(_sizeSettings) {
             this._sizeSettings = _sizeSettings;
-            this._stations = [];
-            this._routes = [];
+            this._stations = new Map();
+            this._routes = new Map();
             this.connectionsManager = new ConnectionModel_1.ConnectionsManager();
             this.subscribers = [];
             // Getters API
@@ -26,62 +26,60 @@ define(["require", "exports", "./StationModel", "./Route", "./ConnectionModel", 
         get sizeSettings() {
             return this._sizeSettings;
         }
+        get routesCount() {
+            return this._routes.size;
+        }
+        get stationsCount() {
+            return this._stations.size;
+        }
         get stations() {
-            return this._stations;
+            return this._stations.values();
         }
         get routes() {
-            return this._routes;
+            return this._routes.values();
         }
         // Route API
         newRoute(id) {
             let newRoute = new Route_1.Route(id, this.connectionsManager);
-            this.routes.push(newRoute);
+            this._routes.set(id, newRoute);
             return newRoute;
         }
         getRoute(id) {
-            for (let i = 0; i < this.routes.length; i++) {
-                if (this.routes[i].id == id)
-                    return this.routes[i];
-            }
+            return this._routes.get(id);
         }
         removeRoute(route) {
             this.connectionsManager.removeEntireRoute(route);
-            let index = this.routes.indexOf(route);
-            if (index > -1)
-                this.routes.splice(index, 1);
+            this._routes.delete(route.id);
             if (this.currentRoute == route)
                 this.currentRoute = null;
         }
-        getOrderedRoutes() {
-            let adjacentsCountMap = this.connectionsManager.getRouteAdjacentsMap();
-            // copy array in order to avoid in-place sort
-            return Array.from(this._routes).sort((a, b) => {
-                let res = adjacentsCountMap.get(a.id) - adjacentsCountMap.get(b.id);
-                if (res == 0) {
-                    return a.getStations().length - b.getStations().length;
+        *consumeRoutes() {
+            let consumable = Array.from(this._routes.values());
+            consumable.forEach(r => r.reset());
+            while (consumable.length > 0) {
+                let index = consumable.findIndex(r => r.isInitialized);
+                if (index < 0) {
+                    yield consumable.shift();
                 }
-                return res;
-            }).reverse(); // order by descending
+                else {
+                    yield consumable.splice(index, 1)[0];
+                }
+            }
         }
         // Station API
         newStation(id, x, y) {
             let newStation = new StationModel_1.Station(id, x, y);
-            this.stations.push(newStation);
+            this._stations.set(id, newStation);
             return newStation;
         }
         getStation(id) {
-            for (let i = 0; i < this.stations.length; i++) {
-                if (this.stations[i].id == id)
-                    return this.stations[i];
-            }
+            return this._stations.get(id);
         }
         removeStation(station) {
-            let index = this.stations.indexOf(station);
             // 1. remove from general stations array
-            if (index > -1)
-                this.stations.splice(index, 1);
-            // 2. remove from any route referenced to this station and from connection cache under the hood
-            this.routes.forEach(route => route.removeConnection(station));
+            this._stations.delete(station.id);
+            // 2. remove from any route passing through this station and from connection cache under the hood
+            this._routes.forEach(route => route.removeConnection(station));
         }
         updateStationPosition(id, x, y) {
             let station = this.getStation(id);
@@ -163,6 +161,15 @@ define(["require", "exports", "./StationModel", "./Route", "./ConnectionModel", 
             this.notifyMapReloaded();
             return this;
         }
+        // Clear all
+        clear(notify) {
+            this._stations.clear();
+            this._routes.clear();
+            this.currentRoute = null;
+            this.connectionsManager.clear();
+            if (notify)
+                this.notifyMapReloaded();
+        }
         notifyMapReloaded() {
             for (let i = 0; i < this.subscribers.length; i++) {
                 this.subscribers[i]();
@@ -237,22 +244,23 @@ define(["require", "exports", "./StationModel", "./Route", "./ConnectionModel", 
         }
         prepareRoutes(stationIdsMap) {
             let routesInfo = [];
-            for (let routeId = 0; routeId < this.routes.length; routeId++) {
-                let route = this.routes[routeId];
+            let routeId = 0;
+            for (let route of this._routes.values()) {
                 let stationsInfo = [];
-                for (let station of route.getStations()) {
+                for (let station of route.stations) {
                     let newId = stationIdsMap.get(station.id);
                     stationsInfo.push(newId);
                 }
                 let serialized = { id: routeId, color: route.color, stations: stationsInfo };
                 routesInfo.push(serialized);
+                routeId++;
             }
             return routesInfo;
         }
         prepareStations(stationIdsMap) {
             let stationsInfo = [];
-            for (let newId = 0; newId < this.stations.length; newId++) {
-                let station = this.stations[newId];
+            let newId = 0;
+            for (let station of this.stations) {
                 stationIdsMap.set(station.id, newId);
                 let serialized = {
                     id: newId, x: station.x, y: station.y,
@@ -263,14 +271,9 @@ define(["require", "exports", "./StationModel", "./Route", "./ConnectionModel", 
                     }
                 };
                 stationsInfo.push(serialized);
+                newId++;
             }
             return stationsInfo;
-        }
-        clear() {
-            this._stations = [];
-            this._routes = [];
-            this.currentRoute = null;
-            this.connectionsManager.clear();
         }
     }
     exports.SubwayMap = SubwayMap;

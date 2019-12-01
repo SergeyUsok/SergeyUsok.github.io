@@ -52,7 +52,7 @@ define(["require", "exports", "./ErrorController", "../Utils/Strings"], function
             mapView.getCanvas().ondragstart = () => false;
         }
         onMapReloaded() {
-            this.stationsCounter = this.subwayMap.stations.length;
+            this.stationsCounter = this.subwayMap.stationsCount;
         }
         handleClick(event) {
             this.hideEditPopup();

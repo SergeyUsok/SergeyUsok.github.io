@@ -129,42 +129,14 @@ define(["require", "exports", "../Utils/Strings"], function (require, exports, S
                     return Direction.northEast;
             }
         }
-        //private determineDirection(stationA: Station, stationB: Station): Direction {
-        //    if (stationA.x == stationB.x && stationA.y != stationB.y)
-        //        return Direction.vertical;
-        //    if (stationA.x != stationB.x && stationA.y == stationB.y)
-        //        return Direction.horizontal;
-        //    // first check if diagonal drawing direction (moves from top to bottom or from bottom to top)
-        //    // from top to Bottom case
-        //    if (stationA.y < stationB.y) {
-        //        if (stationA.x > stationB.x)
-        //            return Direction.rightDiagonal;
-        //        if (stationA.x < stationB.x)
-        //            return Direction.leftDiagonal;
-        //    }
-        //    // from Bottom to top case
-        //    else if (stationA.y > stationB.y) {
-        //        if (stationA.x > stationB.x)
-        //            return Direction.leftDiagonal;
-        //        if (stationA.x < stationB.x)
-        //            return Direction.rightDiagonal;
-        //    }
-        //    return Direction.horizontal;
-        //}
         addNext(next) {
             this._next = next;
         }
     }
     exports.Connection = Connection;
-    //export enum Direction {
-    //    horizontal,
-    //    vertical,
-    //    leftDiagonal,
-    //    rightDiagonal
-    //}
-    //the idea here is that directions laying on the same line
-    //have absolute difference equal to 1, i.e. south and north both lay on vertical line
-    //and have diffrence Math.abs(0-1)=1 or Math.abs(1-0)=1
+    // the idea here is that directions laying on the same line
+    // have absolute difference equal to 1, i.e. south and north both lay on vertical line
+    // and have diffrence Math.abs(0-1)=1 or Math.abs(1-0)=1
     var Direction;
     (function (Direction) {
         Direction[Direction["south"] = 0] = "south";

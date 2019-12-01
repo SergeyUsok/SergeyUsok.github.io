@@ -10,6 +10,10 @@ define(["require", "exports"], function (require, exports) {
         initialize(canvas) {
             document.addEventListener("click", () => this.hideMenu(), false);
             canvas.addEventListener("contextmenu", event => this.showMenu(event), false);
+            document.getElementById("clearAll").addEventListener("click", () => {
+                this.subwayMap.clear(true);
+                this.mapView.redrawMap(this.subwayMap);
+            });
         }
         hideMenu() {
             let menu = document.getElementById("stationMenu");
@@ -40,7 +44,7 @@ define(["require", "exports"], function (require, exports) {
             let menuTemplate = `<div class='dropdown-menu show' id='stationMenu'>` +
                 `<button class='dropdown-item' type='button'>Remove station</button>` +
                 `<div class='dropdown-divider'></div>`;
-            for (let route of this.subwayMap.routes.filter(r => r.passesThrough(station))) {
+            for (let route of Array.from(this.subwayMap.routes).filter(r => r.passesThrough(station))) {
                 menuTemplate += `<button class='dropdown-item' type='button' data-id='${route.id}' ` +
                     `style='color: ${route.color[0]}'>Remove from route ${route.id}</button>`;
             }

@@ -11,8 +11,6 @@ define(["require", "exports"], function (require, exports) {
         initialize(subwayMap, canvas) {
             let textInput = document.getElementById("gridSize");
             textInput.value = `${subwayMap.sizeSettings.gridSize}`;
-            let label = document.getElementById("sizeLabel");
-            label.textContent = `${subwayMap.sizeSettings.gridSize}X${subwayMap.sizeSettings.gridSize}`;
             document.getElementById("update")
                 .addEventListener("click", () => this.updateGrid());
             document.getElementById("grid-switch")
@@ -27,8 +25,6 @@ define(["require", "exports"], function (require, exports) {
         onMapReloaded() {
             let input = document.getElementById("gridSize");
             input.value = `${this.subwayMap.sizeSettings.gridSize}`;
-            let label = document.getElementById("sizeLabel");
-            label.textContent = `${this.subwayMap.sizeSettings.gridSize}X${this.subwayMap.sizeSettings.gridSize}`;
             this.mapView.redrawGrid();
         }
         updateGrid() {
@@ -43,8 +39,6 @@ define(["require", "exports"], function (require, exports) {
             }
             else {
                 this.subwayMap.sizeSettings.gridSize = size;
-                let label = document.getElementById("sizeLabel");
-                label.textContent = `${this.subwayMap.sizeSettings.gridSize}X${this.subwayMap.sizeSettings.gridSize}`;
                 this.mapView.redrawGrid();
                 this.mapView.redrawMap(this.subwayMap);
             }

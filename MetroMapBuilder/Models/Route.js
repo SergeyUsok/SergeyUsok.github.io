@@ -6,6 +6,7 @@ define(["require", "exports", "./ConnectionModel", "../Utils/Strings"], function
             this._id = _id;
             this.connectionCache = connectionCache;
             this._stations = [];
+            this._connections = null;
             this.color = [Strings_1.Strings.defaultColor];
         }
         get id() {
@@ -17,35 +18,26 @@ define(["require", "exports", "./ConnectionModel", "../Utils/Strings"], function
         get last() {
             return this._stations.length > 0 ? this._stations[this._stations.length - 1] : null;
         }
-        getStations() {
+        get isInitialized() {
+            return this._connections != null;
+        }
+        get stations() {
             return this._stations;
         }
-        // todo check ringed lines
-        isReversedRelativeTo(connection) {
-            return this._stations.indexOf(connection.from) > this._stations.indexOf(connection.to);
+        reverse() {
+            this._stations = this._stations.reverse();
         }
-        findConnection(connection, reverse) {
-            let connections = this.getConnections(reverse);
-            return connections.find(c => c.from == connection.from && c.to == connection.to);
-        }
-        getConnections(reverse) {
-            if (this._stations.length < 2)
-                return [];
-            let start = reverse ? this._stations.length - 1 : 0;
-            let end = reverse ? 0 : this._stations.length - 1;
-            let getNext = reverse ? n => n - 1 : n => n + 1;
-            let result = [];
-            let prev = null;
-            while (start != end) {
-                let from = this._stations[start];
-                let to = this._stations[getNext(start)];
-                let routes = this.connectionCache.get(from, to);
-                let current = new ConnectionModel_1.Connection(from, to, Array.from(routes), prev);
-                result.push(current);
-                prev = current;
-                start = getNext(start);
+        findConnection(connection) {
+            if (this._connections == null) {
+                let reversed = this.isReversedRelativeTo(connection);
+                this._connections = this.generateConnections(reversed);
             }
-            return result;
+            return this._connections.find(c => c.from == connection.from && c.to == connection.to);
+        }
+        getConnections() {
+            if (this._connections == null)
+                this._connections = this.generateConnections();
+            return this._connections;
         }
         passesThrough(station) {
             return this._stations.indexOf(station) > -1;
@@ -74,6 +66,28 @@ define(["require", "exports", "./ConnectionModel", "../Utils/Strings"], function
             this.reconnect();
             this.removeConnection(station); // recurcive removal for ring routes
         }
+        reset() {
+            this._connections = null;
+        }
+        generateConnections(reverse) {
+            if (this._stations.length < 2)
+                return [];
+            let start = reverse ? this._stations.length - 1 : 0;
+            let end = reverse ? 0 : this._stations.length - 1;
+            let getNext = reverse ? n => n - 1 : n => n + 1;
+            let result = [];
+            let prev = null;
+            while (start != end) {
+                let from = this._stations[start];
+                let to = this._stations[getNext(start)];
+                let routes = this.connectionCache.get(from, to);
+                let current = new ConnectionModel_1.Connection(from, to, Array.from(routes), prev);
+                result.push(current);
+                prev = current;
+                start = getNext(start);
+            }
+            return result;
+        }
         reconnect() {
             if (this._stations.length <= 1)
                 return;
@@ -82,6 +96,10 @@ define(["require", "exports", "./ConnectionModel", "../Utils/Strings"], function
                 let to = this._stations[i + 1];
                 this.connectionCache.add(from, to, this);
             }
+        }
+        // todo check ringed lines
+        isReversedRelativeTo(connection) {
+            return this._stations.indexOf(connection.from) > this._stations.indexOf(connection.to);
         }
     }
     exports.Route = Route;

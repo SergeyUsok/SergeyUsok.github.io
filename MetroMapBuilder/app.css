@@ -40,6 +40,13 @@ circle[id^="station"].selected, rect[id^="station"].selected {
     stroke-width: 2px;
 }
 
+circle[id^="station"].last-selected, rect[id^="station"].last-selected {
+    cursor: pointer;
+    fill: gold;
+    stroke: indigo;
+    stroke-width: 3px;
+}
+
 circle[id^="station"], rect[id^="station"] {
     fill: white;
     stroke: blue;
@@ -143,3 +150,7 @@ svg text {
         transition: opacity 2s;
         opacity: 0;
     }
+
+.route-mngmt {
+    font-size: 17px;
+}

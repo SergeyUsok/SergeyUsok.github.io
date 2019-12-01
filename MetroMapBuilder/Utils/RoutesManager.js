@@ -1,4 +1,4 @@
-define(["require", "exports", "./SVG", "../Models/ConnectionModel"], function (require, exports, SVG_1, ConnectionModel_1) {
+define(["require", "exports", "./SVG", "./RoutePrioritizer"], function (require, exports, SVG_1, RoutePrioritizer_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     class RoutesManager {
@@ -7,7 +7,9 @@ define(["require", "exports", "./SVG", "../Models/ConnectionModel"], function (r
             this.connetionCallback = connetionCallback;
             // map of cell keys (x-y) to station ids which uses these cells for connection
             this.occupiedCells = new Map();
+            this.prioritizer = new RoutePrioritizer_1.RoutePrioritizer();
         }
+        ;
         noRoutePassesThrough(cell, exceptStationId) {
             let key = `${cell.x}-${cell.y}`;
             // absent in occupied cells list? - cool, return true
@@ -27,14 +29,7 @@ define(["require", "exports", "./SVG", "../Models/ConnectionModel"], function (r
             this.occupiedCells.clear();
         }
         *processAll(subwayMap) {
-            let routesInfo = new Map(subwayMap.routes.map(r => [r.id, {
-                    route: r,
-                    visited: false,
-                    reverse: false,
-                    priority: 10 // some default magic number which will be used as reference value for caclulating priorities of adjacent lines
-                }]));
-            for (let route of subwayMap.getOrderedRoutes()) {
-                routesInfo.get(route.id).visited = true;
+            for (let route of subwayMap.consumeRoutes()) {
                 let routeParent = SVG_1.SVG.createGroup({ id: `route-${route.id}`, "stroke-width": this.geometry.lineWidth });
                 let colorGroups = [SVG_1.SVG.createGroup({ stroke: route.color[0] })];
                 // case for 2-colored lines
@@ -42,18 +37,16 @@ define(["require", "exports", "./SVG", "../Models/ConnectionModel"], function (r
                     let group = SVG_1.SVG.createGroup({ stroke: route.color[1], "stroke-dasharray": `${this.geometry.cellSize / 2}` });
                     colorGroups.push(group);
                 }
-                this.processOne(route, colorGroups, routesInfo);
+                this.processOne(route, colorGroups, subwayMap);
                 colorGroups.forEach(gr => routeParent.append(gr));
                 yield routeParent;
             }
         }
-        processOne(route, parents, routeInfoMap) {
-            let routeInfo = routeInfoMap.get(route.id);
-            for (let connection of route.getConnections(routeInfo.reverse).values()) {
+        processOne(route, parents, subwayMap) {
+            for (let connection of route.getConnections().values()) {
                 let from = this.geometry.centrify(connection.from);
                 let to = this.geometry.centrify(connection.to);
-                this.visitAdjacentRoutes(connection, routeInfoMap, routeInfo.priority);
-                let offset = this.calculateOffset(connection, route, routeInfoMap);
+                let offset = this.calculateOffset(connection, route, subwayMap);
                 let segment = this.geometry.offsetConnection(from, to, offset);
                 this.connetionCallback(connection);
                 //this.createSvgConnetion(segment, connInfo.data, connInfo.prev, connInfo.next);
@@ -61,255 +54,10 @@ define(["require", "exports", "./SVG", "../Models/ConnectionModel"], function (r
                 this.storeCellsOccupiedByLine(segment, connection);
             }
         }
-        // TODO:
-        // implement get getConnection on route properly
-        // check issue with equal priorities
-        // why current route is not more important than adjacents in terms of turns calculation 
-        // check case of 2 lines comes from left with equal and different priorities
-        visitAdjacentRoutes(connection, routeInfo, priority) {
-            if (connection.passingRoutes.length == 1)
-                return; // nothing to do as there are no adjacent lines
-            for (let routeId of connection.passingRoutes) {
-                let adjacent = routeInfo.get(routeId);
-                if (adjacent.visited) {
-                    continue;
-                }
-                adjacent.reverse = adjacent.route.isReversedRelativeTo(connection);
-                adjacent.priority = this.prioritize(connection, adjacent, priority);
-                adjacent.visited = true;
-            }
-        }
-        // 1. first check where adjacent line comes from (taking into account the reverse)
-        // and based on this info calculate priority.
-        // 2. if no previous, then check where both adjacent and current lines go to, but lookahead till the lines divergence
-        // 3. calculate the priority for the pair of lines
-        // E.g. line comes from left and becomes adjacent of current line going to south (from top to down)
-        // Then the line should be drawn as the most left adjacent of current line
-        prioritize(connection, adjacent, referencePriority) {
-            let adjConnection = adjacent.route.findConnection(connection, adjacent.reverse);
-            if (adjConnection.prev != null) {
-                let priority = this.getPriorityBasedOnPrev(connection.direction, adjConnection.prev.direction, referencePriority);
-                if (priority != referencePriority) {
-                    // in case of equal priorities (both connections share same direction) try find differences
-                    // in next connection directions, otherwise return calculated priority
-                    return priority;
-                }
-            }
-            let currNext = connection.next;
-            let adjNext = adjConnection.next;
-            while (currNext != null && adjNext != null && currNext.direction == adjNext.direction) {
-                currNext = currNext.next;
-                adjNext = adjNext.next;
-            }
-            if (adjNext != null) {
-                return this.getPriorityBasedOnNext(adjNext.prev.direction, adjNext.direction, referencePriority);
-            }
-            return referencePriority;
-        }
-        getPriorityBasedOnNext(current, next, referencePriorityValue) {
-            if (current == ConnectionModel_1.Direction.south) { // current moves from top to down
-                switch (next) {
-                    case ConnectionModel_1.Direction.east:
-                    case ConnectionModel_1.Direction.northEast:
-                    case ConnectionModel_1.Direction.southEast: // came from left side
-                        return --referencePriorityValue; // increment because the highest value will be drawn on left
-                    case ConnectionModel_1.Direction.west:
-                    case ConnectionModel_1.Direction.northWest:
-                    case ConnectionModel_1.Direction.southWest: // came from right
-                        return ++referencePriorityValue; // decrement because the lowest value will be drawn on right
-                }
-            }
-            if (current == ConnectionModel_1.Direction.north) { // current moves from down to top
-                switch (next) {
-                    case ConnectionModel_1.Direction.east:
-                    case ConnectionModel_1.Direction.northEast:
-                    case ConnectionModel_1.Direction.southEast:
-                        return ++referencePriorityValue;
-                    case ConnectionModel_1.Direction.west:
-                    case ConnectionModel_1.Direction.northWest:
-                    case ConnectionModel_1.Direction.southWest:
-                        return --referencePriorityValue;
-                }
-            }
-            if (current == ConnectionModel_1.Direction.west) {
-                switch (next) {
-                    case ConnectionModel_1.Direction.south:
-                    case ConnectionModel_1.Direction.southWest:
-                    case ConnectionModel_1.Direction.southEast:
-                        return --referencePriorityValue;
-                    case ConnectionModel_1.Direction.north:
-                    case ConnectionModel_1.Direction.northWest:
-                    case ConnectionModel_1.Direction.northEast:
-                        return ++referencePriorityValue;
-                }
-            }
-            if (current == ConnectionModel_1.Direction.east) {
-                switch (next) {
-                    case ConnectionModel_1.Direction.south:
-                    case ConnectionModel_1.Direction.southWest:
-                    case ConnectionModel_1.Direction.southEast:
-                        return ++referencePriorityValue;
-                    case ConnectionModel_1.Direction.north:
-                    case ConnectionModel_1.Direction.northWest:
-                    case ConnectionModel_1.Direction.northEast:
-                        return --referencePriorityValue;
-                }
-            }
-            if (current == ConnectionModel_1.Direction.southEast) {
-                switch (next) {
-                    case ConnectionModel_1.Direction.north:
-                    case ConnectionModel_1.Direction.east:
-                    case ConnectionModel_1.Direction.northEast:
-                        return --referencePriorityValue;
-                    case ConnectionModel_1.Direction.south:
-                    case ConnectionModel_1.Direction.west:
-                    case ConnectionModel_1.Direction.southWest:
-                        return ++referencePriorityValue;
-                }
-            }
-            if (current == ConnectionModel_1.Direction.northWest) {
-                switch (next) {
-                    case ConnectionModel_1.Direction.north:
-                    case ConnectionModel_1.Direction.east:
-                    case ConnectionModel_1.Direction.northEast:
-                        return ++referencePriorityValue;
-                    case ConnectionModel_1.Direction.south:
-                    case ConnectionModel_1.Direction.west:
-                    case ConnectionModel_1.Direction.southWest:
-                        return --referencePriorityValue;
-                }
-            }
-            if (current == ConnectionModel_1.Direction.northEast) {
-                switch (next) {
-                    case ConnectionModel_1.Direction.south:
-                    case ConnectionModel_1.Direction.east:
-                    case ConnectionModel_1.Direction.southEast:
-                        return ++referencePriorityValue;
-                    case ConnectionModel_1.Direction.north:
-                    case ConnectionModel_1.Direction.west:
-                    case ConnectionModel_1.Direction.northWest:
-                        return --referencePriorityValue;
-                }
-            }
-            if (current == ConnectionModel_1.Direction.southWest) {
-                switch (next) {
-                    case ConnectionModel_1.Direction.south:
-                    case ConnectionModel_1.Direction.east:
-                    case ConnectionModel_1.Direction.southEast:
-                        return --referencePriorityValue;
-                    case ConnectionModel_1.Direction.north:
-                    case ConnectionModel_1.Direction.west:
-                    case ConnectionModel_1.Direction.northWest:
-                        return ++referencePriorityValue;
-                }
-            }
-            return referencePriorityValue;
-        }
-        getPriorityBasedOnPrev(current, prev, referencePriorityValue) {
-            if (current == ConnectionModel_1.Direction.south) { // current moves from top to down
-                switch (prev) {
-                    case ConnectionModel_1.Direction.east:
-                    case ConnectionModel_1.Direction.northEast:
-                    case ConnectionModel_1.Direction.southEast: // came from left side
-                        return ++referencePriorityValue; // increment because the highest value will be drawn on left
-                    case ConnectionModel_1.Direction.west:
-                    case ConnectionModel_1.Direction.northWest:
-                    case ConnectionModel_1.Direction.southWest: // came from right
-                        return --referencePriorityValue; // decrement because the lowest value will be drawn on right
-                }
-            }
-            if (current == ConnectionModel_1.Direction.north) { // current moves from down to top
-                switch (prev) {
-                    case ConnectionModel_1.Direction.east:
-                    case ConnectionModel_1.Direction.northEast:
-                    case ConnectionModel_1.Direction.southEast:
-                        return --referencePriorityValue;
-                    case ConnectionModel_1.Direction.west:
-                    case ConnectionModel_1.Direction.northWest:
-                    case ConnectionModel_1.Direction.southWest:
-                        return ++referencePriorityValue;
-                }
-            }
-            if (current == ConnectionModel_1.Direction.west) {
-                switch (prev) {
-                    case ConnectionModel_1.Direction.south:
-                    case ConnectionModel_1.Direction.southWest:
-                    case ConnectionModel_1.Direction.southEast:
-                        return ++referencePriorityValue;
-                    case ConnectionModel_1.Direction.north:
-                    case ConnectionModel_1.Direction.northWest:
-                    case ConnectionModel_1.Direction.northEast:
-                        return --referencePriorityValue;
-                }
-            }
-            if (current == ConnectionModel_1.Direction.east) {
-                switch (prev) {
-                    case ConnectionModel_1.Direction.south:
-                    case ConnectionModel_1.Direction.southWest:
-                    case ConnectionModel_1.Direction.southEast:
-                        return --referencePriorityValue;
-                    case ConnectionModel_1.Direction.north:
-                    case ConnectionModel_1.Direction.northWest:
-                    case ConnectionModel_1.Direction.northEast:
-                        return ++referencePriorityValue;
-                }
-            }
-            if (current == ConnectionModel_1.Direction.southEast) {
-                switch (prev) {
-                    case ConnectionModel_1.Direction.north:
-                    case ConnectionModel_1.Direction.east:
-                    case ConnectionModel_1.Direction.northEast:
-                        return ++referencePriorityValue;
-                    case ConnectionModel_1.Direction.south:
-                    case ConnectionModel_1.Direction.west:
-                    case ConnectionModel_1.Direction.southWest:
-                        return --referencePriorityValue;
-                }
-            }
-            if (current == ConnectionModel_1.Direction.northWest) {
-                switch (prev) {
-                    case ConnectionModel_1.Direction.north:
-                    case ConnectionModel_1.Direction.east:
-                    case ConnectionModel_1.Direction.northEast:
-                        return --referencePriorityValue;
-                    case ConnectionModel_1.Direction.south:
-                    case ConnectionModel_1.Direction.west:
-                    case ConnectionModel_1.Direction.southWest:
-                        return ++referencePriorityValue;
-                }
-            }
-            if (current == ConnectionModel_1.Direction.northEast) {
-                switch (prev) {
-                    case ConnectionModel_1.Direction.south:
-                    case ConnectionModel_1.Direction.east:
-                    case ConnectionModel_1.Direction.southEast:
-                        return --referencePriorityValue;
-                    case ConnectionModel_1.Direction.north:
-                    case ConnectionModel_1.Direction.west:
-                    case ConnectionModel_1.Direction.northWest:
-                        return ++referencePriorityValue;
-                }
-            }
-            if (current == ConnectionModel_1.Direction.southWest) {
-                switch (prev) {
-                    case ConnectionModel_1.Direction.south:
-                    case ConnectionModel_1.Direction.east:
-                    case ConnectionModel_1.Direction.southEast:
-                        return ++referencePriorityValue;
-                    case ConnectionModel_1.Direction.north:
-                    case ConnectionModel_1.Direction.west:
-                    case ConnectionModel_1.Direction.northWest:
-                        return --referencePriorityValue;
-                }
-            }
-            return referencePriorityValue;
-        }
-        calculateOffset(connection, route, routeInfos) {
+        calculateOffset(connection, route, subwayMap) {
             let fullDistance = this.geometry.distanceOfParallelLines(connection.passingRoutes.length);
             let radius = fullDistance / 2; // we need the half of distance because we draw lines by offsetting them by BOTH sides of central point
-            let offsetFactor = connection.passingRoutes
-                .sort((id1, id2) => routeInfos.get(id1).priority - routeInfos.get(id2).priority)
-                .indexOf(route.id);
+            let offsetFactor = this.prioritizer.calculatePriority(route.id, connection, subwayMap);
             return (-radius + this.geometry.halfOfLineWidth) + (offsetFactor * (this.geometry.lineWidth + this.geometry.distanceBetweenLines));
         }
         //private createSvgConnetion(segment: Segment, current: Connection, prev: Direction, next: Direction): SVGGElement {

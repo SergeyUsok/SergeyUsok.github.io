@@ -20,8 +20,9 @@ define(["require", "exports", "./Controllers/GridController", "./Models/SubwayMa
         let removalController = new RemovalController_1.RemovalController(mapModel, view);
         let ioController = new IOController_1.IOController(mapModel, view);
         function getSizeSettings() {
-            let gridSize = 80;
-            let canvasSize = 1000;
+            let width = document.getElementById("canvas").clientWidth;
+            let gridSize = 100;
+            let canvasSize = width;
             let lineWidthFactor = 0.2;
             return new SubwayMap_1.SizeSettings(gridSize, canvasSize, lineWidthFactor);
         }

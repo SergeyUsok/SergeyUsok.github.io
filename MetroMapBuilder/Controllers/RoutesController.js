@@ -12,8 +12,10 @@ define(["require", "exports", "./ErrorController", "../Utils/Strings"], function
         removeRoute(route) {
             this.subwayMap.removeRoute(route);
             // if current/selected route was removed
-            if (this.subwayMap.currentRoute == null)
-                this.routeSelectionChanged(this.subwayMap.routes.length > 0 ? this.subwayMap.routes[0] : null);
+            if (this.subwayMap.currentRoute == null) {
+                let iterationResult = this.subwayMap.routes.next();
+                this.routeSelectionChanged(iterationResult.done ? null : iterationResult.value);
+            }
             this.mapView.redrawMap(this.subwayMap);
         }
         routeSelectionChanged(newSelection) {
@@ -39,11 +41,11 @@ define(["require", "exports", "./ErrorController", "../Utils/Strings"], function
             this.subwayMap.mapReloaded(() => this.onMapReloaded());
         }
         onMapReloaded() {
-            this.routeIdCounter = this.subwayMap.routes.length;
+            this.routeIdCounter = this.subwayMap.routesCount;
             let panels = document.getElementById("panels");
             this.removeChildren(panels);
-            for (let i = 0; i < this.subwayMap.routes.length; i++) {
-                this.addControlPanel(this.subwayMap.routes[i]);
+            for (let route of this.subwayMap.routes) {
+                this.addControlPanel(route);
             }
             let lineWidths = document.getElementById("lineWidth");
             lineWidths.value = `${this.subwayMap.sizeSettings.lineWidthFactor}`;
@@ -84,7 +86,13 @@ define(["require", "exports", "./ErrorController", "../Utils/Strings"], function
             let clone = document.getElementById("linePanel").cloneNode(true);
             clone.setAttribute("id", `panel-${route.id}`); // save uniqueness of template element
             clone.classList.remove("d-none"); // make element visible
-            let removeButton = clone.querySelector("button");
+            let reverseButton = clone.querySelector("button[title='reverse route']");
+            reverseButton.addEventListener("click", e => {
+                route.reverse();
+                this.routeSelectionChanged(route);
+                e.stopPropagation();
+            });
+            let removeButton = clone.querySelector("button[title='delete route']");
             removeButton.addEventListener("click", e => {
                 clone.remove();
                 this.removeRoute(route);

@@ -133,18 +133,19 @@ export class MapView {
     }
 
     public selectRoute(route: Route): void {
-        for (let station of route.getStations()) {
+        for (let station of route.stations) {
             let stationElement = document.getElementById(`station-${station.id}`);
-            if (!stationElement.classList.contains("selected"))
+            if (station != route.last)
                 stationElement.classList.add("selected");
+            else
+                stationElement.classList.add("last-selected");
         }
     }
 
     public deselectRoute(route: Route): void {
-        for (let station of route.getStations()) {
+        for (let station of route.stations) {
             let stationElement = document.getElementById(`station-${station.id}`);
-            if (stationElement.classList.contains("selected"))
-                stationElement.classList.remove("selected");
+            stationElement.classList.remove("selected", "last-selected");
         }
     }
 
@@ -193,16 +194,14 @@ export class MapView {
     }
 
     private drawStations(subwayMap: SubwayMap): void {
-        for (let i = 0; i < subwayMap.stations.length; i++) {
-            let station = subwayMap.stations[i];
+        for (let station of subwayMap.stations) {
             let shape = this.stationsManager.process(station);
             this.canvas.appendChild(shape);
         }
     }
 
     private drawLabels(subwayMap: SubwayMap): void {
-        for (let i = 0; i < subwayMap.stations.length; i++) {
-            let station = subwayMap.stations[i];
+        for (let station of subwayMap.stations) {
             let stationBounds = this.stationsManager.getBounds(station.id);
             let label = this.labelsManager.process(station.label, stationBounds);
             this.canvas.appendChild(label);

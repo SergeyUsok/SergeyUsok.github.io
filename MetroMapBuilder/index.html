@@ -3,6 +3,8 @@
 <html lang="en">
 <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
     <title>Metro Map builder</title>
 
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
@@ -22,104 +24,100 @@
             <span aria-hidden="true">&times;</span>
         </button>
     </div>
-    <div class="container">
+    <div class="container-fluid">
         <div class="row">
-            <div class="col-9">
-                <div id="canvas">
-                </div>
+            <div id="canvas" class="col-md-6 col-lg-6 col-xl-10">
             </div>
-            <div class="col-3">
-                <div class="toolset">
-                    <div class="card">
-                        <button class="btn btn-info" type="button" data-toggle="collapse" data-target="#showGridSettings" aria-expanded="true" aria-controls="showGridSettings">
-                            Grid settings
-                        </button>
-                        <div class="collapse show" id="showGridSettings">
-                            <div class="card-body">
-                                <div class="custom-control custom-switch mb-3">
-                                    <input type="checkbox" class="custom-control-input" id="grid-switch">
-                                    <label class="custom-control-label" for="grid-switch">Toggle Grid</label>
+
+            <div class="toolset col-md-6 col-lg-4 col-xl-2">
+                <div class="card">
+                    <button class="btn btn-info" type="button" data-toggle="collapse" data-target="#showGridSettings" aria-expanded="true" aria-controls="showGridSettings">
+                        Grid settings
+                    </button>
+                    <div class="collapse show" id="showGridSettings">
+                        <div class="card-body">
+                            <div class="custom-control custom-switch mb-3">
+                                <input type="checkbox" class="custom-control-input" id="grid-switch">
+                                <label class="custom-control-label" for="grid-switch">Toggle Grid</label>
+                            </div>
+                            <div class="input-group mb-1">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text" id="basic-addon1">Size:</span>
                                 </div>
-                                <div class="input-group mb-1">
+                                <input type="text" class="form-control" placeholder="Size" id="gridSize" aria-label="size" aria-describedby="basic-addon1">
+                            </div>
+                            <input type="button" class="btn btn-outline-info mt-2" value="update" id="update">
+                            <input type="button" class="btn btn-outline-danger mt-2" value="clear all" id="clearAll">
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <button class="btn btn-info" type="button" data-toggle="collapse" data-target="#showLinePanels" aria-expanded="true" aria-controls="showLinePanels">
+                        Routes settings
+                    </button>
+                    <div class="collapse show" id="showLinePanels">
+                        <div class="list-group" id="panels">
+                            <div class="list-group-item list-group-item-action d-none" id="linePanel">
+                                <div class="input-group">
                                     <div class="input-group-prepend">
-                                        <span class="input-group-text" id="basic-addon1">Size:</span>
+                                        <button class="btn btn-warning route-mngmt" type="button" title="reverse route">&#8644;</button>
                                     </div>
-                                    <input type="text" class="form-control" placeholder="Size" id="gridSize" aria-label="size" aria-describedby="basic-addon1">
+                                    <input type="text" title="Enter color name or its HEX or RGB value. Max 2 colors per line separated by slash" class="form-control" placeholder="color" aria-label="color" aria-describedby="basic-addon2">
                                     <div class="input-group-append">
-                                        <span class="input-group-text" id="sizeLabel"></span>
-                                    </div>
-                                </div>
-                                <input type="button" class="btn btn-outline-info mb-1" value="update" id="update">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card">
-                        <button class="btn btn-info" type="button" data-toggle="collapse" data-target="#showLinePanels" aria-expanded="true" aria-controls="showLinePanels">
-                            Routes settings
-                        </button>
-                        <div class="collapse show" id="showLinePanels">
-                            <div class="list-group" id="panels">
-                                <div class="list-group-item list-group-item-action d-none" id="linePanel">
-                                    <div class="input-group">
-                                        <input type="text" title="Enter color name or its HEX or RGB value. Max 2 colors per line separated by slash" class="form-control" placeholder="color" aria-label="color" aria-describedby="basic-addon2">
-                                        <div class="input-group-append">
-                                            <button class="btn btn-outline-danger" type="button" title="delete route">&#128465;</button>
-                                        </div>
+                                        <button class="btn btn-outline-danger route-mngmt" type="button" title="delete route">&#128465;</button>
                                     </div>
                                 </div>
                             </div>
-                            <div class="form-inline mb-3 mt-3">
-                                <label for="lineWidth" class="ml-2 mr-2">Line width:</label>
-                                <select class="custom-select custom-select-sm col-xs-2" id="lineWidth">
-                                    <option value="0.2" selected>0.2</option>
-                                    <option value="0.25">0.25</option>
-                                    <option value="0.5">0.5</option>
-                                    <option value="0.75">0.75</option>
-                                    <option value="1">1</option>
-                                </select>
-                                <label for="lineWidth" class="ml-2 mr-4">of cell size</label>
-                                <button type="button" id="addRoute" class="btn btn-outline-secondary btn-sm ml-4" title="add line">&#10133;</button>
-                            </div>
+                        </div>
+                        <div class="form-inline mb-3 mt-3">
+                            <label for="lineWidth" class="ml-2 mr-2">Line width:</label>
+                            <select class="custom-select custom-select-sm col-xs-2" id="lineWidth">
+                                <option value="0.2" selected>0.2</option>
+                                <option value="0.25">0.25</option>
+                                <option value="0.5">0.5</option>
+                                <option value="0.75">0.75</option>
+                                <option value="1">1</option>
+                            </select>
+                            <button type="button" id="addRoute" class="btn btn-outline-secondary btn-sm ml-2" title="add line">&#10133;</button>
                         </div>
                     </div>
-                    <div class="card">
-                        <button class="btn btn-info" type="button" data-toggle="collapse" data-target="#showBackgroundSettings" aria-expanded="true" aria-controls="showBackgroundSettings">
-                            Background settings
-                        </button>
-                        <div class="collapse show" id="showBackgroundSettings">
-                            <div class="card-body">
-                                <div class="input-group mb-1">
-                                    <input type="button" class="btn btn-outline-info" value="add image" id="bgd-img" data-toggle="modal" data-target="#insertImg">
-                                </div>
-                                <div class="custom-control custom-switch">
-                                    <input type="checkbox" class="custom-control-input" id="background-switch" disabled>
-                                    <label class="custom-control-label" for="background-switch">Toggle Background</label>
-                                </div>
+                </div>
+                <div class="card">
+                    <button class="btn btn-info" type="button" data-toggle="collapse" data-target="#showBackgroundSettings" aria-expanded="true" aria-controls="showBackgroundSettings">
+                        Background settings
+                    </button>
+                    <div class="collapse show" id="showBackgroundSettings">
+                        <div class="card-body">
+                            <div class="input-group mb-1">
+                                <input type="button" class="btn btn-outline-info" value="add image" id="bgd-img" data-toggle="modal" data-target="#insertImg">
                             </div>
-                        </div>
-                    </div>
-
-                    <div class="card">
-                        <button class="btn btn-info" type="button" data-toggle="collapse" data-target="#showIOSettings" aria-expanded="true" aria-controls="showIOSettings">
-                            File settings
-                        </button>
-                        <div class="collapse show" id="showIOSettings">
-                            <div class="card-body">
-                                <h6 class="card-subtitle mb-2 text-muted">Save/Load map in local storage</h6>
-                                <button type="button" data-toggle="modal" data-target="#saveMap" id="openSave" class="btn btn-primary mt-2 mr-2">Save</button>
-                                <button type="button" data-toggle="modal" data-target="#loadMap" id="openLoad" class="btn btn-secondary mt-2">Load</button>
-                                <h6 class="card-subtitle mt-2 mb-2 text-muted">Import/Export map as json file</h6>
-                                <button type="button" class="btn btn-primary mt-2 mr-2" id="export">Export</button>
-                                <input type="file" id="importedMap" style="display: none;" />
-                                <button type="button" class="btn btn-secondary mt-2" id="import">Import</button>
+                            <div class="custom-control custom-switch">
+                                <input type="checkbox" class="custom-control-input" id="background-switch" disabled>
+                                <label class="custom-control-label" for="background-switch">Toggle Background</label>
                             </div>
                         </div>
                     </div>
                 </div>
-
-
+                <div class="card">
+                    <button class="btn btn-info" type="button" data-toggle="collapse" data-target="#showIOSettings" aria-expanded="true" aria-controls="showIOSettings">
+                        File settings
+                    </button>
+                    <div class="collapse show" id="showIOSettings">
+                        <div class="card-body">
+                            <h6 class="card-subtitle mb-2 text-muted">Save/Load map in local storage</h6>
+                            <button type="button" data-toggle="modal" data-target="#saveMap" id="openSave" class="btn btn-primary mt-2 mr-2">Save</button>
+                            <button type="button" data-toggle="modal" data-target="#loadMap" id="openLoad" class="btn btn-secondary mt-2">Load</button>
+                            <h6 class="card-subtitle mt-2 mb-2 text-muted">Import/Export map as json file</h6>
+                            <button type="button" class="btn btn-primary mt-2 mr-2" id="export">Export</button>
+                            <input type="file" id="importedMap" style="display: none;" />
+                            <button type="button" class="btn btn-secondary mt-2" id="import">Import</button>
+                        </div>
+                    </div>
+                </div>
             </div>
+
         </div>
+
 
         <div class="modal fade" id="insertImg" tabindex="-1" role="dialog" aria-labelledby="insertUrl" aria-hidden="true">
             <div class="modal-dialog" role="document">

@@ -106,17 +106,18 @@ define(["require", "exports", "./SVG", "./StationsManager", "./LabelsManager", "
                 this.selectRoute(subwayMap.currentRoute);
         }
         selectRoute(route) {
-            for (let station of route.getStations()) {
+            for (let station of route.stations) {
                 let stationElement = document.getElementById(`station-${station.id}`);
-                if (!stationElement.classList.contains("selected"))
+                if (station != route.last)
                     stationElement.classList.add("selected");
+                else
+                    stationElement.classList.add("last-selected");
             }
         }
         deselectRoute(route) {
-            for (let station of route.getStations()) {
+            for (let station of route.stations) {
                 let stationElement = document.getElementById(`station-${station.id}`);
-                if (stationElement.classList.contains("selected"))
-                    stationElement.classList.remove("selected");
+                stationElement.classList.remove("selected", "last-selected");
             }
         }
         trySetColor(routeId, color) {
@@ -155,15 +156,13 @@ define(["require", "exports", "./SVG", "./StationsManager", "./LabelsManager", "
             }
         }
         drawStations(subwayMap) {
-            for (let i = 0; i < subwayMap.stations.length; i++) {
-                let station = subwayMap.stations[i];
+            for (let station of subwayMap.stations) {
                 let shape = this.stationsManager.process(station);
                 this.canvas.appendChild(shape);
             }
         }
         drawLabels(subwayMap) {
-            for (let i = 0; i < subwayMap.stations.length; i++) {
-                let station = subwayMap.stations[i];
+            for (let station of subwayMap.stations) {
                 let stationBounds = this.stationsManager.getBounds(station.id);
                 let label = this.labelsManager.process(station.label, stationBounds);
                 this.canvas.appendChild(label);

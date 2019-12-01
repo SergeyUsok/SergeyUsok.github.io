@@ -3,20 +3,14 @@ import { SVG } from "./SVG";
 import { Geometry, Segment, Point } from "./Geometry";
 import { Connection, Direction } from "../Models/ConnectionModel";
 import { SubwayMap } from "../Models/SubwayMap";
-
-type RouteInfo = {
-    route: Route,
-    visited: boolean,
-    reverse: boolean,
-    priority: number
-}
+import { RoutePrioritizer } from "./RoutePrioritizer";
 
 export class RoutesManager {
     // map of cell keys (x-y) to station ids which uses these cells for connection
     private occupiedCells: Map<string, Set<number>> = new Map<string, Set<number>>();
+    private prioritizer: RoutePrioritizer = new RoutePrioritizer();;
 
     public constructor(private geometry: Geometry, private connetionCallback: (c: Connection) => void) {
-
     }
 
     public noRoutePassesThrough(cell: Point, exceptStationId?: number): boolean {
@@ -43,16 +37,7 @@ export class RoutesManager {
     }
 
     public * processAll(subwayMap: SubwayMap): IterableIterator<SVGElement> {
-        let routesInfo = new Map(subwayMap.routes.map(r => [r.id, {
-            route: r,
-            visited: false,
-            reverse: false,
-            priority: 10 // some default magic number which will be used as reference value for caclulating priorities of adjacent lines
-        }]));
-
-        for (let route of subwayMap.getOrderedRoutes()) {
-            routesInfo.get(route.id).visited = true;
-            
+        for (let route of subwayMap.consumeRoutes()) {            
             let routeParent = SVG.createGroup({ id: `route-${route.id}`, "stroke-width": this.geometry.lineWidth });
             let colorGroups = [SVG.createGroup({ stroke: route.color[0] })];
 
@@ -62,22 +47,19 @@ export class RoutesManager {
                 colorGroups.push(group);
             }
 
-            this.processOne(route, colorGroups, routesInfo);
+            this.processOne(route, colorGroups, subwayMap);
 
             colorGroups.forEach(gr => routeParent.append(gr));
             yield routeParent;
         }
     }
 
-    private processOne(route: Route, parents: SVGElement[], routeInfoMap: Map<number, RouteInfo>) {
-        let routeInfo = routeInfoMap.get(route.id);
-        for (let connection of route.getConnections(routeInfo.reverse).values()) {
+    private processOne(route: Route, parents: SVGElement[], subwayMap: SubwayMap) {        
+        for (let connection of route.getConnections().values()) {
             let from = this.geometry.centrify(connection.from);
             let to = this.geometry.centrify(connection.to);
 
-            this.visitAdjacentRoutes(connection, routeInfoMap, routeInfo.priority);
-
-            let offset = this.calculateOffset(connection, route, routeInfoMap);
+            let offset = this.calculateOffset(connection, route, subwayMap);
             let segment = this.geometry.offsetConnection(from, to, offset);
 
             this.connetionCallback(connection);
@@ -89,219 +71,11 @@ export class RoutesManager {
         }
     }
 
-    // TODO:
-    // implement get getConnection on route properly
-    // check issue with equal priorities
-    // why current route is not more important than adjacents in terms of turns calculation 
-    // check case of 2 lines comes from left with equal and different priorities
-    private visitAdjacentRoutes(connection: Connection, routeInfo: Map<number, RouteInfo>, priority: number): void {
-        if (connection.passingRoutes.length == 1)
-            return; // nothing to do as there are no adjacent lines
-
-        for (let routeId of connection.passingRoutes) {
-            let adjacent = routeInfo.get(routeId);
-                       
-            if (adjacent.visited) {
-                continue;
-            }
-
-            adjacent.reverse = adjacent.route.isReversedRelativeTo(connection);
-            adjacent.priority = this.prioritize(connection, adjacent, priority);
-            adjacent.visited = true;
-        }
-    }
-
-    // 1. first check where adjacent line comes from (taking into account the reverse)
-    // and based on this info calculate priority.
-    // 2. if no previous, then check where both adjacent and current lines go to, but lookahead till the lines divergence
-    // 3. calculate the priority for the pair of lines
-    // E.g. line comes from left and becomes adjacent of current line going to south (from top to down)
-    // Then the line should be drawn as the most left adjacent of current line
-    private prioritize(connection: Connection, adjacent: RouteInfo, referencePriority: number): number {
-        let adjConnection = adjacent.route.findConnection(connection, adjacent.reverse);
-
-        if (adjConnection.prev != null) {
-            let priority = this.getPriorityBasedOnPrev(connection.direction, adjConnection.prev.direction, referencePriority);
-            if (priority != referencePriority) {
-                // in case of equal priorities (both connections share same direction) try find differences
-                // in next connection directions, otherwise return calculated priority
-                return priority;
-            }
-        }
-
-        let currNext = connection.next;
-        let adjNext = adjConnection.next;
-        while (currNext != null && adjNext != null && currNext.direction == adjNext.direction) {
-            currNext = currNext.next;
-            adjNext = adjNext.next;
-        }
-
-        if (adjNext != null) {
-            return this.getPriorityBasedOnNext(adjNext.prev.direction, adjNext.direction, referencePriority);
-        }
-
-        return referencePriority;
-    }
-
-    private getPriorityBasedOnNext(current: Direction, next: Direction, referencePriorityValue: number): number {
-        if (current == Direction.south) { // current moves from top to down
-            switch (next) {
-                case Direction.east: case Direction.northEast: case Direction.southEast: // came from left side
-                    return --referencePriorityValue; // increment because the highest value will be drawn on left
-                case Direction.west: case Direction.northWest: case Direction.southWest: // came from right
-                    return ++referencePriorityValue; // decrement because the lowest value will be drawn on right
-            }
-        }
-
-        if (current == Direction.north) { // current moves from down to top
-            switch (next) {
-                case Direction.east: case Direction.northEast: case Direction.southEast:
-                    return ++referencePriorityValue;
-                case Direction.west: case Direction.northWest: case Direction.southWest:
-                    return --referencePriorityValue;
-            }
-        }
-
-        if (current == Direction.west) {
-            switch (next) {
-                case Direction.south: case Direction.southWest: case Direction.southEast:
-                    return --referencePriorityValue;
-                case Direction.north: case Direction.northWest: case Direction.northEast:
-                    return ++referencePriorityValue;
-            }
-        }
-
-        if (current == Direction.east) {
-            switch (next) {
-                case Direction.south: case Direction.southWest: case Direction.southEast:
-                    return ++referencePriorityValue;
-                case Direction.north: case Direction.northWest: case Direction.northEast:
-                    return --referencePriorityValue;
-            }
-        }
-
-        if (current == Direction.southEast) {
-            switch (next) {
-                case Direction.north: case Direction.east: case Direction.northEast:
-                    return --referencePriorityValue;
-                case Direction.south: case Direction.west: case Direction.southWest:
-                    return ++referencePriorityValue;
-            }
-        }
-
-        if (current == Direction.northWest) {
-            switch (next) {
-                case Direction.north: case Direction.east: case Direction.northEast:
-                    return ++referencePriorityValue;
-                case Direction.south: case Direction.west: case Direction.southWest:
-                    return --referencePriorityValue;
-            }
-        }
-
-        if (current == Direction.northEast) {
-            switch (next) {
-                case Direction.south: case Direction.east: case Direction.southEast:
-                    return ++referencePriorityValue;
-                case Direction.north: case Direction.west: case Direction.northWest:
-                    return --referencePriorityValue;
-            }
-        }
-
-        if (current == Direction.southWest) {
-            switch (next) {
-                case Direction.south: case Direction.east: case Direction.southEast:
-                    return --referencePriorityValue;
-                case Direction.north: case Direction.west: case Direction.northWest:
-                    return ++referencePriorityValue;
-            }
-        }
-
-        return referencePriorityValue;
-    }
-
-    private getPriorityBasedOnPrev(current: Direction, prev: Direction, referencePriorityValue: number): number {
-        if (current == Direction.south) { // current moves from top to down
-            switch (prev) {
-                case Direction.east: case Direction.northEast: case Direction.southEast: // came from left side
-                    return ++referencePriorityValue; // increment because the highest value will be drawn on left
-                case Direction.west: case Direction.northWest: case Direction.southWest: // came from right
-                    return --referencePriorityValue; // decrement because the lowest value will be drawn on right
-            }
-        }
-
-        if (current == Direction.north) { // current moves from down to top
-            switch (prev) {
-                case Direction.east: case Direction.northEast: case Direction.southEast:
-                    return --referencePriorityValue;
-                case Direction.west: case Direction.northWest: case Direction.southWest:
-                    return ++referencePriorityValue;
-            }
-        }
-
-        if (current == Direction.west) {
-            switch (prev) {
-                case Direction.south: case Direction.southWest: case Direction.southEast:
-                    return ++referencePriorityValue;
-                case Direction.north: case Direction.northWest: case Direction.northEast:
-                    return --referencePriorityValue;
-            }
-        }
-
-        if (current == Direction.east) {
-            switch (prev) {
-                case Direction.south: case Direction.southWest: case Direction.southEast:
-                    return --referencePriorityValue;
-                case Direction.north: case Direction.northWest: case Direction.northEast:
-                    return ++referencePriorityValue;
-            }
-        }
-
-        if (current == Direction.southEast) {
-            switch (prev) {
-                case Direction.north: case Direction.east: case Direction.northEast:
-                    return ++referencePriorityValue;
-                case Direction.south: case Direction.west: case Direction.southWest:
-                    return --referencePriorityValue;
-            }
-        }
-
-        if (current == Direction.northWest) {
-            switch (prev) {
-                case Direction.north: case Direction.east: case Direction.northEast:
-                    return --referencePriorityValue;
-                case Direction.south: case Direction.west: case Direction.southWest:
-                    return ++referencePriorityValue;
-            }
-        }
-
-        if (current == Direction.northEast) {
-            switch (prev) {
-                case Direction.south: case Direction.east: case Direction.southEast:
-                    return --referencePriorityValue;
-                case Direction.north: case Direction.west: case Direction.northWest:
-                    return ++referencePriorityValue;
-            }
-        }
-
-        if (current == Direction.southWest) {
-            switch (prev) {
-                case Direction.south: case Direction.east: case Direction.southEast:
-                    return ++referencePriorityValue;
-                case Direction.north: case Direction.west: case Direction.northWest:
-                    return --referencePriorityValue;
-            }
-        }
-
-        return referencePriorityValue;
-    }
-
-    private calculateOffset(connection: Connection, route: Route, routeInfos: Map<number, RouteInfo>) {
+    private calculateOffset(connection: Connection, route: Route, subwayMap: SubwayMap) {
         let fullDistance = this.geometry.distanceOfParallelLines(connection.passingRoutes.length);
         let radius = fullDistance / 2; // we need the half of distance because we draw lines by offsetting them by BOTH sides of central point
 
-        let offsetFactor = connection.passingRoutes
-            .sort((id1, id2) => routeInfos.get(id1).priority - routeInfos.get(id2).priority)
-            .indexOf(route.id);
+        let offsetFactor = this.prioritizer.calculatePriority(route.id, connection, subwayMap);
 
         return (-radius + this.geometry.halfOfLineWidth) + (offsetFactor * (this.geometry.lineWidth + this.geometry.distanceBetweenLines));
     }

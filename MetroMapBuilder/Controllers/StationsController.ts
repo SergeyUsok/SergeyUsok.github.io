@@ -63,7 +63,7 @@ export class StationsController extends ErrorController {
     }
 
     private onMapReloaded(): void {
-        this.stationsCounter = this.subwayMap.stations.length;
+        this.stationsCounter = this.subwayMap.stationsCount;
     }
 
     private handleClick(event: MouseEvent): any {

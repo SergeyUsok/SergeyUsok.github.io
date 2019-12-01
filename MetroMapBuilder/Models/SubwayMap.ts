@@ -10,8 +10,8 @@ export class SizeSettings {
 }
 
 export class SubwayMap {
-    private _stations: Station[] = [];
-    private _routes: Route[] = [];
+    private _stations: Map<number, Station> = new Map<number, Station>();
+    private _routes: Map<number, Route> = new Map<number, Route>();
     private connectionsManager: ConnectionsManager = new ConnectionsManager();
     private subscribers: (() => void)[] = [];
 
@@ -31,76 +31,74 @@ export class SubwayMap {
         return this._sizeSettings;
     }
 
-    public get stations(): Station[] {
-        return this._stations;
+    public get routesCount() {
+        return this._routes.size;
     }
 
-    public get routes(): Route[] {
-        return this._routes;
+    public get stationsCount() {
+        return this._stations.size;
+    }
+
+    public get stations(): IterableIterator<Station> {
+        return this._stations.values();
+    }
+
+    public get routes(): IterableIterator<Route> {
+        return this._routes.values();
     }
 
     // Route API
     public newRoute(id: number): Route {
         let newRoute = new Route(id, this.connectionsManager);
-        this.routes.push(newRoute);
+        this._routes.set(id, newRoute);
         return newRoute;
     }
 
     public getRoute(id: number): Route {
-        for (let i = 0; i < this.routes.length; i++) {
-            if (this.routes[i].id == id)
-                return this.routes[i];
-        }
+        return this._routes.get(id);
     }
 
     public removeRoute(route: Route): void {
         this.connectionsManager.removeEntireRoute(route);
 
-        let index = this.routes.indexOf(route);
-
-        if (index > -1)
-            this.routes.splice(index, 1);
-
+        this._routes.delete(route.id);
+        
         if (this.currentRoute == route)
             this.currentRoute = null;
     }
+    
+    public *consumeRoutes(): IterableIterator<Route> {
+        let consumable = Array.from(this._routes.values());
+        consumable.forEach(r => r.reset());
 
-    public getOrderedRoutes(): Route[] {
-        let adjacentsCountMap = this.connectionsManager.getRouteAdjacentsMap();
-
-        // copy array in order to avoid in-place sort
-        return Array.from(this._routes).sort((a, b) => {
-            let res = adjacentsCountMap.get(a.id) - adjacentsCountMap.get(b.id);
-            if (res == 0) {
-                return a.getStations().length - b.getStations().length;
+        while (consumable.length > 0) {
+            let index = consumable.findIndex(r => r.isInitialized);
+            if (index < 0) {
+                yield consumable.shift();
             }
-            return res;
-        }).reverse(); // order by descending
+            else {
+                yield consumable.splice(index, 1)[0];
+            }
+        }
     }
 
     // Station API
     public newStation(id: number, x: number, y: number): Station {
         let newStation = new Station(id, x, y);
-        this.stations.push(newStation);
+        this._stations.set(id, newStation);
         return newStation;
     }
 
     public getStation(id: number): Station {
-        for (let i = 0; i < this.stations.length; i++) {
-            if (this.stations[i].id == id)
-                return this.stations[i];
-        }
+        return this._stations.get(id);
     }
 
     public removeStation(station: Station): void {
-        let index = this.stations.indexOf(station);
-
         // 1. remove from general stations array
-        if (index > -1)
-            this.stations.splice(index, 1);
+        this._stations.delete(station.id);
 
-        // 2. remove from any route referenced to this station and from connection cache under the hood
-        this.routes.forEach(route => route.removeConnection(station));
+        // 2. remove from any route passing through this station and from connection cache under the hood
+        this._routes.forEach(route => route.removeConnection(station));
     }
 
     public updateStationPosition(id: number, x: number, y: number): void {
@@ -190,6 +188,17 @@ export class SubwayMap {
         this.name = object.name;
         this.notifyMapReloaded();
         return this;
+    }
+
+    // Clear all
+    public clear(notify?: boolean) {
+        this._stations.clear();
+        this._routes.clear();
+        this.currentRoute = null;
+        this.connectionsManager.clear();
+
+        if (notify)
+            this.notifyMapReloaded();
     }
 
     private notifyMapReloaded() {
@@ -285,23 +294,24 @@ export class SubwayMap {
 
     private prepareRoutes(stationIdsMap: Map<number, number>): any {
         let routesInfo = [];
-        for (let routeId = 0; routeId < this.routes.length; routeId++) {
-            let route = this.routes[routeId];
+        let routeId = 0;
+        for (let route of this._routes.values()) {
             let stationsInfo = [];            
-            for (let station of route.getStations()) {
+            for (let station of route.stations) {
                 let newId = stationIdsMap.get(station.id);
                 stationsInfo.push(newId);
             }
             let serialized = { id: routeId, color: route.color, stations: stationsInfo };
             routesInfo.push(serialized);
+            routeId++;
         }
         return routesInfo;
     }
 
     private prepareStations(stationIdsMap: Map<number, number>) {
         let stationsInfo = [];
-        for (let newId = 0; newId < this.stations.length; newId++) {
-            let station = this.stations[newId];
+        let newId = 0;
+        for (let station of this.stations) {
             stationIdsMap.set(station.id, newId);
             let serialized = {
                 id: newId, x: station.x, y: station.y,
@@ -312,14 +322,8 @@ export class SubwayMap {
                 }
             }
             stationsInfo.push(serialized);
+            newId++
         }
         return stationsInfo;
-    }
-
-    private clear() {
-        this._stations = [];
-        this._routes = [];
-        this.currentRoute = null;
-        this.connectionsManager.clear();
     }
 }
