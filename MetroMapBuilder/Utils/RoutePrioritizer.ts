@@ -2,17 +2,30 @@
 import { SubwayMap } from "../Models/SubwayMap";
 
 export class RoutePrioritizer {
+    private comparisonMap: Map<string, number> = new Map<string, number>();
 
-    // TODO: make map of already calculated routes pairs
     public calculatePriority(routeId: number, connection: Connection, subwayMap: SubwayMap): number {
 
         return connection.passingRoutes.sort((a, b) => {
+            let key = `${a}-${b}`;
+
+            if (this.comparisonMap.has(key))
+                return this.comparisonMap.get(key);
+
             let first = subwayMap.getRoute(a).findConnection(connection);
             let second = subwayMap.getRoute(b).findConnection(connection);
-            let result = this.sort(first, second);
-            return result == 0 ? a - b : result; // if route priorities equal just compare routes' ids
+            let sorted = this.sort(first, second);
+
+            let result = sorted == 0 ? a - b : sorted; // if route priorities equal just compare routes' ids
+            this.comparisonMap.set(key, result);
+
+            return result;
 
         }).indexOf(routeId);
+    }
+
+    public reset(): void {
+        this.comparisonMap.clear();
     }
 
     // TODO: may be take into account prev search in case of equal on nexts
@@ -40,9 +53,9 @@ export class RoutePrioritizer {
         // 2.3 Routes do not have point of divergence and but first one finished earlier than second one
         if (secondCurrent != null) {
             let priority = this.walkThroughRoute(second);
-            // The idea here is that the route ended earlier should be less or greater (depending on the sign)
+            // The idea here is that the route that ended earlier should be less or greater (depending on the sign)
             // than the route that still continues.
-            // So the ended route should be is closer to the edge during rendering
+            // Why the ended route is less or greater? Because it should be placed closer to the edge during rendering
             return Math.sign(priority);
         }
         // 2.4 Routes do not have point of divergence and but second one finished earlier than first one

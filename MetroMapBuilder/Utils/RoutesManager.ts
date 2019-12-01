@@ -37,6 +37,7 @@ export class RoutesManager {
     }
 
     public * processAll(subwayMap: SubwayMap): IterableIterator<SVGElement> {
+        this.prioritizer.reset(); // reset any saved comparisons
         for (let route of subwayMap.consumeRoutes()) {            
             let routeParent = SVG.createGroup({ id: `route-${route.id}`, "stroke-width": this.geometry.lineWidth });
             let colorGroups = [SVG.createGroup({ stroke: route.color[0] })];

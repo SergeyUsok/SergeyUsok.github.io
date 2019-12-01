@@ -29,6 +29,7 @@ define(["require", "exports", "./SVG", "./RoutePrioritizer"], function (require,
             this.occupiedCells.clear();
         }
         *processAll(subwayMap) {
+            this.prioritizer.reset(); // reset any saved comparisons
             for (let route of subwayMap.consumeRoutes()) {
                 let routeParent = SVG_1.SVG.createGroup({ id: `route-${route.id}`, "stroke-width": this.geometry.lineWidth });
                 let colorGroups = [SVG_1.SVG.createGroup({ stroke: route.color[0] })];

@@ -122,8 +122,19 @@ export class Route {
         }
     }
 
-    // todo check ringed lines
+    // Since ringed lines are possible we have to check entire array because same station might be met several times
     private isReversedRelativeTo(connection: Connection): boolean {
-        return this._stations.indexOf(connection.from) > this._stations.indexOf(connection.to);
+        for (let i = 0; i < this._stations.length; i++) {
+            if (this._stations[i] != connection.from)
+                continue;
+
+            if (i != 0 && this._stations[i - 1] == connection.to)
+                return true; // to has lower index than from, reverse is required
+
+            if (i != this._stations.length - 1 && this._stations[i + 1] == connection.to)
+                return false; // to has greater index than from, reverse is not required
+        }
+
+        throw new Error(`Cannot find connection between ${connection.from.id} and ${connection.to.id} on route ${this.id}`);
     }
 }

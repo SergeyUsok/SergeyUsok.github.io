@@ -2,14 +2,24 @@ define(["require", "exports", "../Models/ConnectionModel"], function (require, e
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     class RoutePrioritizer {
-        // TODO: make map of already calculated routes pairs
+        constructor() {
+            this.comparisonMap = new Map();
+        }
         calculatePriority(routeId, connection, subwayMap) {
             return connection.passingRoutes.sort((a, b) => {
+                let key = `${a}-${b}`;
+                if (this.comparisonMap.has(key))
+                    return this.comparisonMap.get(key);
                 let first = subwayMap.getRoute(a).findConnection(connection);
                 let second = subwayMap.getRoute(b).findConnection(connection);
-                let result = this.sort(first, second);
-                return result == 0 ? a - b : result; // if route priorities equal just compare routes' ids
+                let sorted = this.sort(first, second);
+                let result = sorted == 0 ? a - b : sorted; // if route priorities equal just compare routes' ids
+                this.comparisonMap.set(key, result);
+                return result;
             }).indexOf(routeId);
+        }
+        reset() {
+            this.comparisonMap.clear();
         }
         // TODO: may be take into account prev search in case of equal on nexts
         // or even calculate where from which side of connection (next or prev) remains most part of route and based on this info
@@ -36,9 +46,9 @@ define(["require", "exports", "../Models/ConnectionModel"], function (require, e
             // 2.3 Routes do not have point of divergence and but first one finished earlier than second one
             if (secondCurrent != null) {
                 let priority = this.walkThroughRoute(second);
-                // The idea here is that the route ended earlier should be less or greater (depending on the sign)
+                // The idea here is that the route that ended earlier should be less or greater (depending on the sign)
                 // than the route that still continues.
-                // So the ended route should be is closer to the edge during rendering
+                // Why the ended route is less or greater? Because it should be placed closer to the edge during rendering
                 return Math.sign(priority);
             }
             // 2.4 Routes do not have point of divergence and but second one finished earlier than first one

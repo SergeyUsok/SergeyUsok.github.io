@@ -24,7 +24,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="app.css" />
-    <Content Include="app.js" />
     <Content Include="index.html" />
     <Content Include="main.js" />
     <Content Include="web.config">
