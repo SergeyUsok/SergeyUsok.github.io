@@ -28,6 +28,8 @@
   <script>
     function tryDecryptPwd() {
       document.getElementById('errorMsg').textContent = '';
+	  document.getElementById('result').textContent = '';
+	
       try {
          let sharedsecret = document.getElementById('sharedSecret').value;
          let passwordInBase64 = document.getElementById('password').value;
