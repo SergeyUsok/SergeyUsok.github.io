@@ -16,7 +16,8 @@
           <td><input type='text' name='password' id='password'></td>
         </tr>
         <tr>
-          <td><input type="button" value="Decrypt" name="submit" id="submitButton" onclick="decrypt()"/></td>
+          <td><input type="button" value="Decrypt" name="decrypt" id="decrypt" onclick="decrypt()"/></td>
+		  <td><input type="button" value="Copy" name="copy" id="copy" onclick="copyPassword()"/></td>
         </tr>
         <tr>
           <td><span id='errorMsg'></span></td>
@@ -31,12 +32,15 @@
       document.getElementById('errorMsg').innerHTML = '';
       try {
          let sharedsecret = document.getElementById('sharedSecret').value;
-         let sharedsecret = document.getElementById('password').value;
+         let passwordInBase64 = document.getElementById('password').value;
+         
+		 let decoded = b64DecodeUnicode(passwordInBase64);
          let decryptedPassword = decrypt(sharedsecret, password);
-         document.getElementById('result').innerHTML = decryptedPassword;
+		 
+         document.getElementById('result').textContent = decryptedPassword;
         
       } catch(e) {
-         document.getElementById('errorMsg').innerHTML = e.message;
+         document.getElementById('errorMsg').textContent = e.message;
       }
     }
 
@@ -50,5 +54,27 @@
       
       return decryptedText;
     }
+
+	function b64DecodeUnicode(str) {
+      // Going backwards: from bytestream, to percent-encoding, to original string.
+      return decodeURIComponent(
+        atob(str)
+          .split("")
+          .map(function (c) {
+            return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
+          })
+          .join(""),
+      );
+    }
+
+	function copyPassword() {
+	    let copyText = document.getElementById("result");
+	    let textArea = document.createElement("textarea");
+	    textArea.value = copyText.textContent;
+	    document.body.appendChild(textArea);
+	    textArea.select();
+	    document.execCommand("Copy");
+	    textArea.remove();
+	}
   </script>
 </html>
