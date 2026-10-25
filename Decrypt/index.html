@@ -16,7 +16,7 @@
           <td><input type='text' name='password' id='password'></td>
         </tr>
         <tr>
-          <td><input type="button" value="Decrypt" name="decrypt" id="decrypt" onclick="decrypt()"/></td>
+          <td><input type="button" value="Decrypt" name="decrypt" id="decrypt" onclick="tryDecryptPwd()"/></td>
 		  <td><input type="button" value="Copy" name="copy" id="copy" onclick="copyPassword()"/></td>
         </tr>
         <tr>
@@ -28,7 +28,7 @@
 	</body>
 
   <script>
-    function decrypt() {
+    function tryDecryptPwd() {
       document.getElementById('errorMsg').textContent = '';
       try {
          let sharedsecret = document.getElementById('sharedSecret').value;
