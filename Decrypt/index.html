@@ -19,11 +19,9 @@
           <td><input type="button" value="Decrypt" name="decrypt" id="decrypt" onclick="tryDecryptPwd()"/></td>
 		  <td><input type="button" value="Copy" name="copy" id="copy" onclick="copyPassword()"/></td>
         </tr>
-        <tr>
-          <td><span id='errorMsg'></span></td>
-          <td><span id='result'></span></td>
-        </tr>
       </table>
+	  <p id='errorMsg' style="color: red"></p>
+	  <p id='result'></p>
       
 	</body>
 
@@ -69,13 +67,8 @@
     }
 
 	function copyPassword() {
-	    let copyText = document.getElementById("result");
-	    let textArea = document.createElement("textarea");
-	    textArea.value = copyText.textContent;
-	    document.body.appendChild(textArea);
-	    textArea.select();
-	    document.execCommand("Copy");
-	    textArea.remove();
+        const copyText = document.getElementById("result");
+		navigator.clipboard.writeText(copyText.textContent);
 	}
   </script>
 </html>
