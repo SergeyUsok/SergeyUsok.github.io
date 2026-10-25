@@ -1,1 +1,54 @@
+<html lang="en" ng-app="minesweeperGame">
+	<head>
+		<meta charset="utf-8">
+		<script src="lib/crypto-js.min.4.2.0.js"></script>
+		<title>Decrypt</title>
+	</head>
 
+	<body>
+		<table>
+        <tr>
+          <td>Shared Secret:</td>
+          <td><input type='password' name='sharedSecret' id='sharedSecret'></td>
+        </tr>
+         <tr>
+          <td>Encrypted password:</td>
+          <td><input type='text' name='password' id='password'></td>
+        </tr>
+        <tr>
+          <td><input type="button" value="Decrypt" name="submit" id="submitButton" onclick="decrypt()"/></td>
+        </tr>
+        <tr>
+          <td><span id='errorMsg'></span></td>
+          <td><span id='result'></span></td>
+        </tr>
+      </table>
+      
+	</body>
+
+  <script>
+    function submitForm() {
+      document.getElementById('errorMsg').innerHTML = '';
+      try {
+         let sharedsecret = document.getElementById('sharedSecret').value;
+         let sharedsecret = document.getElementById('password').value;
+         let decryptedPassword = decrypt(sharedsecret, password);
+         document.getElementById('result').innerHTML = decryptedPassword;
+        
+      } catch(e) {
+         document.getElementById('errorMsg').innerHTML = e.message;
+      }
+    }
+
+    function decrypt(sharedSecret, encryptedString) {
+      const decryptedBytes = CryptoJS.AES.decrypt(encryptedString, sharedSecret);
+      const decryptedText = decryptedBytes.toString(CryptoJS.enc.Utf8);
+      
+      if (!decryptedText) {
+        throw new Error("Failed to decrypt");
+      }
+      
+      return decryptedText;
+    }
+  </script>
+</html>
