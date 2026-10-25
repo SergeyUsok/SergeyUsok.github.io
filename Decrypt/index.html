@@ -35,6 +35,9 @@
          let passwordInBase64 = document.getElementById('password').value;
          
 		 let decoded = b64DecodeUnicode(passwordInBase64);
+
+
+		 console.log(decoded);
          let decryptedPassword = decrypt(sharedsecret, password);
 		 
          document.getElementById('result').textContent = decryptedPassword;
