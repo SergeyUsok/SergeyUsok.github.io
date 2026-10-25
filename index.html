@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 
 <html lang="en">
 <head>
@@ -8,6 +8,16 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+    
+    <!-- Додані стилі для вирівнювання мініатюр -->
+    <style>
+        .thumbnail img {
+            width: 100%;          /* Зображення розтягується на всю ширину колонки */
+            height: 200px;        /* ТУТ задається фіксована однакова висота для всіх карток */
+            object-fit: cover;    /* Обрізає зайве та зберігає правильні пропорції картинки */
+            display: block;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
