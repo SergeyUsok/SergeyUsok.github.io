@@ -28,16 +28,14 @@
 	</body>
 
   <script>
-    function submitForm() {
-      document.getElementById('errorMsg').innerHTML = '';
+    function decrypt() {
+      document.getElementById('errorMsg').textContent = '';
       try {
          let sharedsecret = document.getElementById('sharedSecret').value;
          let passwordInBase64 = document.getElementById('password').value;
          
 		 let decoded = b64DecodeUnicode(passwordInBase64);
 
-
-		 console.log(decoded);
          let decryptedPassword = decrypt(sharedsecret, password);
 		 
          document.getElementById('result').textContent = decryptedPassword;
