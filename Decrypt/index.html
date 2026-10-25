@@ -80,4 +80,51 @@
 	<p id='errorMsg' style="color: red; text-align: center;"></p>
 	<p id='result' style="text-align: center; font-weight: bold;"></p>
 </body>
+<script>
+    function tryDecryptPwd() {
+      document.getElementById('errorMsg').textContent = '';
+	  document.getElementById('result').textContent = '';
+	
+      try {
+         let sharedsecret = document.getElementById('sharedSecret').value;
+         let passwordInBase64 = document.getElementById('password').value;
+         
+		 let decoded = b64DecodeUnicode(passwordInBase64);
+         let decryptedPassword = decrypt(sharedsecret, decoded);
+		 
+         document.getElementById('result').textContent = decryptedPassword;
+        
+      } catch(e) {
+         document.getElementById('errorMsg').textContent = e.message;
+      }
+    }
+
+    function decrypt(sharedSecret, encryptedString) {
+      const decryptedBytes = CryptoJS.AES.decrypt(encryptedString, sharedSecret);
+      const decryptedText = decryptedBytes.toString(CryptoJS.enc.Utf8);
+      
+      if (!decryptedText) {
+        throw new Error("Failed to decrypt");
+      }
+      
+      return decryptedText;
+    }
+
+    function b64DecodeUnicode(str) {
+      // Going backwards: from bytestream, to percent-encoding, to original string.
+      return decodeURIComponent(
+        atob(str)
+          .split("")
+          .map(function (c) {
+            return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
+          })
+          .join(""),
+      );
+    }
+
+    function copyPassword() {
+        const copyText = document.getElementById("result");
+		navigator.clipboard.writeText(copyText.textContent);
+	}
+  </script>
 </html>
